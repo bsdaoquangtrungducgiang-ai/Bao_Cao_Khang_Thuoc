@@ -731,6 +731,455 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
           </div>
         </section>
 
+        <!-- ================= VIEW: DỮ LIỆU BỆNH NHÂN ================= -->
+        <section class="view-panel" id="view-data_patients">
+          <div class="data-panel-card">
+            <div class="data-toolbar">
+              <div class="search-input-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-patients" placeholder="Tìm kiếm theo mã BN, họ tên, khoa phòng...">
+              </div>
+              <div>
+                <span class="chart-badge" id="count-patients">Đang tải...</span>
+              </div>
+            </div>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Mã Bệnh Nhân</th>
+                    <th>Họ và Tên</th>
+                    <th style="text-align: center;">Tuổi</th>
+                    <th style="text-align: center;">Giới tính</th>
+                    <th>Khoa Phòng</th>
+                    <th>Đối Tượng</th>
+                  </tr>
+                </thead>
+                <tbody id="table-patients-body"></tbody>
+              </table>
+            </div>
+            <div id="pagination-patients"></div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: DỮ LIỆU BỆNH PHẨM ================= -->
+        <section class="view-panel" id="view-data_specimens">
+          <div class="data-panel-card">
+            <div class="data-toolbar">
+              <div class="search-input-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-specimens" placeholder="Tìm kiếm theo mã BP, loại bệnh phẩm, mã BN...">
+              </div>
+              <div>
+                <span class="chart-badge" id="count-specimens">Đang tải...</span>
+              </div>
+            </div>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Mã Bệnh Phẩm</th>
+                    <th>Loại Bệnh Phẩm</th>
+                    <th>Mã Bệnh Nhân</th>
+                    <th>Ngày Lấy Mẫu</th>
+                    <th>Khoa Yêu Cầu</th>
+                  </tr>
+                </thead>
+                <tbody id="table-specimens-body"></tbody>
+              </table>
+            </div>
+            <div id="pagination-specimens"></div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: VI KHUẨN PHÂN LẬP ================= -->
+        <section class="view-panel" id="view-data_cultures">
+          <div class="data-panel-card">
+            <div class="data-toolbar">
+              <div class="search-input-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-cultures" placeholder="Tìm theo tên vi khuẩn, mã vi khuẩn, mã BN...">
+              </div>
+              <div>
+                <span class="chart-badge" id="count-cultures">Đang tải...</span>
+              </div>
+            </div>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Vi Khuẩn Định Danh</th>
+                    <th>Mã Chuẩn</th>
+                    <th>Nhuộm Gram</th>
+                    <th>Mã Bệnh Nhân</th>
+                    <th>Ngày Nuôi Cấy</th>
+                    <th>Số Lượng Khuẩn Lạc</th>
+                  </tr>
+                </thead>
+                <tbody id="table-cultures-body"></tbody>
+              </table>
+            </div>
+            <div id="pagination-cultures"></div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: KHÁNG SINH ĐỒ (AST) ================= -->
+        <section class="view-panel" id="view-data_ast">
+          <div class="data-panel-card">
+            <div class="data-toolbar">
+              <div class="search-input-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-ast" placeholder="Tìm theo vi khuẩn, kháng sinh, mã BN...">
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <select class="filter-select" id="filter-ast-interp" onchange="window.ClinicalDataViews.renderCurrentView()">
+                  <option value="ALL">Tất cả kết quả (S / I / R)</option>
+                  <option value="S">Nhạy cảm (S)</option>
+                  <option value="I">Trung gian (I)</option>
+                  <option value="R">Kháng thuốc (R)</option>
+                </select>
+                <span class="chart-badge" id="count-ast">Đang tải...</span>
+              </div>
+            </div>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Mã BN</th>
+                    <th>Bệnh Phẩm</th>
+                    <th>Vi Khuẩn Phân Lập</th>
+                    <th>Kháng Sinh</th>
+                    <th>Kết Quả (AST)</th>
+                    <th>MIC / Zone</th>
+                    <th>Tiêu Chuẩn</th>
+                  </tr>
+                </thead>
+                <tbody id="table-ast-body"></tbody>
+              </table>
+            </div>
+            <div id="pagination-ast"></div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: ANTIBIOGRAM BÁO CÁO (MỤC XIX & XX) ================= -->
+        <section class="view-panel" id="view-analytics_antibiogram">
+          <div class="data-panel-card">
+            <div class="data-toolbar">
+              <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                <div>
+                  <span class="filter-label">Chọn Vi Khuẩn:</span>
+                  <select class="filter-select" id="abg-select-organism"></select>
+                </div>
+                <div>
+                  <span class="filter-label">Bệnh Phẩm:</span>
+                  <select class="filter-select" id="abg-select-specimen"></select>
+                </div>
+                <div>
+                  <span class="filter-label">Năm:</span>
+                  <select class="filter-select" id="abg-select-year">
+                    <option value="2026" selected>2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-setup-action" id="btn-export-abg-excel" style="background: #059669;">
+                  <i class="fa-solid fa-file-excel"></i> Xuất Excel Antibiogram
+                </button>
+                <button class="btn-reset-filters" id="btn-print-abg">
+                  <i class="fa-solid fa-print"></i> In Báo Cáo
+                </button>
+              </div>
+            </div>
+
+            <h3 id="abg-report-title" style="font-size: 16px; margin: 10px 0 16px; color: var(--text-main);">
+              Antibiogram: Escherichia coli — Nước tiểu (2026)
+            </h3>
+
+            <!-- Grid: Bảng số liệu + Biểu đồ thanh -->
+            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px;">
+              <div class="preview-table-container">
+                <table class="table-lab">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">#</th>
+                      <th>Mã</th>
+                      <th>Kháng Sinh</th>
+                      <th style="text-align: center;">%S (Nhạy)</th>
+                      <th style="text-align: center;">%I (TG)</th>
+                      <th style="text-align: center;">%R (Kháng)</th>
+                      <th style="text-align: center;">Tổng mẫu</th>
+                      <th style="width: 90px;">Cơ cấu</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-abg-body"></tbody>
+                </table>
+              </div>
+              <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px;">
+                <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 10px;">
+                  <i class="fa-solid fa-chart-bar"></i> Biểu đồ Tỷ lệ Kháng (%R, %I, %S)
+                </h4>
+                <div style="height: 380px;">
+                  <canvas id="chart-abg-bars"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: HEATMAP KHÁNG THUỐC (MỤC XXI) ================= -->
+        <section class="view-panel" id="view-analytics_heatmap">
+          <div class="data-panel-card">
+            <div class="data-toolbar">
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <span class="filter-label">Nhóm vi khuẩn:</span>
+                <select class="filter-select" id="heatmap-filter-group">
+                  <option value="ALL">Tất cả các chủng vi khuẩn mục tiêu</option>
+                  <option value="negative">Chỉ vi khuẩn Gram âm (E. coli, Klebsiella, Pseudomonas, Acinetobacter)</option>
+                  <option value="positive">Chỉ vi khuẩn Gram dương (S. aureus, E. faecalis, S. pneumoniae)</option>
+                </select>
+              </div>
+              <button class="btn-setup-action" id="btn-export-heatmap" style="background: #059669;">
+                <i class="fa-solid fa-file-excel"></i> Xuất Excel Heatmap
+              </button>
+            </div>
+
+            <div class="heatmap-table-container">
+              <table class="table-heatmap" id="table-heatmap">
+                <thead id="table-heatmap-head"></thead>
+                <tbody id="table-heatmap-body"></tbody>
+              </table>
+            </div>
+
+            <div class="heatmap-legend">
+              <strong>Chú giải mức độ Kháng (%R):</strong>
+              <div><span class="legend-swatch" style="background: #d1fae5; border: 1px solid #10b981;"></span> Nhạy cảm / Kháng thấp (&lt; 20%)</div>
+              <div><span class="legend-swatch" style="background: #fef3c7; border: 1px solid #f59e0b;"></span> Kháng trung bình (20% - 50%)</div>
+              <div><span class="legend-swatch" style="background: #fee2e2; border: 1px solid #ef4444;"></span> Báo động Kháng cao (&gt; 50%)</div>
+              <div><span class="legend-swatch" style="background: #f8fafc; border: 1px solid #e2e8f0;"></span> Chưa có dữ liệu thử nghiệm (-)</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: GIÁM SÁT MDR / XDR / PDR (MỤC XXIV) ================= -->
+        <section class="view-panel" id="view-analytics_mdr">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Tổng Chủng Thử Nghiệm</span>
+                <div class="kpi-icon icon-blue"><i class="fa-solid fa-bacterium"></i></div>
+              </div>
+              <div class="kpi-value" id="mdr-stat-total">0</div>
+              <div class="kpi-subtext">Đã kiểm tra tối thiểu 3 nhóm KS</div>
+            </div>
+            <div class="kpi-card card-warning">
+              <div class="kpi-header">
+                <span class="kpi-title">Đa Kháng (MDR)</span>
+                <div class="kpi-icon icon-amber"><i class="fa-solid fa-biohazard"></i></div>
+              </div>
+              <div class="kpi-value" id="mdr-stat-count" style="color: var(--color-i);">0</div>
+              <div class="kpi-subtext">Tỷ lệ: <strong id="mdr-stat-rate">0%</strong></div>
+            </div>
+            <div class="kpi-card card-danger">
+              <div class="kpi-header">
+                <span class="kpi-title">Kháng Mở Rộng (XDR)</span>
+                <div class="kpi-icon icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              </div>
+              <div class="kpi-value" id="xdr-stat-count" style="color: var(--color-r);">0</div>
+              <div class="kpi-subtext">Chỉ còn nhạy ≤ 2 nhóm kháng sinh</div>
+            </div>
+            <div class="kpi-card card-danger">
+              <div class="kpi-header">
+                <span class="kpi-title">Toàn Kháng (PDR)</span>
+                <div class="kpi-icon icon-red"><i class="fa-solid fa-radiation"></i></div>
+              </div>
+              <div class="kpi-value" id="pdr-stat-count" style="color: #991b1b;">0</div>
+              <div class="kpi-subtext">Kháng với tất cả các nhóm thử nghiệm</div>
+            </div>
+          </div>
+
+          <div class="data-panel-card">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px;">
+              <i class="fa-solid fa-list-check"></i> Danh Sách Chủng Vi Khuẩn Đa Kháng Phát Hiện
+            </h3>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Vi Khuẩn Phân Lập</th>
+                    <th>Mã Bệnh Nhân</th>
+                    <th>Bệnh Phẩm</th>
+                    <th style="text-align: center;">Phân Loại AMR</th>
+                    <th style="text-align: center;">Số Nhóm Bị Kháng</th>
+                    <th>Ngày Xét Nghiệm</th>
+                  </tr>
+                </thead>
+                <tbody id="table-mdr-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: GIÁM SÁT VI KHUẨN TIẾT ESBL (MỤC XXV) ================= -->
+        <section class="view-panel" id="view-analytics_esbl">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Enterobacterales Thử Nghiệm</span>
+                <div class="kpi-icon icon-blue"><i class="fa-solid fa-flask-vial"></i></div>
+              </div>
+              <div class="kpi-value" id="esbl-stat-total">0</div>
+              <div class="kpi-subtext">E. coli &amp; Klebsiella pneumoniae</div>
+            </div>
+            <div class="kpi-card card-danger">
+              <div class="kpi-header">
+                <span class="kpi-title">Nghi Ngờ Tiết ESBL</span>
+                <div class="kpi-icon icon-red"><i class="fa-solid fa-dna"></i></div>
+              </div>
+              <div class="kpi-value" id="esbl-stat-count" style="color: var(--color-r);">0</div>
+              <div class="kpi-subtext">Kháng Cephalosporin thế hệ 3</div>
+            </div>
+            <div class="kpi-card card-danger">
+              <div class="kpi-header">
+                <span class="kpi-title">Tỷ Lệ Tiết ESBL</span>
+                <div class="kpi-icon icon-red"><i class="fa-solid fa-percent"></i></div>
+              </div>
+              <div class="kpi-value" id="esbl-stat-rate" style="color: var(--color-r);">0%</div>
+              <div class="kpi-subtext">Chỉ báo nguy cơ kháng đa thuốc</div>
+            </div>
+          </div>
+
+          <div class="data-panel-card" style="max-width: 600px; margin: 0 auto;">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; text-align: center;">
+              <i class="fa-solid fa-chart-pie"></i> Tỷ Lệ Phát Hiện ESBL (+) vs ESBL (-)
+            </h3>
+            <div style="height: 280px;">
+              <canvas id="chart-esbl-donut"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: GIÁM SÁT KHÁNG CARBAPENEM (MỤC XXVI) ================= -->
+        <section class="view-panel" id="view-analytics_carbapenem">
+          <div class="data-panel-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">
+              <i class="fa-solid fa-shield-virus"></i> Tình Hình Kháng Carbapenem (CRE / CRAB / CRPA)
+            </h3>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th>Vi Khuẩn Mục Tiêu</th>
+                    <th style="text-align: center;">Meropenem (MEM %R)</th>
+                    <th style="text-align: center;">Imipenem (IPM %R)</th>
+                    <th style="text-align: center;">Ertapenem (ETP %R)</th>
+                  </tr>
+                </thead>
+                <tbody id="table-carbapenem-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: GIÁM SÁT MRSA (MỤC XXVII) ================= -->
+        <section class="view-panel" id="view-analytics_mrsa">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Tổng Tụ Cầu Vàng (S. aureus)</span>
+                <div class="kpi-icon icon-blue"><i class="fa-solid fa-bacterium"></i></div>
+              </div>
+              <div class="kpi-value" id="mrsa-stat-total">0</div>
+              <div class="kpi-subtext">Mẫu bệnh phẩm phân lập</div>
+            </div>
+            <div class="kpi-card card-danger">
+              <div class="kpi-header">
+                <span class="kpi-title">Tụ Cầu Kháng Methicillin (MRSA)</span>
+                <div class="kpi-icon icon-red"><i class="fa-solid fa-shield-virus"></i></div>
+              </div>
+              <div class="kpi-value" id="mrsa-stat-count" style="color: var(--color-r);">0</div>
+              <div class="kpi-subtext">Kháng Cefoxitin / Oxacillin</div>
+            </div>
+            <div class="kpi-card card-danger">
+              <div class="kpi-header">
+                <span class="kpi-title">Tỷ Lệ MRSA (%)</span>
+                <div class="kpi-icon icon-red"><i class="fa-solid fa-percent"></i></div>
+              </div>
+              <div class="kpi-value" id="mrsa-stat-rate" style="color: var(--color-r);">0%</div>
+              <div class="kpi-subtext">Mục tiêu kiểm soát nhiễm khuẩn</div>
+            </div>
+            <div class="kpi-card card-success">
+              <div class="kpi-header">
+                <span class="kpi-title">Tụ Cầu Nhạy (MSSA)</span>
+                <div class="kpi-icon icon-green"><i class="fa-solid fa-circle-check"></i></div>
+              </div>
+              <div class="kpi-value" id="mssa-stat-count" style="color: var(--color-s);">0</div>
+              <div class="kpi-subtext">Nhạy cảm Methicillin</div>
+            </div>
+          </div>
+
+          <div class="data-panel-card" style="max-width: 600px; margin: 0 auto;">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; text-align: center;">
+              <i class="fa-solid fa-chart-pie"></i> Cơ Cấu Chủng Tụ Cầu Vàng (MRSA vs MSSA)
+            </h3>
+            <div style="height: 280px;">
+              <canvas id="chart-mrsa-donut"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: DỊCH TỄ HỌC VI SINH (MỤC XVIII) ================= -->
+        <section class="view-panel" id="view-analytics_epi">
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-bar"></i> Phân Bố Vi Khuẩn Gây Bệnh</h3>
+              </div>
+              <div class="chart-canvas-container" style="height: 320px;">
+                <canvas id="chart-epi-org"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-pie"></i> Phân Bố Theo Loại Bệnh Phẩm</h3>
+              </div>
+              <div class="chart-canvas-container" style="height: 320px;">
+                <canvas id="chart-epi-spec"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: PHÂN TÍCH THEO KHOA PHÒNG (MỤC XXIII) ================= -->
+        <section class="view-panel" id="view-analytics_resistance">
+          <div class="data-panel-card">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px;">
+              <i class="fa-solid fa-hospital"></i> Tỷ Lệ Kháng Ceftriaxone (CRO) của E. coli Theo Từng Khoa Lâm Sàng
+            </h3>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Khoa Lâm Sàng</th>
+                    <th style="text-align: center;">Tỷ Lệ Kháng (%R)</th>
+                    <th style="text-align: center;">Tỷ Lệ Trung Gian (%I)</th>
+                    <th style="text-align: center;">Tỷ Lệ Nhạy (%S)</th>
+                    <th style="text-align: center;">Tổng Số Mẫu</th>
+                  </tr>
+                </thead>
+                <tbody id="table-dept-res-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <!-- Placeholder for upcoming tabs -->
         <section class="view-panel" id="view-generic">
           <div class="placeholder-view">
@@ -852,11 +1301,16 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/services/auditService.js"></script>
   <script src="js/services/astService.js"></script>
   <script src="js/services/importService.js"></script>
+  <script src="js/services/specializedAMRService.js"></script>
   <script src="js/components/toast.js"></script>
   <script src="js/components/navigation.js"></script>
   <script src="js/components/authModal.js"></script>
   <script src="js/components/kpiCards.js"></script>
   <script src="js/components/importWizard.js"></script>
+  <script src="js/components/clinicalDataViews.js"></script>
+  <script src="js/components/antibiogramView.js"></script>
+  <script src="js/components/heatmapView.js"></script>
+  <script src="js/components/surveillanceModulesView.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

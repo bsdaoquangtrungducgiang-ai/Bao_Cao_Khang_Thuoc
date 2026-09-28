@@ -32,6 +32,10 @@ const App = {
     window.Navigation?.init();
     window.AuthModal?.init();
     window.ImportWizard?.init();
+    window.ClinicalDataViews?.init();
+    window.AntibiogramView?.init();
+    window.HeatmapView?.init();
+    window.SurveillanceModulesView?.init();
 
     // 2. Khởi tạo đồng hồ thời gian thực và tiêu chuẩn CLSI/EUCAST
     this.initClock();

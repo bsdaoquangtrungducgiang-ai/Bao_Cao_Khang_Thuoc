@@ -15,9 +15,13 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/phase2_phase3_tests.js
     P2_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ]; then
+    echo "3. Chạy Bộ Test Phase 4, 5 & 6 (MDR/XDR, Carbapenem, MRSA, ESBL, Epidemiology)..."
+    "$JSC_BIN" tests/phase4_5_6_tests.js
+    P3_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ]; then
         echo "================================================================"
-        echo "  ✔ TOÀN BỘ 132 BÀI TEST ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
+        echo "  ✔ TOÀN BỘ 153 BÀI TEST ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"
         exit 0
     else
@@ -26,5 +30,5 @@ if [ -f "$JSC_BIN" ]; then
     fi
 else
     echo "Không tìm thấy JSC binary tại $JSC_BIN. Thử chạy với Node.js..."
-    node tests/phase1_tests.js && node tests/phase2_phase3_tests.js
+    node tests/phase1_tests.js && node tests/phase2_phase3_tests.js && node tests/phase4_5_6_tests.js
 fi
