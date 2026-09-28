@@ -31,6 +31,7 @@ const App = {
     await window.AuthService?.init();
     window.Navigation?.init();
     window.AuthModal?.init();
+    window.ImportWizard?.init();
 
     // 2. Khởi tạo đồng hồ thời gian thực và tiêu chuẩn CLSI/EUCAST
     this.initClock();

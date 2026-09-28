@@ -493,6 +493,244 @@
           </div>
         </section>
 
+        <!-- ================= VIEW: IMPORT EXCEL / CSV (WIZARD 5 BƯỚC) ================= -->
+        <section class="view-panel" id="view-import_excel">
+          <div class="wizard-container">
+            <!-- Wizard Steps Navigation (Mục LI) -->
+            <div class="wizard-steps-nav">
+              <div class="wizard-step-item active" data-step="1">
+                <div class="wizard-step-number">1</div>
+                <div class="wizard-step-title">
+                  <strong>Bước 1</strong>
+                  <span>Tải lên File</span>
+                </div>
+              </div>
+              <div class="wizard-step-item" data-step="2">
+                <div class="wizard-step-number">2</div>
+                <div class="wizard-step-title">
+                  <strong>Bước 2</strong>
+                  <span>Xem trước Dữ liệu</span>
+                </div>
+              </div>
+              <div class="wizard-step-item" data-step="3">
+                <div class="wizard-step-number">3</div>
+                <div class="wizard-step-title">
+                  <strong>Bước 3</strong>
+                  <span>Khớp nối Cột (Mapping)</span>
+                </div>
+              </div>
+              <div class="wizard-step-item" data-step="4">
+                <div class="wizard-step-number">4</div>
+                <div class="wizard-step-title">
+                  <strong>Bước 4</strong>
+                  <span>Kiểm định (Validation)</span>
+                </div>
+              </div>
+              <div class="wizard-step-item" data-step="5">
+                <div class="wizard-step-number">5</div>
+                <div class="wizard-step-title">
+                  <strong>Bước 5</strong>
+                  <span>Nạp Database (Import)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- BƯỚC 1: UPLOAD FILE -->
+            <div class="wizard-step-content active" id="wizard-step-1">
+              <div class="dropzone" id="import-dropzone">
+                <div class="dropzone-icon">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div class="dropzone-text">
+                  <h3>Kéo & thả file Excel (.xlsx, .xls) hoặc CSV vào đây</h3>
+                  <p>Hệ thống tự động phát hiện cấu trúc cột bảng ngang (Matrix) hoặc bảng dọc (List)</p>
+                </div>
+                <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv" style="display: none;">
+                <div style="margin-top: 16px;">
+                  <button type="button" class="btn-setup-action" style="padding: 10px 22px; font-size: 13px;">
+                    <i class="fa-regular fa-folder-open"></i> Chọn file từ máy tính
+                  </button>
+                  <button type="button" class="btn-reset-filters" id="btn-download-template" style="margin-left: 10px; display: inline-flex;">
+                    <i class="fa-solid fa-file-excel" style="color: #059669;"></i> Tải file Excel mẫu chuẩn
+                  </button>
+                </div>
+              </div>
+
+              <!-- Paste văn bản hoặc CSV trực tiếp (Section XV) -->
+              <div class="paste-box-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                    <i class="fa-solid fa-paste"></i> Hoặc dán trực tiếp dữ liệu dạng văn bản / CSV (Mục XV):
+                  </h4>
+                  <span style="font-size: 11.5px; color: var(--text-muted);">Ngăn cách bởi dấu phẩy, chấm phẩy hoặc Tab</span>
+                </div>
+                <textarea class="paste-textarea" id="textarea-import-paste" placeholder="Mã BN,Tên BN,Khoa,Bệnh phẩm,Ngày,Vi khuẩn,AMP,CTX,CRO,MEM
+BN00201,Nguyễn Văn C,Ngoại,Nước tiểu,2026-09-25,E. coli,R,R,R,S
+BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
+                <div style="margin-top: 10px; text-align: right;">
+                  <button class="btn-setup-action" id="btn-parse-text" style="background: var(--secondary);">
+                    <i class="fa-solid fa-bolt"></i> Phân tích nội dung đã dán
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- BƯỚC 2: PREVIEW DỮ LIỆU (20 DÒNG ĐẦU) -->
+            <div class="wizard-step-content" id="wizard-step-2">
+              <div class="preview-stats-bar">
+                <div><strong>File:</strong> <span id="preview-file-name">-</span></div>
+                <div><strong>Sheet:</strong> <span id="preview-sheet-name">-</span></div>
+                <div><strong>Tổng số dòng:</strong> <span id="preview-total-rows" style="color: var(--primary); font-weight: 700;">0</span></div>
+                <div><strong>Tổng số cột:</strong> <span id="preview-total-cols" style="color: var(--secondary); font-weight: 700;">0</span></div>
+              </div>
+
+              <div class="preview-table-container">
+                <table class="table-lab" id="preview-table">
+                  <thead id="preview-table-head"></thead>
+                  <tbody id="preview-table-body"></tbody>
+                </table>
+              </div>
+
+              <div class="wizard-footer-actions">
+                <button class="btn-reset-filters" data-wizard-goto="1">
+                  <i class="fa-solid fa-arrow-left"></i> Quay lại chọn file
+                </button>
+                <button class="btn-setup-action" data-wizard-goto="3">
+                  Tiếp tục Khớp nối Cột <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- BƯỚC 3: MAPPING CỘT DỮ LIỆU -->
+            <div class="wizard-step-content" id="wizard-step-3">
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+                <p style="font-size: 13px; color: #166534; line-height: 1.5;">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Hệ thống tự động nhận diện:</strong> Khớp nối thông minh các cột mã bệnh nhân, khoa phòng, ngày lấy mẫu, vi khuẩn và các cột kháng sinh (AMP, CTX, MEM...). Bạn có thể tùy chỉnh hoặc đổi cột bên dưới nếu cần thiết.
+                </p>
+              </div>
+
+              <div class="mapping-cards-grid" id="mapping-cards-container"></div>
+
+              <div class="wizard-footer-actions">
+                <button class="btn-reset-filters" data-wizard-goto="2">
+                  <i class="fa-solid fa-arrow-left"></i> Quay lại Xem trước
+                </button>
+                <button class="btn-setup-action" data-wizard-goto="4">
+                  Kiểm tra Chất lượng Dữ liệu <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- BƯỚC 4: VALIDATION (KIỂM TRA CHẤT LƯỢNG) -->
+            <div class="wizard-step-content" id="wizard-step-4">
+              <div class="validation-summary-grid">
+                <div class="val-card">
+                  <h5>Tổng kết quả</h5>
+                  <div class="val-num" id="val-stat-total">0</div>
+                </div>
+                <div class="val-card card-valid">
+                  <h5>Hợp lệ</h5>
+                  <div class="val-num" id="val-stat-valid">0</div>
+                </div>
+                <div class="val-card card-warning">
+                  <h5>Cảnh báo / Nghi vấn</h5>
+                  <div class="val-num" id="val-stat-warning">0</div>
+                </div>
+                <div class="val-card card-error">
+                  <h5>Lỗi từ chối</h5>
+                  <div class="val-num" id="val-stat-error">0</div>
+                </div>
+                <div class="val-card">
+                  <h5>Nghi vấn trùng</h5>
+                  <div class="val-num" id="val-stat-duplicate">0</div>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="font-size: 13.5px; font-weight: 700; color: var(--text-main);">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Chi tiết các dòng cần kiểm tra hoặc có lỗi:
+                </h4>
+                <button class="btn-reset-filters" id="btn-export-errors" style="color: #dc2626;">
+                  <i class="fa-solid fa-file-excel"></i> Xuất file Excel báo cáo lỗi
+                </button>
+              </div>
+
+              <div class="preview-table-container" style="max-height: 280px;">
+                <table class="table-lab">
+                  <thead>
+                    <tr>
+                      <th style="width: 70px; text-align: center;">Dòng</th>
+                      <th style="width: 140px;">Trường dữ liệu</th>
+                      <th style="width: 180px;">Giá trị ghi nhận</th>
+                      <th>Lỗi / Mô tả cảnh báo</th>
+                      <th style="width: 100px; text-align: center;">Mức độ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="validation-error-table-body"></tbody>
+                </table>
+              </div>
+
+              <div class="wizard-footer-actions">
+                <button class="btn-reset-filters" data-wizard-goto="3">
+                  <i class="fa-solid fa-arrow-left"></i> Chỉnh sửa Mapping
+                </button>
+                <button class="btn-setup-action" data-wizard-goto="5" style="background: var(--color-s);">
+                  Tiến hành Nạp Dữ liệu <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- BƯỚC 5: NẠP VÀO DATABASE -->
+            <div class="wizard-step-content" id="wizard-step-5">
+              <div id="import-step5-actions" style="text-align: center; padding: 30px 10px;">
+                <div style="font-size: 48px; color: var(--primary); margin-bottom: 16px;">
+                  <i class="fa-solid fa-database"></i>
+                </div>
+                <h3 style="font-size: 18px; margin-bottom: 8px;">Sẵn sàng lưu vào Hệ thống Xét nghiệm</h3>
+                <p style="font-size: 13.5px; color: var(--text-muted); max-width: 520px; margin: 0 auto 24px;">
+                  Dữ liệu hợp lệ sẽ được chuẩn hóa S/I/R, lưu trữ vào PostgreSQL và cập nhật ngay lập tức lên Dashboard dịch tễ vi sinh.
+                </p>
+                <button class="btn-setup-action" id="btn-execute-import" style="padding: 12px 28px; font-size: 14px; background: var(--primary);">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận & Nạp vào Database
+                </button>
+              </div>
+
+              <!-- Kết quả sau khi nạp xong -->
+              <div class="completion-card hidden" id="import-complete-summary">
+                <div class="completion-icon">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h3>Import Dữ Liệu Hoàn Tất!</h3>
+                <p style="color: var(--text-muted); font-size: 13.5px;">Toàn bộ dữ liệu kháng sinh đồ đã được chuẩn hóa và lưu trữ an toàn.</p>
+
+                <div class="completion-metrics">
+                  <div class="metric-box">
+                    <span>Đã nạp thành công</span>
+                    <strong id="sum-imported-count" style="color: var(--color-s);">0</strong>
+                  </div>
+                  <div class="metric-box">
+                    <span>Dòng có cảnh báo</span>
+                    <strong id="sum-warning-count" style="color: var(--color-i);">0</strong>
+                  </div>
+                  <div class="metric-box">
+                    <span>Dòng bị từ chối</span>
+                    <strong id="sum-rejected-count" style="color: var(--color-r);">0</strong>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                  <button class="btn-reset-filters" onclick="window.ImportWizard.goToStep(1)">
+                    <i class="fa-solid fa-file-arrow-up"></i> Import file khác
+                  </button>
+                  <button class="btn-setup-action" onclick="window.Navigation.navigateTo('dashboard')">
+                    <i class="fa-solid fa-chart-line"></i> Chuyển tới Dashboard xem phân tích
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Placeholder for upcoming tabs -->
         <section class="view-panel" id="view-generic">
           <div class="placeholder-view">
@@ -606,15 +844,19 @@
   <!-- Core JavaScript Modules -->
   <script src="js/config.js"></script>
   <script src="js/supabaseClient.js"></script>
+  <script src="js/utils/dataNormalization.js"></script>
+  <script src="js/utils/dataValidation.js"></script>
   <script src="js/services/demoDataService.js"></script>
   <script src="js/services/analyticsService.js"></script>
   <script src="js/services/authService.js"></script>
   <script src="js/services/auditService.js"></script>
   <script src="js/services/astService.js"></script>
+  <script src="js/services/importService.js"></script>
   <script src="js/components/toast.js"></script>
   <script src="js/components/navigation.js"></script>
   <script src="js/components/authModal.js"></script>
   <script src="js/components/kpiCards.js"></script>
+  <script src="js/components/importWizard.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
