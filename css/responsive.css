@@ -1,0 +1,65 @@
+/**
+ * RESPONSIVE CSS - BAO-CAO-KHANG-THUOC
+ * Tối ưu hiển thị cho Desktop, Laptop và Tablet
+ */
+
+@media (max-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 992px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -270px;
+    bottom: 0;
+    height: 100vh;
+  }
+
+  .sidebar.mobile-open {
+    left: 0;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar-toggle-btn {
+    display: inline-block;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .top-header {
+    padding: 0 14px;
+  }
+
+  .clock-display {
+    display: none;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group-wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .content-body {
+    padding: 14px;
+  }
+}

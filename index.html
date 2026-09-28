@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BAO-CAO-KHANG-THUOC | Hệ Thống Báo Cáo Kháng Kháng Sinh - Khoa Vi Sinh</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js 4.4 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- SheetJS CDN (Cho module Import Excel ở Phase 2) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">
+          <i class="fa-solid fa-bacteria"></i>
+        </div>
+        <div class="brand-info">
+          <h1>BAO-CAO-KHANG-THUOC</h1>
+          <span>Khoa Vi Sinh Bệnh Viện</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div class="menu-label">Tổng Quan</div>
+        <a href="#dashboard" class="menu-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard Tổng quan</span>
+        </a>
+
+        <div class="menu-label">Dữ Liệu & Nhập Liệu</div>
+        <!-- Group: Import -->
+        <div class="menu-group">
+          <div class="menu-group-header">
+            <div class="menu-group-title">
+              <i class="fa-solid fa-file-import"></i>
+              <span>Import Dữ liệu</span>
+            </div>
+            <i class="fa-solid fa-chevron-right arrow-icon"></i>
+          </div>
+          <div class="submenu">
+            <a href="#import_excel" class="menu-item" data-tab="import_excel">
+              <i class="fa-solid fa-file-excel"></i>
+              <span>File Excel / CSV</span>
+            </a>
+            <a href="#import_pdf" class="menu-item" data-tab="import_pdf">
+              <i class="fa-solid fa-file-pdf"></i>
+              <span>Kết quả PDF</span>
+            </a>
+            <a href="#import_text" class="menu-item" data-tab="import_text">
+              <i class="fa-solid fa-paste"></i>
+              <span>Dữ liệu Văn bản</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Group: Dữ liệu Vi sinh -->
+        <div class="menu-group">
+          <div class="menu-group-header">
+            <div class="menu-group-title">
+              <i class="fa-solid fa-flask-vial"></i>
+              <span>Dữ liệu Vi sinh</span>
+            </div>
+            <i class="fa-solid fa-chevron-right arrow-icon"></i>
+          </div>
+          <div class="submenu">
+            <a href="#data_patients" class="menu-item" data-tab="data_patients">
+              <i class="fa-solid fa-hospital-user"></i>
+              <span>Bệnh nhân</span>
+            </a>
+            <a href="#data_specimens" class="menu-item" data-tab="data_specimens">
+              <i class="fa-solid fa-vial"></i>
+              <span>Bệnh phẩm</span>
+            </a>
+            <a href="#data_cultures" class="menu-item" data-tab="data_cultures">
+              <i class="fa-solid fa-virus"></i>
+              <span>Vi khuẩn phân lập</span>
+            </a>
+            <a href="#data_ast" class="menu-item" data-tab="data_ast">
+              <i class="fa-solid fa-table-cells"></i>
+              <span>Kháng sinh đồ (AST)</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="menu-label">Phân Tích & Giám Sát AMR</div>
+        <!-- Group: Phân tích -->
+        <div class="menu-group">
+          <div class="menu-group-header">
+            <div class="menu-group-title">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>Phân tích Chuyên sâu</span>
+            </div>
+            <i class="fa-solid fa-chevron-right arrow-icon"></i>
+          </div>
+          <div class="submenu">
+            <a href="#analytics_epi" class="menu-item" data-tab="analytics_epi">
+              <i class="fa-solid fa-virus-covid"></i>
+              <span>Dịch tễ Vi sinh</span>
+            </a>
+            <a href="#analytics_resistance" class="menu-item" data-tab="analytics_resistance">
+              <i class="fa-solid fa-shield-virus"></i>
+              <span>Kháng Kháng sinh</span>
+            </a>
+            <a href="#analytics_antibiogram" class="menu-item" data-tab="analytics_antibiogram">
+              <i class="fa-solid fa-table-list"></i>
+              <span>Antibiogram</span>
+            </a>
+            <a href="#analytics_heatmap" class="menu-item" data-tab="analytics_heatmap">
+              <i class="fa-solid fa-border-all"></i>
+              <span>Heatmap Kháng thuốc</span>
+            </a>
+            <a href="#analytics_mdr" class="menu-item" data-tab="analytics_mdr">
+              <i class="fa-solid fa-biohazard"></i>
+              <span>Đa kháng MDR / XDR</span>
+            </a>
+            <a href="#analytics_esbl" class="menu-item" data-tab="analytics_esbl">
+              <i class="fa-solid fa-dna"></i>
+              <span>Vi khuẩn tiết ESBL</span>
+            </a>
+            <a href="#analytics_carbapenem" class="menu-item" data-tab="analytics_carbapenem">
+              <i class="fa-solid fa-capsules"></i>
+              <span>Kháng Carbapenem</span>
+            </a>
+            <a href="#analytics_mrsa" class="menu-item" data-tab="analytics_mrsa">
+              <i class="fa-solid fa-circle-radiation"></i>
+              <span>Giám sát MRSA</span>
+            </a>
+          </div>
+        </div>
+
+        <a href="#reports" class="menu-item" data-tab="reports">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>Báo cáo AMR Tự động</span>
+        </a>
+
+        <a href="#import_history" class="menu-item" data-tab="import_history">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Lịch sử Import</span>
+        </a>
+
+        <div class="menu-label">Hệ Thống</div>
+        <a href="#catalogs" class="menu-item" data-tab="catalogs">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Danh mục Hệ thống</span>
+        </a>
+
+        <a href="#users" class="menu-item" data-tab="users" data-permission="admin">
+          <i class="fa-solid fa-users-gear"></i>
+          <span>Quản lý Người dùng</span>
+        </a>
+
+        <a href="#audit_logs" class="menu-item" data-tab="audit_logs" data-permission="admin,manager">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Audit Log An ninh</span>
+        </a>
+
+        <a href="#settings" class="menu-item" data-tab="settings">
+          <i class="fa-solid fa-gear"></i>
+          <span>Cài đặt Kết nối</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div><strong>Hệ thống Giám sát Vi sinh</strong></div>
+        <div>Phiên bản v1.0.0 (Phase 1)</div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+    <div class="main-wrapper">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="sidebar-toggle-btn" id="sidebar-toggle">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title-box">
+            <h2 id="header-page-title">Dashboard Tổng quan Kháng sinh đồ</h2>
+            <span>Giám sát tình hình kháng kháng sinh (AMR) bệnh viện</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Guideline Selector -->
+          <div class="guideline-badge">
+            <i class="fa-solid fa-book-medical"></i>
+            <select class="guideline-select" id="select-guideline">
+              <option value="CLSI M100 2025" selected>CLSI M100 2025</option>
+              <option value="CLSI M100 2026">CLSI M100 2026</option>
+              <option value="EUCAST 2026">EUCAST 2026</option>
+            </select>
+          </div>
+
+          <!-- Live Clock -->
+          <div class="clock-display" id="live-clock">
+            <i class="fa-regular fa-clock"></i>
+            <span>--:--:--</span>
+          </div>
+
+          <!-- Connection Pill -->
+          <div class="connection-pill" id="btn-show-sql">
+            <span class="status-indicator status-online" id="conn-status-badge"></span>
+            <span id="conn-status-text">Đang kết nối Supabase...</span>
+          </div>
+
+          <!-- User Profile Chip -->
+          <div class="user-chip" id="btn-user-profile" title="Xem thông tin và chuyển đổi vai trò kiểm thử">
+            <div class="user-avatar">
+              <i class="fa-solid fa-user-doctor"></i>
+            </div>
+            <div class="user-meta">
+              <span class="user-name" id="user-display-name">Admin Vi sinh</span>
+              <span class="role-badge role-admin" id="user-display-role">ADMIN</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Body -->
+      <main class="content-body">
+        <!-- ================= VIEW: DASHBOARD ================= -->
+        <section class="view-panel active" id="view-dashboard">
+          <!-- Setup Banner -->
+          <div class="setup-alert-banner">
+            <div class="setup-alert-left">
+              <i class="fa-solid fa-database"></i>
+              <div class="setup-alert-text">
+                <h4>Cơ sở dữ liệu Supabase PostgreSQL đã sẵn sàng cho Phase 1</h4>
+                <p>Schema y tế chuẩn quan hệ: 10 bảng phân hệ, 1,000 kết quả AST demo, RLS phân quyền Admin/Manager/User/Viewer.</p>
+              </div>
+            </div>
+            <button class="btn-setup-action" onclick="document.getElementById('modal-sql').classList.add('open')">
+              <i class="fa-solid fa-code"></i> Xem SQL Migration
+            </button>
+          </div>
+
+          <!-- KPI Summary Cards (Section XVI & L) -->
+          <div class="kpi-grid">
+            <!-- 1. Bệnh nhân -->
+            <div class="kpi-card card-teal">
+              <div class="kpi-header">
+                <span class="kpi-title">Tổng Bệnh Nhân</span>
+                <div class="kpi-icon icon-teal">
+                  <i class="fa-solid fa-hospital-user"></i>
+                </div>
+              </div>
+              <div class="kpi-value" id="kpi-patients">100</div>
+              <div class="kpi-subtext">Hồ sơ bệnh nhân nội / ngoại trú</div>
+            </div>
+
+            <!-- 2. Bệnh phẩm -->
+            <div class="kpi-card card-teal">
+              <div class="kpi-header">
+                <span class="kpi-title">Tổng Bệnh Phẩm</span>
+                <div class="kpi-icon icon-teal">
+                  <i class="fa-solid fa-vial-virus"></i>
+                </div>
+              </div>
+              <div class="kpi-value" id="kpi-specimens">150</div>
+              <div class="kpi-subtext">Máu, nước tiểu, đờm, dịch...</div>
+            </div>
+
+            <!-- 3. Vi khuẩn phân lập -->
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Chủng Vi Khuẩn</span>
+                <div class="kpi-icon icon-blue">
+                  <i class="fa-solid fa-bacterium"></i>
+                </div>
+              </div>
+              <div class="kpi-value" id="kpi-cultures">200</div>
+              <div class="kpi-subtext"><span id="kpi-organisms">8</span> loài vi khuẩn định danh</div>
+            </div>
+
+            <!-- 4. Tổng số AST -->
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Kết Quả AST</span>
+                <div class="kpi-icon icon-blue">
+                  <i class="fa-solid fa-flask-vial"></i>
+                </div>
+              </div>
+              <div class="kpi-value" id="kpi-ast">1,000</div>
+              <div class="kpi-subtext"><span id="kpi-antibiotics">16</span> loại kháng sinh thử nghiệm</div>
+            </div>
+
+            <!-- 5. Tỷ lệ Nhạy cảm S% -->
+            <div class="kpi-card card-success">
+              <div class="kpi-header">
+                <span class="kpi-title">Tỷ Lệ Nhạy Cảm (S%)</span>
+                <div class="kpi-icon icon-green">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+              </div>
+              <div class="kpi-value" id="kpi-rate-s" style="color: var(--color-s);">62.0%</div>
+              <div class="kpi-subtext">Susceptible theo tiêu chuẩn CLSI</div>
+            </div>
+
+            <!-- 6. Tỷ lệ Trung gian I% -->
+            <div class="kpi-card card-warning">
+              <div class="kpi-header">
+                <span class="kpi-title">Tỷ Lệ Trung Gian (I%)</span>
+                <div class="kpi-icon icon-amber">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+              </div>
+              <div class="kpi-value" id="kpi-rate-i" style="color: var(--color-i);">8.0%</div>
+              <div class="kpi-subtext">Intermediate (Không gộp vào S hoặc R)</div>
+            </div>
+
+            <!-- 7. Tỷ lệ Kháng thuốc R% -->
+            <div class="kpi-card card-danger">
+              <div class="kpi-header">
+                <span class="kpi-title">Tỷ Lệ Kháng (R%)</span>
+                <div class="kpi-icon icon-red">
+                  <i class="fa-solid fa-shield-virus"></i>
+                </div>
+              </div>
+              <div class="kpi-value" id="kpi-rate-r" style="color: var(--color-r);">30.0%</div>
+              <div class="kpi-subtext">R% = R / (S + I + R) × 100</div>
+            </div>
+
+            <!-- 8. Thanh tỷ lệ S/I/R phân bố chung -->
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Cơ Cấu S / I / R</span>
+                <div class="kpi-icon icon-blue">
+                  <i class="fa-solid fa-chart-simple"></i>
+                </div>
+              </div>
+              <div class="sir-bar-container">
+                <div class="sir-bar">
+                  <div class="sir-bar-s" id="bar-rate-s" style="width: 62%;"></div>
+                  <div class="sir-bar-i" id="bar-rate-i" style="width: 8%;"></div>
+                  <div class="sir-bar-r" id="bar-rate-r" style="width: 30%;"></div>
+                </div>
+                <div class="sir-legend">
+                  <span class="sir-legend-item"><i class="fa-solid fa-circle dot-s"></i> S: 62%</span>
+                  <span class="sir-legend-item"><i class="fa-solid fa-circle dot-i"></i> I: 8%</span>
+                  <span class="sir-legend-item"><i class="fa-solid fa-circle dot-r"></i> R: 30%</span>
+                </div>
+              </div>
+              <div class="kpi-subtext" style="margin-top: 10px;">Tuân thủ loại trừ NA khỏi mẫu số</div>
+            </div>
+          </div>
+
+          <!-- Filter Toolbar (Section XVII) -->
+          <div class="filter-toolbar">
+            <div class="filter-group-wrap">
+              <div class="filter-item">
+                <span class="filter-label"><i class="fa-regular fa-calendar"></i> Thời Gian</span>
+                <select class="filter-select" id="filter-time">
+                  <option value="ALL">Toàn bộ thời gian</option>
+                  <option value="TODAY">Hôm nay</option>
+                  <option value="WEEK">Tuần này</option>
+                  <option value="MONTH">Tháng này</option>
+                  <option value="QUARTER">Quý này</option>
+                  <option value="2026" selected>Năm 2026</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <span class="filter-label"><i class="fa-solid fa-hospital"></i> Khoa Lâm Sàng</span>
+                <select class="filter-select" id="filter-department">
+                  <option value="ALL">Tất cả các khoa</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <span class="filter-label"><i class="fa-solid fa-vial"></i> Loại Bệnh Phẩm</span>
+                <select class="filter-select" id="filter-specimen">
+                  <option value="ALL">Tất cả bệnh phẩm</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <span class="filter-label"><i class="fa-solid fa-bacterium"></i> Vi Khuẩn</span>
+                <select class="filter-select" id="filter-organism">
+                  <option value="ALL">Tất cả vi khuẩn</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <span class="filter-label"><i class="fa-solid fa-layer-group"></i> Nhóm Vi Khuẩn</span>
+                <select class="filter-select" id="filter-gram">
+                  <option value="ALL">Tất cả nhóm</option>
+                  <option value="negative">Gram âm (Negative)</option>
+                  <option value="positive">Gram dương (Positive)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn-reset-filters" id="btn-reset-filters">
+              <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+            </button>
+          </div>
+
+          <!-- Charts Grid (Chart.js) -->
+          <div class="charts-grid">
+            <!-- Chart 1: Phân bố Vi khuẩn (Section XVIII.2) -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-pie"></i> Phân Bố Vi Khuẩn Phổ Biến</h3>
+                <span class="chart-badge">Tỷ lệ % phân lập</span>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="chart-organisms"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 2: Phân bố Bệnh phẩm (Section XVIII.1) -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-pie"></i> Phân Bố Theo Loại Bệnh Phẩm</h3>
+                <span class="chart-badge">Nước tiểu, máu, đờm...</span>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="chart-specimens"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 3: Tỷ lệ Kháng thuốc AST (Section XIX & XX) -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-bar"></i> Tỷ Lệ Nhạy / Kháng Kháng Sinh (%R, %I, %S)</h3>
+                <span class="chart-badge">Stacked Bar Chart</span>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="chart-resistance-bars"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 4: Xu hướng Kháng theo Thời gian (Section XXVIII) -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-line"></i> Xu Hướng Kháng Ceftriaxone (CRO) Theo Thời Gian</h3>
+                <span class="chart-badge">Line Trend (E. coli)</span>
+              </div>
+              <div class="chart-canvas-container">
+                <canvas id="chart-trends"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Quality Summary Card (Section XLI) -->
+          <div class="quality-card">
+            <div class="chart-header">
+              <h3><i class="fa-solid fa-clipboard-check"></i> Kiểm Soát Chất Lượng Dữ Liệu (Data Quality)</h3>
+              <span class="chart-badge">Độ tin cậy xét nghiệm</span>
+            </div>
+            <div class="quality-grid">
+              <div class="quality-stat">
+                <div class="quality-stat-label">Tổng Bản Ghi AST</div>
+                <div class="quality-stat-value">1,000</div>
+              </div>
+              <div class="quality-stat">
+                <div class="quality-stat-label">Hợp Lệ (Valid)</div>
+                <div class="quality-stat-value" style="color: var(--color-s);">1,000 (100%)</div>
+              </div>
+              <div class="quality-stat">
+                <div class="quality-stat-label">Cần Kiểm Tra (Warning)</div>
+                <div class="quality-stat-value" style="color: var(--color-i);">0</div>
+              </div>
+              <div class="quality-stat">
+                <div class="quality-stat-label">Lỗi Nghiêm Trọng</div>
+                <div class="quality-stat-value" style="color: var(--color-r);">0</div>
+              </div>
+              <div class="quality-stat">
+                <div class="quality-stat-label">Trùng Lặp (Duplicate)</div>
+                <div class="quality-stat-value">0</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Placeholder for upcoming tabs -->
+        <section class="view-panel" id="view-generic">
+          <div class="placeholder-view">
+            <i class="fa-solid fa-microscope"></i>
+            <h3 id="generic-title">Phân Hệ Xét Nghiệm Vi Sinh</h3>
+            <p>Phân hệ đang trong giai đoạn sẵn sàng kết nối. Bạn có thể xem toàn bộ cấu trúc database, các bảng quan hệ và dữ liệu mẫu 1,000 kết quả AST tại Dashboard Tổng Quan.</p>
+            <button class="btn-setup-action" onclick="window.Navigation.navigateTo('dashboard')">
+              <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: AUTHENTICATION & ROLE SWITCHER ==================== -->
+  <div class="modal-backdrop" id="modal-auth">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-shield"></i> Tài Khoản & Phân Quyền Hệ Thống</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 20px;">
+          <h4 style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">TÀI KHOẢN HIỆN TẠI</h4>
+          <p><strong>Họ tên:</strong> <span id="auth-modal-name">TS.BS. Nguyễn Văn An</span></p>
+          <p><strong>Khoa phòng:</strong> Khoa Vi sinh</p>
+          <p><strong>Vai trò (Role):</strong> <span class="role-badge role-admin">ADMIN</span></p>
+        </div>
+
+        <h4 style="font-size: 13px; color: var(--text-main); margin-bottom: 10px;">Chuyển đổi vai trò thử nghiệm (Role Switcher - Mục II & XXXVI):</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+          <button class="btn-role-switch" data-role="admin" style="padding: 10px; border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: 6px; font-weight: 600; cursor: pointer;">
+            <i class="fa-solid fa-crown"></i> Admin (Toàn quyền)
+          </button>
+          <button class="btn-role-switch" data-role="manager" style="padding: 10px; border: 1px solid #fde68a; background: #fef3c7; color: #92400e; border-radius: 6px; font-weight: 600; cursor: pointer;">
+            <i class="fa-solid fa-user-tie"></i> Manager (Quản lý)
+          </button>
+          <button class="btn-role-switch" data-role="user" style="padding: 10px; border: 1px solid #bae6fd; background: #e0f2fe; color: #075985; border-radius: 6px; font-weight: 600; cursor: pointer;">
+            <i class="fa-solid fa-user"></i> User (Kỹ thuật viên)
+          </button>
+          <button class="btn-role-switch" data-role="viewer" style="padding: 10px; border: 1px solid #e5e7eb; background: #f3f4f6; color: #374151; border-radius: 6px; font-weight: 600; cursor: pointer;">
+            <i class="fa-solid fa-eye"></i> Viewer (Chỉ xem)
+          </button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 16px;">
+
+        <form id="form-login">
+          <h4 style="font-size: 13px; color: var(--text-main); margin-bottom: 10px;">Đăng nhập tài khoản Supabase Auth thực tế:</h4>
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted);">Email y tế</label>
+            <input type="email" id="login-email" placeholder="bacsi@hospital.vn" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px;" required>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; margin-bottom: 4px; color: var(--text-muted);">Mật khẩu</label>
+            <input type="password" id="login-password" placeholder="••••••••" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px;" required>
+          </div>
+          <button type="submit" class="btn-setup-action" style="width: 100%; background: var(--primary); color: white; padding: 10px;">
+            <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập Supabase
+          </button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-logout" class="btn-reset-filters" style="color: #dc2626;">
+          <i class="fa-solid fa-power-off"></i> Đăng xuất
+        </button>
+        <button class="btn-setup-action modal-close">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: SQL MIGRATION INSTRUCTIONS ==================== -->
+  <div class="modal-backdrop" id="modal-sql">
+    <div class="modal-box" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-database"></i> Supabase Database Migration (PostgreSQL)</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.5;">
+          Hệ thống đã xây dựng trọn bộ 10 file SQL migration và bộ dữ liệu Seed đầy đủ tại thư mục <code>supabase/</code>:
+        </p>
+        <ul style="font-size: 12.5px; color: var(--text-muted); margin-left: 20px; margin-bottom: 16px; line-height: 1.6;">
+          <li><code>001_create_profiles.sql</code> - Bảng tài khoản & trigger phân quyền</li>
+          <li><code>002_create_patients.sql</code> - Bảng bệnh nhân (Data minimization)</li>
+          <li><code>003_create_specimens.sql</code> - Mẫu bệnh phẩm & danh mục động</li>
+          <li><code>004_create_organisms.sql</code> - Danh mục vi khuẩn & phân loại Gram</li>
+          <li><code>005_create_antibiotics.sql</code> - Danh mục kháng sinh & nhóm thuốc</li>
+          <li><code>006_create_cultures.sql</code> - Kết quả nuôi cấy & định danh</li>
+          <li><code>007_create_ast_results.sql</code> - Bảng kháng sinh đồ (S/I/R, MIC, disk zone)</li>
+          <li><code>008_create_import_jobs.sql</code> - Quản lý file import & error log</li>
+          <li><code>009_create_audit_logs.sql</code> - Nhật ký an ninh & danh mục khoa</li>
+          <li><code>010_create_rls.sql</code> - Chính sách bảo mật Row Level Security</li>
+          <li><code>seed_data.sql</code> - Dữ liệu mẫu 100 BN, 150 bệnh phẩm, 200 nuôi cấy, 1,000 AST</li>
+        </ul>
+        <div style="background: #0f172a; color: #38bdf8; padding: 14px; border-radius: 8px; font-size: 12px; margin-bottom: 14px;">
+          <strong>File tổng hợp sẵn sàng chạy:</strong><br>
+          <code style="color: #f1f5f9;">supabase/full_schema_and_seed.sql</code> (42 KB)
+        </div>
+        <p style="font-size: 12.5px; color: var(--text-muted);">
+          Bạn có thể mở Supabase Dashboard &rarr; <strong>SQL Editor</strong> &rarr; Dán nội dung file <code>supabase/full_schema_and_seed.sql</code> và nhấn <strong>Run</strong>.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-setup-action modal-close">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JavaScript Modules -->
+  <script src="js/config.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/services/demoDataService.js"></script>
+  <script src="js/services/analyticsService.js"></script>
+  <script src="js/services/authService.js"></script>
+  <script src="js/services/auditService.js"></script>
+  <script src="js/services/astService.js"></script>
+  <script src="js/components/toast.js"></script>
+  <script src="js/components/navigation.js"></script>
+  <script src="js/components/authModal.js"></script>
+  <script src="js/components/kpiCards.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
