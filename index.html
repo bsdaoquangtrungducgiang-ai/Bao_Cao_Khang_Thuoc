@@ -21,6 +21,14 @@
 
   <!-- SheetJS CDN (Cho module Import Excel ở Phase 2) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- PDF.js CDN (Cho module Import PDF ở Phase 7) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/style.css">
@@ -1180,6 +1188,400 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
           </div>
         </section>
 
+        <!-- ================= VIEW: IMPORT PDF KẾT QUẢ XÉT NGHIỆM (MỤC XIV) ================= -->
+        <section class="view-panel" id="view-import_pdf">
+          <div class="data-panel-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">
+              <i class="fa-solid fa-file-pdf" style="color: #dc2626;"></i> Nhập Dữ Liệu Từ Phiếu Kết Quả Xét Nghiệm (PDF)
+            </h3>
+            <div class="dropzone" id="pdf-dropzone" style="background: #fef2f2; border-color: #fca5a5;">
+              <div class="dropzone-icon" style="color: #dc2626;">
+                <i class="fa-solid fa-file-circle-plus"></i>
+              </div>
+              <div class="dropzone-text">
+                <h3>Kéo & thả file PDF phiếu xét nghiệm vào đây</h3>
+                <p>Hệ thống tự động trích xuất thông tin bệnh nhân, vi khuẩn định danh và bảng kháng sinh đồ</p>
+              </div>
+              <input type="file" id="pdf-file-input" accept=".pdf" style="display: none;">
+              <div style="margin-top: 14px;">
+                <button type="button" class="btn-setup-action" style="background: #dc2626; color: white;">
+                  <i class="fa-regular fa-folder-open"></i> Chọn file PDF từ máy tính
+                </button>
+              </div>
+            </div>
+
+            <!-- Kết quả trích xuất PDF -->
+            <div id="pdf-result-container" class="hidden" style="margin-top: 24px;">
+              <div id="pdf-warning-banner" class="hidden" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 14px; border-radius: 8px; margin-bottom: 18px; display: flex; align-items: center; gap: 12px;"></div>
+
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">
+                <i class="fa-solid fa-user-check"></i> Thông Tin Hành Chính & Mẫu Bệnh Phẩm Trích Xuất:
+              </h4>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div>
+                  <label class="filter-label">Mã Bệnh Nhân:</label>
+                  <input type="text" id="pdf-patient-code" class="filter-select" style="width: 100%;">
+                </div>
+                <div>
+                  <label class="filter-label">Họ và Tên:</label>
+                  <input type="text" id="pdf-patient-name" class="filter-select" style="width: 100%;">
+                </div>
+                <div>
+                  <label class="filter-label">Tuổi:</label>
+                  <input type="number" id="pdf-age" class="filter-select" style="width: 100%;">
+                </div>
+                <div>
+                  <label class="filter-label">Giới Tính:</label>
+                  <select id="pdf-sex" class="filter-select" style="width: 100%;">
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Unknown">Chưa rõ</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="filter-label">Bệnh Phẩm:</label>
+                  <input type="text" id="pdf-specimen" class="filter-select" style="width: 100%;">
+                </div>
+                <div>
+                  <label class="filter-label">Ngày Lấy Mẫu:</label>
+                  <input type="date" id="pdf-date" class="filter-select" style="width: 100%;">
+                </div>
+                <div>
+                  <label class="filter-label">Vi Khuẩn Định Danh:</label>
+                  <input type="text" id="pdf-organism" class="filter-select" style="width: 100%; font-weight: 700; color: var(--primary);">
+                </div>
+              </div>
+
+              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">
+                <i class="fa-solid fa-table"></i> Kết Quả Kháng Sinh Đồ AST Nhận Diện:
+              </h4>
+              <div class="preview-table-container" style="max-height: 260px;">
+                <table class="table-lab">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px; text-align: center;">#</th>
+                      <th>Kháng Sinh</th>
+                      <th>Kết Quả Thô (Raw)</th>
+                      <th>MIC / Vòng vô khuẩn</th>
+                      <th style="text-align: center;">Chuẩn Hóa (S/I/R)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-pdf-ast-body"></tbody>
+                </table>
+              </div>
+
+              <div style="margin-top: 18px; text-align: right;">
+                <button class="btn-setup-action" id="btn-commit-pdf-data" style="padding: 10px 24px; background: var(--color-s); color: white;">
+                  <i class="fa-solid fa-check"></i> Xác Nhận &amp; Lưu Vào Cơ Sở Dữ Liệu
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: BÁO CÁO AMR TỰ ĐỘNG 9 PHẦN (MỤC XXX & XXXI) ================= -->
+        <section class="view-panel" id="view-reports">
+          <div class="data-panel-card">
+            <!-- Filter Toolbar -->
+            <div class="data-toolbar">
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <div>
+                  <span class="filter-label">Năm báo cáo:</span>
+                  <select class="filter-select" id="report-filter-time">
+                    <option value="2026" selected>Năm 2026</option>
+                    <option value="2025">Năm 2025</option>
+                    <option value="2024">Năm 2024</option>
+                  </select>
+                </div>
+                <div>
+                  <span class="filter-label">Vi khuẩn:</span>
+                  <select class="filter-select" id="report-filter-organism">
+                    <option value="ALL">Tất cả vi khuẩn</option>
+                    <option value="Escherichia coli">Escherichia coli</option>
+                    <option value="Klebsiella pneumoniae">Klebsiella pneumoniae</option>
+                    <option value="Pseudomonas aeruginosa">Pseudomonas aeruginosa</option>
+                    <option value="Acinetobacter baumannii">Acinetobacter baumannii</option>
+                    <option value="Staphylococcus aureus">Staphylococcus aureus</option>
+                  </select>
+                </div>
+                <div>
+                  <span class="filter-label">Bệnh phẩm:</span>
+                  <select class="filter-select" id="report-filter-specimen">
+                    <option value="ALL">Tất cả bệnh phẩm</option>
+                    <option value="Nước tiểu">Nước tiểu</option>
+                    <option value="Máu">Máu</option>
+                    <option value="Đờm">Đờm</option>
+                    <option value="Dịch vết thương">Dịch vết thương</option>
+                  </select>
+                </div>
+                <button class="btn-setup-action" id="btn-generate-report" style="margin-top: 14px;">
+                  <i class="fa-solid fa-arrows-rotate"></i> Tạo Báo Cáo
+                </button>
+              </div>
+              <div style="display: flex; gap: 10px; margin-top: 14px;">
+                <button class="btn-setup-action" id="btn-print-full-report" style="background: #0284c7;">
+                  <i class="fa-solid fa-print"></i> In Báo Cáo (PDF)
+                </button>
+                <button class="btn-setup-action" id="btn-export-full-excel" style="background: #059669;">
+                  <i class="fa-solid fa-file-excel"></i> Xuất Excel Trọn Gói
+                </button>
+              </div>
+            </div>
+
+            <!-- Document Sheet (Chuẩn in ấn y tế) -->
+            <div class="report-document-sheet" id="printable-report" style="background: #ffffff; padding: 32px; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 16px;">
+              <!-- Header Bệnh Viện -->
+              <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 16px; margin-bottom: 20px;">
+                <div>
+                  <h3 id="rep-hospital-name" style="font-size: 15px; font-weight: 700; color: var(--text-main); text-transform: uppercase;">BỆNH VIỆN ĐA KHOA TRUNG TÂM</h3>
+                  <h4 id="rep-department-name" style="font-size: 13px; color: var(--primary); font-weight: 600;">KHOA VI SINH</h4>
+                </div>
+                <div style="text-align: right; font-size: 11.5px; color: var(--text-muted);">
+                  <div>Ngày lập: <strong id="rep-timestamp">28/09/2026</strong></div>
+                  <div>Người lập: <strong id="rep-author">TS.BS. Nguyễn Văn An</strong></div>
+                  <div>Tiêu chuẩn: <strong>CLSI M100</strong></div>
+                </div>
+              </div>
+
+              <!-- Title -->
+              <div style="text-align: center; margin-bottom: 24px;">
+                <h2 style="font-size: 19px; font-weight: 800; color: #0f172a; letter-spacing: 0.5px;">BÁO CÁO GIÁM SÁT TÌNH HÌNH KHÁNG KHÁNG SINH (AMR)</h2>
+                <span id="rep-filter-display" style="font-size: 12.5px; color: var(--text-muted);">Thời gian: Năm 2026 | Toàn viện</span>
+              </div>
+
+              <!-- 1. Chỉ số tổng quan -->
+              <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
+                  1. TỔNG QUAN VÀ TỶ LỆ KHÁNG SINH ĐỒ TOÀN BỘ
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; background: #f8fafc; padding: 14px; border-radius: 6px;">
+                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Tổng AST</span><strong id="rep-sum-total" style="font-size: 18px;">1,000</strong></div>
+                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Tỷ Lệ Nhạy (%S)</span><strong id="rep-sum-s" style="font-size: 18px; color: var(--color-s);">62.0%</strong></div>
+                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Trung Gian (%I)</span><strong id="rep-sum-i" style="font-size: 18px; color: var(--color-i);">8.0%</strong></div>
+                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Kháng Thuốc (%R)</span><strong id="rep-sum-r" style="font-size: 18px; color: var(--color-r);">30.0%</strong></div>
+                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Đa Kháng (MDR)</span><strong id="rep-sum-mdr" style="font-size: 18px; color: #b45309;">9.5%</strong></div>
+                </div>
+              </div>
+
+              <!-- 2. Phân bố vi khuẩn -->
+              <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
+                  2. PHÂN BỐ CÁC CHỦNG VI KHUẨN GÂY BỆNH HÀNG ĐẦU
+                </h4>
+                <table class="table-lab" style="font-size: 12px;">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">#</th>
+                      <th>Chủng Vi Khuẩn</th>
+                      <th style="text-align: center;">Số lượng mẫu</th>
+                      <th style="text-align: center;">Tỷ lệ phân lập (%)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-rep-org-body"></tbody>
+                </table>
+              </div>
+
+              <!-- 3. Antibiogram -->
+              <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
+                  3. BẢNG KHÁNG SINH ĐỒ (ANTIBIOGRAM) CHI TIẾT
+                </h4>
+                <table class="table-lab" style="font-size: 12px;">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">#</th>
+                      <th>Mã</th>
+                      <th>Tên Kháng Sinh</th>
+                      <th style="text-align: center;">% Nhạy (S)</th>
+                      <th style="text-align: center;">% Trung Gian (I)</th>
+                      <th style="text-align: center;">% Kháng (R)</th>
+                      <th style="text-align: center;">Mẫu Thử</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-rep-abg-body"></tbody>
+                </table>
+              </div>
+
+              <!-- 4. So sánh các năm -->
+              <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
+                  4. SO SÁNH XU HƯỚNG KHÁNG THUỐC QUA CÁC NĂM (2024 - 2026)
+                </h4>
+                <table class="table-lab" style="font-size: 12px;">
+                  <thead>
+                    <tr>
+                      <th>Giai Đoạn</th>
+                      <th style="text-align: center;">Tổng Mẫu</th>
+                      <th style="text-align: center;">Kháng (%R)</th>
+                      <th style="text-align: center;">Trung Gian (%I)</th>
+                      <th style="text-align: center;">Nhạy Cảm (%S)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-rep-years-body"></tbody>
+                </table>
+              </div>
+
+              <!-- Chữ ký xác nhận y khoa -->
+              <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; page-break-inside: avoid;">
+                <div style="text-align: center; width: 220px;">
+                  <div style="font-size: 12px; font-weight: 600;">TRƯỞNG KHOA XÉT NGHIỆM / VI SINH</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">(Ký và ghi rõ họ tên)</div>
+                  <div style="margin-top: 60px; font-weight: 700;">TS.BS. Nguyễn Văn An</div>
+                </div>
+                <div style="text-align: center; width: 220px;">
+                  <div style="font-size: 12px; font-weight: 600;">CHỦ TỊCH HỘI ĐỒNG THUỐC &amp; ĐIỀU TRỊ</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">(Ký và ghi rõ họ tên)</div>
+                  <div style="margin-top: 60px; font-weight: 700;">PGS.TS. Giám Đốc Bệnh Viện</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: LỊCH SỬ IMPORT (MỤC XXXIII) ================= -->
+        <section class="view-panel" id="view-import_history">
+          <div class="data-panel-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">
+              <i class="fa-solid fa-clock-rotate-left"></i> Nhật Ký &amp; Lịch Sử Nhập File (Import History)
+            </h3>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Tên File</th>
+                    <th>Định Dạng</th>
+                    <th>Thời Gian Nạp</th>
+                    <th>Người Thực Hiện</th>
+                    <th style="text-align: center;">Tổng Dòng</th>
+                    <th style="text-align: center;">Thành Công</th>
+                    <th style="text-align: center;">Lỗi / Cảnh Báo</th>
+                    <th style="text-align: center;">Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody id="table-import-history-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: DANH MỤC HỆ THỐNG (MỤC LVI) ================= -->
+        <section class="view-panel" id="view-catalogs">
+          <div class="data-panel-card" style="margin-bottom: 20px;">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">
+              <i class="fa-solid fa-bacteria"></i> Danh Mục Vi Khuẩn Chuẩn Hóa
+            </h3>
+            <div class="preview-table-container" style="max-height: 250px;">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th>Tên Vi Khuẩn</th>
+                    <th>Mã Chuẩn (WHONET/LIS)</th>
+                    <th>Tên Tiếng Việt</th>
+                    <th>Nhuộm Gram</th>
+                    <th>Họ (Family)</th>
+                  </tr>
+                </thead>
+                <tbody id="table-catalog-org-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="data-panel-card">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">
+              <i class="fa-solid fa-capsules"></i> Danh Mục Kháng Sinh Thử Nghiệm
+            </h3>
+            <div class="preview-table-container" style="max-height: 250px;">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th>Mã Kháng Sinh</th>
+                    <th>Tên Hoạt Chất</th>
+                    <th>Nhóm Kháng Sinh</th>
+                    <th>Lớp Hoạt Chất</th>
+                  </tr>
+                </thead>
+                <tbody id="table-catalog-abx-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: QUẢN LÝ NGƯỜI DÙNG (MỤC II) ================= -->
+        <section class="view-panel" id="view-users">
+          <div class="data-panel-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">
+              <i class="fa-solid fa-users-gear"></i> Quản Lý Tài Khoản Nhân Viên &amp; Phân Quyền (RBAC)
+            </h3>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Họ và Tên Nhân Viên</th>
+                    <th>Email Y Tế</th>
+                    <th>Khoa Phòng</th>
+                    <th style="text-align: center;">Vai Trò (Role)</th>
+                    <th style="text-align: center;">Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody id="table-users-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: AUDIT LOG AN NINH (MỤC XXXV) ================= -->
+        <section class="view-panel" id="view-audit_logs">
+          <div class="data-panel-card">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">
+              <i class="fa-solid fa-shield-halved"></i> Nhật Ký Kiểm Toán Hoạt Động (Security Audit Log)
+            </h3>
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th>Hành Động</th>
+                    <th>Đối Tượng (Entity)</th>
+                    <th>Người Thực Hiện</th>
+                    <th>Thời Điểm</th>
+                    <th>Chi Tiết</th>
+                  </tr>
+                </thead>
+                <tbody id="table-audit-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VIEW: CÀI ĐẶT HỆ THỐNG & KẾT NỐI (MỤC LX) ================= -->
+        <section class="view-panel" id="view-settings">
+          <div class="data-panel-card" style="max-width: 680px; margin: 0 auto;">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">
+              <i class="fa-solid fa-sliders"></i> Cài Đặt Kết Nối Supabase Database
+            </h3>
+            <form id="form-settings-connection">
+              <div style="margin-bottom: 16px;">
+                <label class="filter-label">Supabase Project URL:</label>
+                <input type="url" id="settings-supabase-url" class="filter-select" style="width: 100%;" required>
+              </div>
+              <div style="margin-bottom: 20px;">
+                <label class="filter-label">Supabase Anon / Public Key:</label>
+                <input type="text" id="settings-supabase-key" class="filter-select" style="width: 100%;" required>
+              </div>
+              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn-reset-filters" id="btn-reset-default-conn">
+                  Khôi phục mặc định
+                </button>
+                <button type="submit" class="btn-setup-action">
+                  <i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình Mới
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
         <!-- Placeholder for upcoming tabs -->
         <section class="view-panel" id="view-generic">
           <div class="placeholder-view">
@@ -1302,6 +1704,8 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/services/astService.js"></script>
   <script src="js/services/importService.js"></script>
   <script src="js/services/specializedAMRService.js"></script>
+  <script src="js/services/pdfImportService.js"></script>
+  <script src="js/services/reportExportService.js"></script>
   <script src="js/components/toast.js"></script>
   <script src="js/components/navigation.js"></script>
   <script src="js/components/authModal.js"></script>
@@ -1311,6 +1715,9 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/components/antibiogramView.js"></script>
   <script src="js/components/heatmapView.js"></script>
   <script src="js/components/surveillanceModulesView.js"></script>
+  <script src="js/components/pdfImportView.js"></script>
+  <script src="js/components/reportView.js"></script>
+  <script src="js/components/systemCatalogsView.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

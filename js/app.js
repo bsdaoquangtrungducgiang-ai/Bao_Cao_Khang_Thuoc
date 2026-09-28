@@ -36,6 +36,9 @@ const App = {
     window.AntibiogramView?.init();
     window.HeatmapView?.init();
     window.SurveillanceModulesView?.init();
+    window.PDFImportView?.init();
+    window.ReportView?.init();
+    window.SystemCatalogsView?.init();
 
     // 2. Khởi tạo đồng hồ thời gian thực và tiêu chuẩn CLSI/EUCAST
     this.initClock();
