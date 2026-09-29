@@ -79,8 +79,22 @@ const DataValidation = {
       }
 
       // 4. Kiểm tra Tuổi (Age)
+      let parsedAge = null;
       if (row.age !== undefined && row.age !== null && row.age !== '') {
-        const ageNum = Number(row.age);
+        let ageNum = Number(row.age);
+        if (isNaN(ageNum) || ageNum < 0 || ageNum > 130) {
+          // Trích xuất năm sinh nếu trường này là ngày tháng năm sinh (DD/MM/YYYY hoặc YYYY-MM-DD)
+          const yMatch = String(row.age).match(/\b(19\d\d|20\d\d)\b/);
+          if (yMatch) {
+            const birthYear = Number(yMatch[1]);
+            const currentYear = new Date().getFullYear();
+            const calculatedAge = currentYear - birthYear;
+            if (calculatedAge >= 0 && calculatedAge <= 130) {
+              row.age = calculatedAge;
+              ageNum = calculatedAge;
+            }
+          }
+        }
         if (isNaN(ageNum) || ageNum < 0 || ageNum > 130) {
           rowWarnings.push({
             row: rowNum,
@@ -89,6 +103,8 @@ const DataValidation = {
             error: `Tuổi không hợp lý (${row.age})`,
             severity: 'warning'
           });
+        } else {
+          parsedAge = ageNum;
         }
       }
 

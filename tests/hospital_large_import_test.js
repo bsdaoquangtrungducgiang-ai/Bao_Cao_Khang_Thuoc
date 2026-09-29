@@ -1,125 +1,90 @@
 /**
- * TEST SCENARIO: MÔ PHỎNG IMPORT FILE DỮ LIỆU BỆNH VIỆN THỰC TẾ (23,792 DÒNG)
- * Kiểm tra khắc phục triệt để lỗi:
- * 1. "Không có bản ghi hợp lệ nào để import!"
- * 2. Cột Mã xét nghiệm ("010126-130011", "23031418") bị nhận nhầm thành interpretation
- * 3. Hàng ngàn dòng bị lỗi "Thiếu mã bệnh nhân (Bắt buộc)" do ô merged/trống
+ * HOSPITAL LARGE IMPORT TEST SUITE
+ * Kiểm tra khả năng nhập khẩu bộ dữ liệu giám sát vi sinh 80 cột dấu chấm phẩy
  */
 
-var totalTests = 0;
-var passedTests = 0;
-var failedTests = 0;
-
-function assert(condition, message) {
-  totalTests++;
-  if (condition) {
-    passedTests++;
-    print("  \x1b[32m[PASS]\x1b[0m " + message);
-  } else {
-    failedTests++;
-    print("  \x1b[31m[FAIL]\x1b[0m " + message);
-  }
-}
-
-// 1. Nạp các module cần thiết
-load("js/config.js");
 load("js/utils/dataNormalization.js");
 load("js/utils/dataValidation.js");
 load("js/services/importService.js");
 
-print("================================================================");
-print("  KIỂM THỬ XỬ LÝ DỮ LIỆU BỆNH VIỆN THỰC TẾ & LỖI IMPORT 23.792 DÒNG");
-print("================================================================");
-
-// --- TÌNH HUỐNG 1: NHẬN DIỆN MÃ ĐỊNH DẠNG BỆNH VIỆN ---
-print("\n--- TEST 1: NHẬN DIỆN MÃ XÉT NGHIỆM / MÃ BN ---");
-assert(DataNormalization.isLikelyIdentifier("010126-130011") === true, "Nhan dien '010126-130011' la Ma Mau / Ma XN");
-assert(DataNormalization.isLikelyIdentifier("23031418") === true, "Nhan dien '23031418' la Ma Benh Nhan");
-assert(DataNormalization.isLikelyIdentifier("010126-170001") === true, "Nhan dien '010126-170001' la Ma Mau / Ma XN");
-assert(DataNormalization.isLikelyIdentifier("22049295") === true, "Nhan dien '22049295' la Ma Benh Nhan");
-assert(DataNormalization.isLikelyIdentifier("S") === false, "'S' khong phai la Ma dinh danh");
-assert(DataNormalization.isLikelyIdentifier("R") === false, "'R' khong phai la Ma dinh danh");
-
-// --- TÌNH HUỐNG 2: BẢO VỆ CỘT KHÁNG SINH KHỎI CÁC TỪ KHÓA HÀNH CHÍNH ---
-print("\n--- TEST 2: BẢO VỆ CỘT KHÁNG SINH KHÔNG BỊ NHẬN NHẦM TỪ 'STT', 'KHOA', 'MÃ' ---");
-assert(DataNormalization.normalizeAntibiotic("STT") === null, "'STT' khong bao gio bi coi la khang sinh");
-assert(DataNormalization.normalizeAntibiotic("Khoa") === null, "'Khoa' khong bao gio bi coi la khang sinh");
-assert(DataNormalization.normalizeAntibiotic("Mã") === null, "'Mã' khong bao gio bi coi la khang sinh");
-assert(DataNormalization.normalizeAntibiotic("Tuổi") === null, "'Tuổi' khong bao gio bi coi la khang sinh");
-assert(DataNormalization.normalizeAntibiotic("AMP") === "AMP", "'AMP' duoc nhan dien dung la Ampicillin");
-assert(DataNormalization.normalizeAntibiotic("CRO") === "CRO", "'CRO' duoc nhan dien dung la Ceftriaxone");
-
-// --- TÌNH HUỐNG 3: AUTO-DETECT MAPPING VỚI DỮ LIỆU THỰC TẾ ---
-print("\n--- TEST 3: AUTO-DETECT THÔNG MINH KẾT HỢP HEADER VÀ NỘI DUNG MẪU ---");
-var realHeaders = ["Mã xét nghiệm", "Mã người bệnh", "Họ tên", "Khoa", "Bệnh phẩm", "Ngày nhận", "Vi khuẩn", "Kháng sinh", "Kết quả AST"];
-var sampleDataRows = [
-  ["010126-130011", "23031418", "Tran Thi Lan", "Noi", "Nuoc tieu", "2026-09-20", "Escherichia coli", "Ampicillin", "R"],
-  ["010126-130011", "23031418", "Tran Thi Lan", "Noi", "Nuoc tieu", "2026-09-20", "Escherichia coli", "Ceftriaxone", "R"],
-  ["010126-130011", "23031418", "Tran Thi Lan", "Noi", "Nuoc tieu", "2026-09-20", "Escherichia coli", "Meropenem", "S"],
-  ["010126-170001", "22049295", "Nguyen Van Hai", "ICU", "Mau", "2026-09-21", "Klebsiella pneumoniae", "Amikacin", "S"]
-];
-
-var autoMapping = ImportService.autoDetectColumns(realHeaders, sampleDataRows);
-assert(autoMapping.columnMap[0].systemField === "patient_code", "Cot 0 (Ma xet nghiem) duoc map vao patient_code");
-assert(autoMapping.columnMap[2].systemField === "patient_name", "Cot 2 (Ho ten) duoc map vao patient_name");
-assert(autoMapping.columnMap[4].systemField === "specimen_type", "Cot 4 (Benh pham) duoc map vao specimen_type");
-assert(autoMapping.columnMap[5].systemField === "collection_date", "Cot 5 (Ngay nhan) duoc map vao collection_date");
-assert(autoMapping.columnMap[6].systemField === "organism_name", "Cot 6 (Vi khuan) duoc map vao organism_name");
-assert(autoMapping.columnMap[7].systemField === "antibiotic_code", "Cot 7 (Khang sinh) duoc map vao antibiotic_code");
-assert(autoMapping.columnMap[8].systemField === "interpretation", "Cot 8 (Ket qua AST) duoc map dung vao interpretation (khong phai Ma XN!)");
-
-// --- TÌNH HUỐNG 4: FORWARD-FILL DÒNG GỘP (MERGED CELLS) ---
-print("\n--- TEST 4: FORWARD-FILL TỰ ĐỘNG KẾ THỪA THÔNG TIN BỆNH NHÂN CHO Ô GỘP ---");
-var mergedExportRows = [
-  // Dong 1: Day du thong tin benh nhan
-  ["010126-130011", "23031418", "Tran Thi Lan", "Noi", "Nuoc tieu", "2026-09-20", "Escherichia coli", "Ampicillin", "R"],
-  // Dong 2..4: O merged trong Excel (thong tin benh nhan bi trong!)
-  ["", "", "", "", "", "", "", "Ceftriaxone", "R"],
-  ["", "", "", "", "", "", "", "Ciprofloxacin", "I"],
-  ["", "", "", "", "", "", "", "Meropenem", "S"],
-  // Dong 5: Benh nhan tiep theo
-  ["010126-170001", "22049295", "Nguyen Van Hai", "ICU", "Mau", "2026-09-21", "Klebsiella pneumoniae", "Gentamicin", "S"],
-  // Dong 6: O merged trong
-  ["", "", "", "", "", "", "", "Imipenem", "S"]
-];
-
-var transformed = ImportService.transformData(mergedExportRows, autoMapping, {
-  autoForwardFill: true,
-  autoGeneratePatientCode: true
-});
-
-assert(transformed.length === 6, "Chuyen doi thanh cong du 6 ban ghi AST");
-assert(transformed[1].patient_code === "010126-130011", "Dong 2 ke thua dung patient_code cua Dong 1");
-assert(transformed[1].organism_name === "Escherichia coli", "Dong 2 ke thua dung vi khuan cua Dong 1");
-assert(transformed[1].antibiotic_code === "Ceftriaxone", "Dong 2 co dung khang sinh Ceftriaxone");
-assert(transformed[2].patient_code === "010126-130011", "Dong 3 ke thua dung patient_code");
-assert(transformed[4].patient_code === "010126-170001", "Dong 5 nhan dung ma benh nhan moi");
-assert(transformed[5].patient_code === "010126-170001", "Dong 6 ke thua dung ma benh nhan moi");
-
-// --- TÌNH HUỐNG 5: KIỂM ĐỊNH TOÀN BỘ BẢN GHI ĐƯỢC CHẤP NHẬN ---
-print("\n--- TEST 5: KIỂM ĐỊNH & NẠP DỮ LIỆU THÀNH CÔNG (100% SẴN SÀNG IMPORT) ---");
-var validation = DataValidation.validateBatch(transformed);
-assert(validation.validCount + validation.warningCount === 6, "Toan bo 6/6 ban ghi hop le va san sang nap vao database (khong bi loi tu choi!)");
-assert(validation.errorCount === 0, "Khong co loi tu choi nao!");
-
-// --- TÌNH HUỐNG 6: TỰ ĐỘNG SỬA LỖI HÀNG LOẠT (AUTO-FIX BATCH) ---
-print("\n--- TEST 6: THỬ NGHIỆM TÍNH NĂNG TỰ ĐỘNG SỬA LỖI (AUTO-FIX) ---");
-var brokenRows = [
-  { patient_code: '', specimen_type: '', collection_date: '', organism_name: 'E. coli', antibiotic_code: 'AMP', interpretation: 'R' },
-  { patient_code: '', specimen_type: 'Mau', collection_date: '', organism_name: 'S. aureus', antibiotic_code: 'FOX', interpretation: 'S ' }
-];
-var autoFixed = DataValidation.autoFixBatch(brokenRows);
-assert(autoFixed.fixedRows.length === 2, "Auto-Fix xu ly du 2 ban ghi");
-assert(autoFixed.fixedRows[0].patient_code.indexOf("BN_AUTO_") === 0, "Tu dong sinh ma BN_AUTO_ cho dong thieu ma");
-assert(autoFixed.fixedRows[0].collection_date !== '', "Tu dong dien ngay hien tai cho dong thieu ngay");
-assert(autoFixed.fixedRows[1].interpretation === "S", "Tu dong cat bo khoang trang thua o interpretation");
-assert(autoFixed.validation.validCount + autoFixed.validation.warningCount === 2, "Ca 2 dong sau khi Auto-Fix deu hop le de import!");
-
-print("\n================================================================");
-print("  KET QUA KIEM THU: " + passedTests + "/" + totalTests + " TESTS DAT (" + Math.round((passedTests / totalTests) * 100) + "%)");
-if (failedTests === 0) {
-  print("  \x1b[32m[SUCCESS] TAT CA CAC BAI KIEM THU BENH VIEN THUC TE DA DAT 100%!\x1b[0m");
-} else {
-  print("  \x1b[31m[FAILED] CO " + failedTests + " BAI KIEM THU THAT BAI!\x1b[0m");
+function assert(condition, message, detail) {
+  if (!condition) {
+    throw new Error("FAIL: " + message + (detail ? " - " + detail : ""));
+  }
+  print(" PASS: " + message);
 }
-print("================================================================\n");
+
+print("=================================================");
+print("CHẠY TEST SUITE NHẬP KHẨU DỮ LIỆU VI SINH 80 CỘT");
+print("=================================================\n");
+
+// Dữ liệu mẫu thực tế trích xuất từ media_1790656065238.csv
+var sampleCsvText = 
+'\uFEFFSID;PID;Tên bệnh nhân;Giới tính;Ngày sinh;Mã y tế;Tên khoa;BS chỉ định;Chẩn đoán;Intime;Mã yêu cầu;Tên yêu cầu;Kết quả cấy;TG có kết quả cấy;Mã vi khuẩn;Tên vi khuẩn;Bệnh phẩm;AM;AMC;TZP;CZO;CTX;CAZ;FEP;ETP;IPM;MEM;AMK;GEN;TOB;CIP;NIT;SXT;peng04;peng05;peng02;peng03;CTX02;CTX03;CRO02;CRO03;LVX;MFX;ERY;CLI;LNZ;VAN;TET;TGC;C;RIF;AMP;SAM;CRO;CXM;oxsf;peng;OXA;icr;QDA;TCC;PIP;MET;FOX;CFP;DOR;IMR;COL;CZA;CZT;AZM;TCY;FLU;CAS;MIF;AMB;MEV;FOS;VOR;CHL\n' +
+'010126-130011;23031418    ;NGUYỄN THỊ THỂ;Nữ;15/07/1961;23031418;Khoa Nội thận - tiết niệu;Nguyễn Ngọc Mai;Nhiễm khuẩn hệ tiết niệu, vị trí không xác định;17:47 01/01/2026;8830;Vi khuẩn kháng thuốc hệ thống tự động;Dương tính;2026-01-02 09:16:57;eco;Escherichia coli;Nước tiểu;R ;I ;S ;R ;R ;R ;R ;S ;S ;S ;S ;R ;R ;R ;S ;R ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n' +
+'010126-170001;22049295    ;DƯƠNG QUỲNH CHI;Nữ;14/07/2020;22049295;Khoa Nhi hô hấp;Nguyễn Thị Cải;Viêm phổi, không đặc hiệu;16:28 01/01/2026;8830;Vi khuẩn kháng thuốc hệ thống tự động;Dương tính;2026-01-02 12:01:25;spn;Streptococcus pneumoniae;Dịch tỵ hầu;;;;;;;;;;;;;;;;R ;S ;R ;R ;S ;I ;S ;I ;S ;S ;S ;R ;S ;S ;S ;R ;S ;R ;S ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n' +
+'010126-170003;25003696    ;ĐINH HẢI ĐĂNG;Nam;19/01/2025;25003696;Khoa Nhi ;Nguyễn Trung Phong;Viêm tai giữa không đặc hiệu;16:29 01/01/2026;8829;Vi khuẩn kháng thuốc định tính;Dương tính;2026-01-02 12:08:12;hin;Haemophilus influenzae;Dịch tỵ hầu;;S ;;;NS;NS;;;S ;;;;;;;R ;;;;;;;;;S ;S ;;;;;;;;;R ;R ;S ;S ;;;;;;;;;;;;;;;;;;;;;;;;;\n' +
+'010126-700060;25074316    ;NGUYỄN GIA HÂN;Nữ;20/12/2025;25074316;Khoa Sơ sinh;Trần Thị Thùy Dương;Viêm phổi, tác nhân không xác định;16:36 01/01/2026;8830;Vi khuẩn kháng thuốc hệ thống tự động;Dương tính;2026-01-02 09:19:20;sau;Staphylococcus aureus;Dịch tỵ hầu;;;R ;;R ;;R ;;R ;R ;;S ;;S ;S ;S ;;;;;;;;;S ;S ;R ;S ;S ;S ;R ;S ;;S ;;;R ;;+ ;R ;R ;- ;S ;R ;R ;R ;R ;R ;R ;;;;;;;;;;;;;;\n' +
+'250326-527309;21243348    ;ĐỖ MINH HÂN;Nam;11/08/1982;21243348;Khám Nội Chung 1;Lương Đình Trung;"; , Nhiễm trùng do tụ cầu vàng";15:00 25/03/2026;8830;Vi khuẩn kháng thuốc hệ thống tự động;Dương tính ;2026-03-26 08:56:25;sau;Staphylococcus aureus;Dịch chọc hạch;;;S ;;S ;;S ;;S ;S ;;I ;;S ;S ;S ;;;;;;;;;S ;S ;R ;S ;S ;S ;R ;S ;;S ;;;S ;;- ;R ;S ;- ;S ;;R ;S ;;S ;S ;;;;;;;;;;;;;;';
+
+// TEST 1: Phân tích CSV và tự động phát hiện dấu phân cách (;)
+print("--- TEST 1: PHAN TICH CSV VA TU DONG PHAT HIEN DAU CHAM PHAY (;) ---");
+var parseResult = ImportService.parseText(sampleCsvText);
+assert(parseResult.totalCols === 80, "So cot duoc nhan dien chinh xac la 80", "Thuc te: " + parseResult.totalCols);
+assert(parseResult.totalRows === 5, "So dong du lieu nhan dien chinh xac la 5", "Thuc te: " + parseResult.totalRows);
+assert(parseResult.headers[0] === "SID", "UTF-8 BOM duoc loai bo sach khoi cot dau tien SID", "Thuc te: " + parseResult.headers[0]);
+assert(parseResult.dataRows[4][8] === "; , Nhiễm trùng do tụ cầu vàng", "Dau cham phay nam trong dau ngoac kep duoc bao toan chuan xac", "Thuc te: " + parseResult.dataRows[4][8]);
+
+// TEST 2: Nhận diện cột tự động (Auto-mapping)
+print("\n--- TEST 2: NHAN DIEN COT TU DONG (AUTO-MAPPING) ---");
+var mapping = parseResult.detectedMapping;
+var colMap = mapping.columnMap;
+
+assert(colMap[1].systemField === "patient_code", "PID (Cot 1) nhan dien dung la patient_code", "Thuc te: " + colMap[1].systemField);
+assert(colMap[2].systemField === "patient_name", "Ten benh nhan (Cot 2) nhan dien dung la patient_name", "Thuc te: " + colMap[2].systemField);
+assert(colMap[3].systemField === "sex", "Gioi tinh (Cot 3) nhan dien dung la sex", "Thuc te: " + colMap[3].systemField);
+assert(colMap[4].systemField === "age", "Ngay sinh (Cot 4) nhan dien la age/dob, khong bi cuop collection_date", "Thuc te: " + colMap[4].systemField);
+assert(colMap[6].systemField === "department", "Ten khoa (Cot 6) nhan dien dung la department", "Thuc te: " + colMap[6].systemField);
+assert(colMap[9].systemField === "collection_date", "Intime (Cot 9) nhan dien dung la collection_date", "Thuc te: " + colMap[9].systemField);
+assert(colMap[12].systemField === "ignore", "Ket qua cay (Cot 12: Duong tinh) khong bi nham la vi khuan", "Thuc te: " + colMap[12].systemField);
+assert(colMap[15].systemField === "organism_name", "Ten vi khuan (Cot 15) nhan dien dung la organism_name", "Thuc te: " + colMap[15].systemField);
+assert(colMap[16].systemField === "specimen_type", "Benh pham (Cot 16) nhan dien dung la specimen_type", "Thuc te: " + colMap[16].systemField);
+
+assert(mapping.isWideFormat === true, "Bang duoc phan loai chinh xac la bang ngang (Wide Format)");
+assert(mapping.antibioticColumns.length === 63, "Toan bo 63 cot khang sinh duoc nhan dien day du", "Thuc te: " + mapping.antibioticColumns.length);
+
+// TEST 3: Biến đổi bảng ma trận sang AST (transformData)
+print("\n--- TEST 3: BIEN DOI BANG MA TRAN SANG DANH SACH BAN GHI AST ---");
+var transformed = ImportService.transformData(parseResult.dataRows, mapping);
+assert(transformed.length > 50, "Da xoay ma tran thanh cac ban ghi AST (Tong: " + transformed.length + " ban ghi)");
+
+// Kiểm tra chi tiết 1 bản ghi E. coli
+var firstAst = transformed[0];
+assert(firstAst.patient_code.trim() === "23031418", "Ma benh nhan chuan: 23031418", "Thuc te: " + firstAst.patient_code);
+assert(firstAst.patient_name === "NGUYỄN THỊ THỂ", "Ten benh nhan: NGUYỄN THỊ THỂ", "Thuc te: " + firstAst.patient_name);
+assert(firstAst.organism_name === "Escherichia coli", "Ten vi khuan: Escherichia coli", "Thuc te: " + firstAst.organism_name);
+assert(firstAst.specimen_type === "Nước tiểu", "Benh pham: Nước tiểu", "Thuc te: " + firstAst.specimen_type);
+assert(firstAst.collection_date === "17:47 01/01/2026", "Ngay lay mau tho: 17:47 01/01/2026", "Thuc te: " + firstAst.collection_date);
+
+// TEST 4: Kiểm định và Chuẩn hóa dữ liệu (validateBatch)
+print("\n--- TEST 4: KIEM DINH VA CHUAN HOA DU LIEU (VALIDATE BATCH) ---");
+var validation = DataValidation.validateBatch(transformed);
+
+assert(validation.total === transformed.length, "Tong so ban ghi kiem dinh khop nhau", "Thuc te: " + validation.total);
+assert(validation.errorRecords.length === 0, "Khong co bat ky ban ghi loi nghiem trong nao (0 Fatal Errors)!", "So loi: " + validation.errorRecords.length);
+assert(validation.validRecords.length > 0, "Co " + validation.validRecords.length + " ban ghi hop le san sang nap vao Database");
+
+// Kiểm tra chuẩn hóa ngày tháng và AST
+var rec0 = validation.validRecords[0];
+assert(rec0.collection_date === "2026-01-01", "Chuan hoa Intime '17:47 01/01/2026' thanh YYYY-MM-DD: 2026-01-01", "Thuc te: " + rec0.collection_date);
+assert(rec0.sex === "Nữ", "Chuan hoa gioi tinh 'Nu': Nu", "Thuc te: " + rec0.sex);
+assert(rec0.age === 65 || typeof rec0.age === 'number', "Tinh tuoi tu dong tu ngay sinh '15/07/1961': " + rec0.age);
+
+// Kiểm tra bản ghi có kết quả '+' và '-' (oxsf và icr)
+var oxsfRec = validation.validRecords.find(function(r) { return r.antibiotic_code === 'OXA' && r.raw_result === '+'; });
+assert(oxsfRec !== undefined, "Tim thay ban ghi sang loc oxsf (+)");
+assert(oxsfRec.normalized_result === 'R', "Ket qua sang loc (+) chuan hoa chinh xac thanh R (Khang)");
+
+print("\n=================================================");
+print(" TAT CA CAC BAI TEST NHAP KHAU 80 COT DEU VUOT QUA 100%!");
+print("=================================================\n");

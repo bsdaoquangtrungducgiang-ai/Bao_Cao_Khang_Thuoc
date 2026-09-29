@@ -8,14 +8,14 @@ const ImportService = {
   // Từ điển nhận diện cột tự động (Auto-detection column mapping)
   headerAliasDictionary: {
     patient_code: [
-      'mã bn', 'mã bệnh nhân', 'ma bn', 'ma benh nhan', 'patient code', 'patient id', 'patient_id', 'mabenhnhan',
-      'so_benh_an', 'maba', 'mã ba', 'mã người bệnh', 'ma nguoi benh', 'mã số người bệnh', 'ma so nguoi benh',
-      'mã số bn', 'ma so bn', 'mã số bệnh nhân', 'ma so benh nhan', 'mã y tế', 'ma y te', 'mayte', 'pid', 'mrn',
+      'pid', 'mã bn', 'mã bệnh nhân', 'ma bn', 'ma benh nhan', 'patient code', 'patient id', 'patient_id', 'mabenhnhan',
+      'mã y tế', 'ma y te', 'mayte', 'mrn', 'so_benh_an', 'maba', 'mã ba', 'mã người bệnh', 'ma nguoi benh',
+      'mã số người bệnh', 'ma so nguoi benh', 'mã số bn', 'ma so bn', 'mã số bệnh nhân', 'ma so benh nhan',
       'mã hsba', 'số hsba', 'mã hồ sơ', 'số hồ sơ', 'so ho so', 'mã tiếp nhận', 'số tiếp nhận', 'so tiep nhan',
       'mã khám', 'mã lượt khám', 'mã kcb', 'makcb', 'malk', 'mã số', 'ma so', 'số ba', 'so ba', 'mã viện phí',
       'số thẻ bhyt', 'mã bhyt', 'id bn', 'id người bệnh', 'mã bệnh nhân his', 'mã bn his',
       // Accession / Lab Order codes that serve as specimen/order IDs in hospital exports:
-      'mã xét nghiệm', 'mã xn', 'số xét nghiệm', 'so xn', 'mã mẫu', 'ma mau', 'barcode', 'mã phiếu', 'số phiếu',
+      'sid', 'mã xét nghiệm', 'mã xn', 'số xét nghiệm', 'so xn', 'mã mẫu', 'ma mau', 'barcode', 'mã phiếu', 'số phiếu',
       'so phieu', 'mã ca bệnh', 'mã đợt khám', 'accession', 'accession no', 'sample id', 'sample_id', 'specimen id'
     ],
     patient_name: [
@@ -23,25 +23,28 @@ const ImportService = {
       'tên bn', 'họ và tên bệnh nhân', 'tên người bệnh', 'họ tên người bệnh', 'họ và tên người bệnh', 'full name',
       'fullname', 'patient'
     ],
-    age: ['tuổi', 'tuoi', 'age', 'năm sinh', 'nam sinh', 'yob', 'birth year'],
+    age: ['tuổi', 'tuoi', 'age', 'năm sinh', 'nam sinh', 'ngày sinh', 'ngay sinh', 'yob', 'birth year', 'dob', 'date of birth'],
     sex: ['giới', 'giới tính', 'gioi', 'gioi tinh', 'sex', 'gender', 'phái', 'phai'],
     department: [
-      'khoa', 'khoa phòng', 'khoa phong', 'phòng', 'department', 'dept', 'khoa chỉ định', 'khoa điều trị',
-      'khoa dieu tri', 'khoa yeu cau', 'phòng khám', 'phong kham', 'vi trí', 'đơn vị'
+      'tên khoa', 'ten khoa', 'khoa', 'khoa phòng', 'khoa phong', 'phòng', 'department', 'dept',
+      'khoa chỉ định', 'khoa điều trị', 'khoa dieu tri', 'khoa yeu cau', 'phòng khám', 'phong kham',
+      'vị trí', 'vi tri', 'đơn vị'
     ],
     specimen_type: [
       'bệnh phẩm', 'loại bệnh phẩm', 'benh pham', 'loai benh pham', 'specimen', 'specimen type', 'specimen_type',
       'mẫu bệnh phẩm', 'loại mẫu', 'chủng bệnh phẩm', 'nguồn mẫu', 'vị trí lấy mẫu', 'specimen_name'
     ],
     collection_date: [
+      'intime', 'in time', 'tg có kết quả cấy', 'thời gian có kết quả cấy', 'tg co ket qua cay',
       'ngày lấy mẫu', 'ngày nhận mẫu', 'ngày cấy', 'ngày làm xn', 'ngày chỉ định', 'ngày xét nghiệm',
-      'ngay lay mau', 'ngay nhan mau', 'ngay cay', 'collection date', 'collection_date', 'received date',
-      'specimen date', 'ngay_nhan', 'ngay'
+      'ngay lay mau', 'ngay nhan mau', 'ngay cay', 'tg cấy', 'thời gian cấy', 'tg nhận mẫu', 'thời gian nhận mẫu',
+      'collection date', 'collection_date', 'received date', 'specimen date', 'ngay_nhan', 'ngay nhan'
     ],
     organism_name: [
-      'tên vi khuẩn', 'chủng vi khuẩn', 'vi khuẩn', 'vi khuan', 'ten vi khuan', 'organism', 'organism name',
-      'organism_name', 'mầm bệnh', 'bacterial', 'vi sinh vật', 'tên vi sinh vật', 'chủng phân lập', 'kết quả cấy',
-      'kết quả nuôi cấy', 'định danh vi khuẩn', 'định danh', 'kết quả định danh'
+      'tên vi khuẩn', 'ten vi khuan', 'tên vk', 'chủng vi khuẩn', 'vi khuẩn', 'vi khuan',
+      'mã vi khuẩn', 'ma vi khuan', 'organism', 'organism name', 'organism_name',
+      'mầm bệnh', 'bacterial', 'vi sinh vật', 'tên vi sinh vật', 'chủng phân lập',
+      'định danh vi khuẩn', 'định danh', 'kết quả định danh'
     ],
     antibiotic_code: [
       'kháng sinh', 'mã kháng sinh', 'tên kháng sinh', 'khang sinh', 'antibiotic', 'antibiotic code',
@@ -50,17 +53,125 @@ const ImportService = {
     interpretation: [
       'kết quả ast', 'kết quả kháng sinh', 'kết quả sir', 'kết quả s/i/r', 's/i/r', 'sir', 'interpretation',
       'độ nhạy', 'độ nhạy cảm', 'nhạy cảm', 'kháng thuốc', 'mic/sir', 'diễn giải', 'phân loại sir', 'kết luận ast',
-      'kết quả ksđ', 'kq ksđ', 'độ nhạy kháng sinh', 'kết quả'
+      'kết quả ksđ', 'kq ksđ', 'độ nhạy kháng sinh'
     ]
   },
 
   /**
-   * Đọc file Excel (.xlsx, .xls) hoặc CSV qua SheetJS
+   * Bộ phân tích dữ liệu phân cách đa năng (CSV, TSV, Semicolon CSV)
+   * Tự động phát hiện dấu phân cách (;, \t, ,), xử lý quotes, newline trong ô, và UTF-8 BOM
+   */
+  parseDelimitedText(cleanText) {
+    if (!cleanText) return { delimiter: ',', rows: [] };
+    cleanText = String(cleanText).replace(/^\uFEFF/, '');
+
+    const sampleLines = cleanText.split(/\r?\n/).slice(0, 10).filter(l => l.trim().length > 0);
+    let delimiter = ',';
+    let maxCount = -1;
+    [';', '\t', ','].forEach(delim => {
+      let count = 0;
+      sampleLines.forEach(line => {
+        const matches = line.split(delim);
+        if (matches.length > 1) count += (matches.length - 1);
+      });
+      if (count > maxCount) {
+        maxCount = count;
+        delimiter = delim;
+      }
+    });
+
+    const rows = [];
+    let currentRow = [];
+    let currentCell = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < cleanText.length; i++) {
+      const char = cleanText[i];
+      const nextChar = cleanText[i + 1];
+
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          currentCell += '"';
+          i++;
+        } else {
+          insideQuotes = !insideQuotes;
+        }
+      } else if (char === delimiter && !insideQuotes) {
+        currentRow.push(currentCell.trim());
+        currentCell = '';
+      } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+        if (char === '\r' && nextChar === '\n') {
+          i++;
+        }
+        currentRow.push(currentCell.trim());
+        if (currentRow.some(c => c !== '')) {
+          rows.push(currentRow);
+        }
+        currentRow = [];
+        currentCell = '';
+      } else {
+        currentCell += char;
+      }
+    }
+
+    if (currentCell !== '' || currentRow.length > 0) {
+      currentRow.push(currentCell.trim());
+      if (currentRow.some(c => c !== '')) {
+        rows.push(currentRow);
+      }
+    }
+
+    return { delimiter, rows };
+  },
+
+  /**
+   * Đọc file Excel (.xlsx, .xls) hoặc CSV qua SheetJS & parseDelimitedText
    */
   async parseFile(file) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+      const isCsv = file.name && (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.tsv'));
 
+      // Ưu tiên đọc file dạng Text nếu là CSV / TXT / TSV
+      if (isCsv) {
+        const textReader = new FileReader();
+        textReader.onload = (e) => {
+          try {
+            const text = e.target.result;
+            const parsed = this.parseDelimitedText(text);
+            if (!parsed.rows || parsed.rows.length === 0) {
+              throw new Error('File không chứa dữ liệu!');
+            }
+            const rawHeaders = parsed.rows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
+            const dataRows = parsed.rows.slice(1).filter(r => r.some(c => String(c).trim() !== ''));
+
+            const detectedMapping = this.autoDetectColumns(rawHeaders, dataRows.slice(0, 30));
+            const previewRows = dataRows.slice(0, 20);
+
+            resolve({
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.name.split('.').pop().toLowerCase(),
+              sheetNames: ['Sheet1'],
+              activeSheet: 'Sheet1',
+              headers: rawHeaders,
+              totalRows: dataRows.length,
+              totalCols: rawHeaders.length,
+              detectedMapping,
+              rawHeaders,
+              previewRows,
+              dataRows
+            });
+          } catch (err) {
+            reject(err);
+          }
+        };
+        textReader.onerror = (err) => reject(new Error('Lỗi khi đọc file CSV: ' + err.message));
+        textReader.readAsText(file, 'utf-8');
+        return;
+      }
+
+      // Đọc file Excel (.xlsx, .xls) qua SheetJS
+      const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target.result);
@@ -71,7 +182,7 @@ const ImportService = {
           const worksheet = workbook.Sheets[firstSheetName];
 
           // Đọc thành mảng các mảng dòng (raw matrix)
-          const rawMatrix = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+          let rawMatrix = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
           if (!rawMatrix || rawMatrix.length === 0) {
             throw new Error('File không chứa dữ liệu!');
@@ -88,10 +199,20 @@ const ImportService = {
             }
           }
 
-          const rawHeaders = rawMatrix[headerRowIndex].map(h => String(h || '').trim());
-          const dataRows = rawMatrix.slice(headerRowIndex + 1).filter(row => 
+          let rawHeaders = rawMatrix[headerRowIndex].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
+          let dataRows = rawMatrix.slice(headerRowIndex + 1).filter(row => 
             row.some(cell => String(cell).trim() !== '')
           );
+
+          // Trường hợp đặc biệt: file CSV có đuôi .xls/.xlsx hoặc SheetJS không tự tách dấu chấm phẩy
+          if (rawHeaders.length <= 2 && rawHeaders[0] && (rawHeaders[0].includes(';') || rawHeaders[0].includes('\t'))) {
+            const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+            const parsed = this.parseDelimitedText(csvContent);
+            if (parsed.rows.length > 0) {
+              rawHeaders = parsed.rows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
+              dataRows = parsed.rows.slice(1).filter(r => r.some(c => String(c).trim() !== ''));
+            }
+          }
 
           // Nhận diện cột tự động (kết hợp tiêu đề và nội dung dữ liệu mẫu)
           const detectedMapping = this.autoDetectColumns(rawHeaders, dataRows.slice(0, 30));
@@ -131,21 +252,13 @@ const ImportService = {
       throw new Error('Vui lòng dán nội dung dữ liệu!');
     }
 
-    const lines = textData.trim().split(/\r?\n/).filter(line => line.trim() !== '');
-    if (lines.length < 2) {
+    const parsed = this.parseDelimitedText(textData);
+    if (!parsed.rows || parsed.rows.length < 2) {
       throw new Error('Dữ liệu cần tối thiểu 1 dòng tiêu đề và 1 dòng dữ liệu!');
     }
 
-    // Tự động phát hiện dấu phân cách (phẩy, tab, hoặc chấm phẩy)
-    const firstLine = lines[0];
-    let delimiter = ',';
-    if (firstLine.includes('\t')) delimiter = '\t';
-    else if (firstLine.includes(';') && !firstLine.includes(',')) delimiter = ';';
-
-    const parseLine = (line) => line.split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
-
-    const rawHeaders = parseLine(lines[0]);
-    const dataRows = lines.slice(1).map(parseLine);
+    const rawHeaders = parsed.rows[0].map(h => String(h || '').replace(/^\uFEFF/, '').trim());
+    const dataRows = parsed.rows.slice(1).filter(r => r.some(c => String(c).trim() !== ''));
     const detectedMapping = this.autoDetectColumns(rawHeaders, dataRows.slice(0, 30));
 
     return {
@@ -180,12 +293,71 @@ const ImportService = {
         .map(val => String(val).trim());
     };
 
-    // Vòng 1: Khớp chính xác hoàn toàn (Exact match) với từ điển
-    headers.forEach((header, colIndex) => {
-      const cleanHeader = String(header).toLowerCase().trim();
-      for (const [sysField, aliases] of Object.entries(this.headerAliasDictionary)) {
-        if (recognizedFields.has(sysField)) continue;
-        if (aliases.some(alias => cleanHeader === alias)) {
+    // Vòng 1: Khớp chính xác hoàn toàn (Exact match) ưu tiên theo thứ tự từ điển
+    const claimedCols = new Set();
+    const fieldOrder = [
+      'patient_code', 'patient_name', 'collection_date', 'organism_name',
+      'specimen_type', 'department', 'sex', 'age', 'antibiotic_code', 'interpretation'
+    ];
+
+    fieldOrder.forEach(sysField => {
+      const aliases = this.headerAliasDictionary[sysField];
+      if (!aliases || recognizedFields.has(sysField)) return;
+
+      let bestCol = -1;
+      let bestRank = 999999;
+
+      headers.forEach((header, colIndex) => {
+        if (claimedCols.has(colIndex)) return;
+        const cleanHeader = String(header).toLowerCase().trim();
+        const rank = aliases.indexOf(cleanHeader);
+        if (rank !== -1 && rank < bestRank) {
+          bestRank = rank;
+          bestCol = colIndex;
+        }
+      });
+
+      if (bestCol !== -1) {
+        mapping[bestCol] = {
+          colIndex: bestCol,
+          rawHeader: headers[bestCol],
+          systemField: sysField,
+          isAntibiotic: false
+        };
+        recognizedFields.add(sysField);
+        claimedCols.add(bestCol);
+      }
+    });
+
+    // Vòng 2: Khớp tương đối (Substring match) có bộ lọc an toàn cho các trường chưa nhận diện
+    fieldOrder.forEach(sysField => {
+      if (recognizedFields.has(sysField)) return;
+      const aliases = this.headerAliasDictionary[sysField];
+      if (!aliases) return;
+
+      for (let colIndex = 0; colIndex < headers.length; colIndex++) {
+        if (claimedCols.has(colIndex)) continue;
+        const header = headers[colIndex];
+        const cleanHeader = String(header).toLowerCase().trim();
+
+        // Bộ lọc an toàn
+        if (sysField === 'interpretation') {
+          if (/mã|code|id|số|stt|phiếu|ngay|date|tg|thời gian|time|cấy/.test(cleanHeader)) {
+            continue;
+          }
+        }
+        if (sysField === 'collection_date') {
+          if (/sinh|yob|birth|dob/.test(cleanHeader)) {
+            continue;
+          }
+        }
+        if (sysField === 'organism_name') {
+          if (/kết quả cấy|kq cấy|nuôi cấy/.test(cleanHeader)) {
+            continue;
+          }
+        }
+
+        if (aliases.some(alias => cleanHeader.includes(alias))) {
           mapping[colIndex] = {
             colIndex,
             rawHeader: header,
@@ -193,69 +365,29 @@ const ImportService = {
             isAntibiotic: false
           };
           recognizedFields.add(sysField);
+          claimedCols.add(colIndex);
           break;
         }
-      }
-    });
-
-    // Vòng 2: Khớp tương đối (Substring match) có bộ lọc an toàn
-    headers.forEach((header, colIndex) => {
-      if (mapping[colIndex]) return; // Đã khớp ở vòng 1
-
-      const cleanHeader = String(header).toLowerCase().trim();
-      let matchedField = null;
-
-      for (const [sysField, aliases] of Object.entries(this.headerAliasDictionary)) {
-        if (recognizedFields.has(sysField)) continue;
-
-        // Bộ lọc an toàn: Tránh nhận diện nhầm mã số thành kết quả xét nghiệm
-        if (sysField === 'interpretation') {
-          // Nếu tiêu đề chứa mã, code, id, số, phiếu, ngày -> Không thể là kết quả AST
-          if (/mã|code|id|số|stt|phiếu|ngay|date/.test(cleanHeader)) {
-            continue;
-          }
-        }
-        if (sysField === 'collection_date') {
-          // Tránh nhầm ngày sinh với ngày lấy mẫu
-          if (/sinh|yob|birth/.test(cleanHeader)) {
-            continue;
-          }
-        }
-
-        if (aliases.some(alias => cleanHeader.includes(alias))) {
-          matchedField = sysField;
-          recognizedFields.add(sysField);
-          break;
-        }
-      }
-
-      if (matchedField) {
-        mapping[colIndex] = {
-          colIndex,
-          rawHeader: header,
-          systemField: matchedField,
-          isAntibiotic: false
-        };
       }
     });
 
     // Vòng 3: Phân tích nội dung dữ liệu thực tế (Data Content Sampling)
     headers.forEach((header, colIndex) => {
+      if (claimedCols.has(colIndex)) return;
       const current = mapping[colIndex];
       const samples = getSampleValues(colIndex);
       if (samples.length === 0) return;
+      const cleanHeader = String(header).toLowerCase().trim();
 
       // 1. Kiểm tra xem có phải cột Mã định danh / Mã bệnh nhân / Mã mẫu (010126-130011, 23031418...)
       const idMatches = samples.filter(s => Norm.isLikelyIdentifier && Norm.isLikelyIdentifier(s)).length;
       const isMostlyId = samples.length > 0 && (idMatches / samples.length) >= 0.5;
 
       if (isMostlyId) {
-        // Nếu cột này bị nhận diện nhầm là interpretation -> Hủy ngay lập tức!
         if (current && current.systemField === 'interpretation') {
           recognizedFields.delete('interpretation');
           current.systemField = 'ignore';
         }
-        // Nếu chưa có patient_code -> Gán làm patient_code
         if (!recognizedFields.has('patient_code') && (!current || current.systemField === 'ignore')) {
           mapping[colIndex] = {
             colIndex,
@@ -264,6 +396,7 @@ const ImportService = {
             isAntibiotic: false
           };
           recognizedFields.add('patient_code');
+          claimedCols.add(colIndex);
           return;
         }
       }
@@ -277,16 +410,27 @@ const ImportService = {
       const isMostlyAST = samples.length > 0 && (astMatches / samples.length) >= 0.5;
 
       if (isMostlyAST && !recognizedFields.has('interpretation')) {
-        // Chỉ gán interpretation nếu đây không phải là cột kháng sinh trong bảng ngang
-        if (!current || current.systemField === 'ignore') {
-          mapping[colIndex] = {
-            colIndex,
-            rawHeader: header,
-            systemField: 'interpretation',
-            isAntibiotic: false
-          };
-          recognizedFields.add('interpretation');
+        // Chỉ gán interpretation nếu đây KHÔNG phải là cột kháng sinh
+        const normAbx = Norm.normalizeAntibiotic ? Norm.normalizeAntibiotic(header) : null;
+        const isKnownAbx = (Norm.antibioticDictionary && (cleanHeader in Norm.antibioticDictionary)) || (normAbx && /^[A-Z0-9_]{2,8}$/.test(normAbx));
+        if (isKnownAbx) {
+          // Là cột kháng sinh trong bảng ngang -> Không được gán làm interpretation!
           return;
+        }
+
+        // Tránh nhầm "Kết quả cấy" hoặc tiêu đề vi khuẩn với cột kết quả AST
+        if (!/cấy|nuôi cấy|vi khuẩn|bacterial|culture/.test(cleanHeader)) {
+          if (!current || current.systemField === 'ignore') {
+            mapping[colIndex] = {
+              colIndex,
+              rawHeader: header,
+              systemField: 'interpretation',
+              isAntibiotic: false
+            };
+            recognizedFields.add('interpretation');
+            claimedCols.add(colIndex);
+            return;
+          }
         }
       }
 
@@ -300,26 +444,30 @@ const ImportService = {
           isAntibiotic: false
         };
         recognizedFields.add('organism_name');
+        claimedCols.add(colIndex);
         return;
       }
 
       // 4. Kiểm tra xem có phải cột Ngày lấy mẫu
-      const dateMatches = samples.filter(s => Norm.normalizeDate && Norm.normalizeDate(s).isValid).length;
-      if (samples.length > 0 && (dateMatches / samples.length) >= 0.6 && !recognizedFields.has('collection_date')) {
-        mapping[colIndex] = {
-          colIndex,
-          rawHeader: header,
-          systemField: 'collection_date',
-          isAntibiotic: false
-        };
-        recognizedFields.add('collection_date');
-        return;
+      if (!/sinh|yob|birth|dob/.test(cleanHeader)) {
+        const dateMatches = samples.filter(s => Norm.normalizeDate && Norm.normalizeDate(s).isValid).length;
+        if (samples.length > 0 && (dateMatches / samples.length) >= 0.6 && !recognizedFields.has('collection_date')) {
+          mapping[colIndex] = {
+            colIndex,
+            rawHeader: header,
+            systemField: 'collection_date',
+            isAntibiotic: false
+          };
+          recognizedFields.add('collection_date');
+          claimedCols.add(colIndex);
+          return;
+        }
       }
     });
 
     // Vòng 4: Nhận diện cột Kháng sinh cho bảng định dạng ngang (Wide format)
     headers.forEach((header, colIndex) => {
-      if (mapping[colIndex] && mapping[colIndex].systemField !== 'ignore') {
+      if (claimedCols.has(colIndex)) {
         return;
       }
 
@@ -339,10 +487,11 @@ const ImportService = {
       const isAstContent = samples.length === 0 || samples.some(s => {
         if (!Norm.normalizeAST) return false;
         const res = Norm.normalizeAST(s);
-        return res.isValid && !res.isIdentifier;
+        return res.isValid && !res.isIdentifier && res.normalized_value !== 'NA';
       });
 
-      if (normAbx && ((Norm.antibioticDictionary && normAbx in Norm.antibioticDictionary) || (/^[A-Z]{3,4}$/.test(normAbx) && isAstContent))) {
+      const isKnownAbx = Norm.antibioticDictionary && (cleanHeader in Norm.antibioticDictionary);
+      if (normAbx && (isKnownAbx || (/^[A-Z0-9_]{2,8}$/.test(normAbx) && isAstContent))) {
         antibioticColumns.push({
           colIndex,
           headerName: header,
@@ -354,6 +503,7 @@ const ImportService = {
           systemField: `antibiotic_${normAbx}`,
           isAntibiotic: true
         };
+        claimedCols.add(colIndex);
       } else {
         mapping[colIndex] = {
           colIndex,
