@@ -7,16 +7,51 @@
 const ImportService = {
   // Từ điển nhận diện cột tự động (Auto-detection column mapping)
   headerAliasDictionary: {
-    patient_code: ['mã bn', 'mã bệnh nhân', 'ma bn', 'ma benh nhan', 'patient code', 'patient id', 'patient_id', 'mabenhnhan', 'so_benh_an', 'maba', 'mã ba'],
-    patient_name: ['họ và tên', 'họ tên', 'tên bệnh nhân', 'ho ten', 'ten benh nhan', 'patient name', 'patient_name', 'hoten', 'tên bn'],
-    age: ['tuổi', 'tuoi', 'age', 'năm sinh', 'nam sinh'],
-    sex: ['giới', 'giới tính', 'gioi', 'gioi tinh', 'sex', 'gender', 'phái'],
-    department: ['khoa', 'khoa phòng', 'khoa phong', 'phòng', 'department', 'dept', 'khoa chỉ định', 'khoa dieu tri'],
-    specimen_type: ['bệnh phẩm', 'loại bệnh phẩm', 'benh pham', 'loai benh pham', 'specimen', 'specimen type', 'specimen_type', 'mẫu'],
-    collection_date: ['ngày lấy mẫu', 'ngày nhận mẫu', 'ngày', 'ngay lay mau', 'ngay', 'date', 'collection date', 'collection_date', 'ngay_nhan'],
-    organism_name: ['vi khuẩn', 'tên vi khuẩn', 'chủng vi khuẩn', 'vi khuan', 'ten vi khuan', 'organism', 'organism name', 'organism_name', 'mầm bệnh', 'bacterial'],
-    antibiotic_code: ['kháng sinh', 'mã kháng sinh', 'tên kháng sinh', 'khang sinh', 'antibiotic', 'antibiotic code', 'abx'],
-    interpretation: ['kết quả', 'ket qua', 'sir', 's/i/r', 'interpretation', 'nhạy cảm', 'kháng thuốc', 'result']
+    patient_code: [
+      'mã bn', 'mã bệnh nhân', 'ma bn', 'ma benh nhan', 'patient code', 'patient id', 'patient_id', 'mabenhnhan',
+      'so_benh_an', 'maba', 'mã ba', 'mã người bệnh', 'ma nguoi benh', 'mã số người bệnh', 'ma so nguoi benh',
+      'mã số bn', 'ma so bn', 'mã số bệnh nhân', 'ma so benh nhan', 'mã y tế', 'ma y te', 'mayte', 'pid', 'mrn',
+      'mã hsba', 'số hsba', 'mã hồ sơ', 'số hồ sơ', 'so ho so', 'mã tiếp nhận', 'số tiếp nhận', 'so tiep nhan',
+      'mã khám', 'mã lượt khám', 'mã kcb', 'makcb', 'malk', 'mã số', 'ma so', 'số ba', 'so ba', 'mã viện phí',
+      'số thẻ bhyt', 'mã bhyt', 'id bn', 'id người bệnh', 'mã bệnh nhân his', 'mã bn his',
+      // Accession / Lab Order codes that serve as specimen/order IDs in hospital exports:
+      'mã xét nghiệm', 'mã xn', 'số xét nghiệm', 'so xn', 'mã mẫu', 'ma mau', 'barcode', 'mã phiếu', 'số phiếu',
+      'so phieu', 'mã ca bệnh', 'mã đợt khám', 'accession', 'accession no', 'sample id', 'sample_id', 'specimen id'
+    ],
+    patient_name: [
+      'họ và tên', 'họ tên', 'tên bệnh nhân', 'ho ten', 'ten benh nhan', 'patient name', 'patient_name', 'hoten',
+      'tên bn', 'họ và tên bệnh nhân', 'tên người bệnh', 'họ tên người bệnh', 'họ và tên người bệnh', 'full name',
+      'fullname', 'patient'
+    ],
+    age: ['tuổi', 'tuoi', 'age', 'năm sinh', 'nam sinh', 'yob', 'birth year'],
+    sex: ['giới', 'giới tính', 'gioi', 'gioi tinh', 'sex', 'gender', 'phái', 'phai'],
+    department: [
+      'khoa', 'khoa phòng', 'khoa phong', 'phòng', 'department', 'dept', 'khoa chỉ định', 'khoa điều trị',
+      'khoa dieu tri', 'khoa yeu cau', 'phòng khám', 'phong kham', 'vi trí', 'đơn vị'
+    ],
+    specimen_type: [
+      'bệnh phẩm', 'loại bệnh phẩm', 'benh pham', 'loai benh pham', 'specimen', 'specimen type', 'specimen_type',
+      'mẫu bệnh phẩm', 'loại mẫu', 'chủng bệnh phẩm', 'nguồn mẫu', 'vị trí lấy mẫu', 'specimen_name'
+    ],
+    collection_date: [
+      'ngày lấy mẫu', 'ngày nhận mẫu', 'ngày cấy', 'ngày làm xn', 'ngày chỉ định', 'ngày xét nghiệm',
+      'ngay lay mau', 'ngay nhan mau', 'ngay cay', 'collection date', 'collection_date', 'received date',
+      'specimen date', 'ngay_nhan', 'ngay'
+    ],
+    organism_name: [
+      'tên vi khuẩn', 'chủng vi khuẩn', 'vi khuẩn', 'vi khuan', 'ten vi khuan', 'organism', 'organism name',
+      'organism_name', 'mầm bệnh', 'bacterial', 'vi sinh vật', 'tên vi sinh vật', 'chủng phân lập', 'kết quả cấy',
+      'kết quả nuôi cấy', 'định danh vi khuẩn', 'định danh', 'kết quả định danh'
+    ],
+    antibiotic_code: [
+      'kháng sinh', 'mã kháng sinh', 'tên kháng sinh', 'khang sinh', 'antibiotic', 'antibiotic code',
+      'abx', 'thuốc kháng sinh', 'tên thuốc'
+    ],
+    interpretation: [
+      'kết quả ast', 'kết quả kháng sinh', 'kết quả sir', 'kết quả s/i/r', 's/i/r', 'sir', 'interpretation',
+      'độ nhạy', 'độ nhạy cảm', 'nhạy cảm', 'kháng thuốc', 'mic/sir', 'diễn giải', 'phân loại sir', 'kết luận ast',
+      'kết quả ksđ', 'kq ksđ', 'độ nhạy kháng sinh', 'kết quả'
+    ]
   },
 
   /**
@@ -58,8 +93,8 @@ const ImportService = {
             row.some(cell => String(cell).trim() !== '')
           );
 
-          // Nhận diện cột tự động
-          const detectedMapping = this.autoDetectColumns(rawHeaders);
+          // Nhận diện cột tự động (kết hợp tiêu đề và nội dung dữ liệu mẫu)
+          const detectedMapping = this.autoDetectColumns(rawHeaders, dataRows.slice(0, 30));
 
           // Tạo preview 20 dòng
           const previewRows = dataRows.slice(0, 20);
@@ -111,7 +146,7 @@ const ImportService = {
 
     const rawHeaders = parseLine(lines[0]);
     const dataRows = lines.slice(1).map(parseLine);
-    const detectedMapping = this.autoDetectColumns(rawHeaders);
+    const detectedMapping = this.autoDetectColumns(rawHeaders, dataRows.slice(0, 30));
 
     return {
       fileName: 'Text_Paste_' + new Date().toISOString().split('T')[0] + '.csv',
@@ -128,64 +163,239 @@ const ImportService = {
   },
 
   /**
-   * Tự động nhận diện cột từ Header (Section X.Bước 3)
+   * Tự động nhận diện cột từ Header kết hợp kiểm tra nội dung dữ liệu mẫu (Section X.Bước 3)
    */
-  autoDetectColumns(headers = []) {
+  autoDetectColumns(headers = [], sampleRows = []) {
+    const Norm = (typeof window !== 'undefined' && window.DataNormalization) ? window.DataNormalization : (typeof DataNormalization !== 'undefined' ? DataNormalization : {});
     const mapping = {};
     const recognizedFields = new Set();
     const antibioticColumns = [];
 
+    // Helper: trích xuất dữ liệu mẫu của 1 cột
+    const getSampleValues = (colIdx) => {
+      if (!sampleRows || sampleRows.length === 0) return [];
+      return sampleRows
+        .map(row => row[colIdx])
+        .filter(val => val !== undefined && val !== null && String(val).trim() !== '')
+        .map(val => String(val).trim());
+    };
+
+    // Vòng 1: Khớp chính xác hoàn toàn (Exact match) với từ điển
     headers.forEach((header, colIndex) => {
+      const cleanHeader = String(header).toLowerCase().trim();
+      for (const [sysField, aliases] of Object.entries(this.headerAliasDictionary)) {
+        if (recognizedFields.has(sysField)) continue;
+        if (aliases.some(alias => cleanHeader === alias)) {
+          mapping[colIndex] = {
+            colIndex,
+            rawHeader: header,
+            systemField: sysField,
+            isAntibiotic: false
+          };
+          recognizedFields.add(sysField);
+          break;
+        }
+      }
+    });
+
+    // Vòng 2: Khớp tương đối (Substring match) có bộ lọc an toàn
+    headers.forEach((header, colIndex) => {
+      if (mapping[colIndex]) return; // Đã khớp ở vòng 1
+
       const cleanHeader = String(header).toLowerCase().trim();
       let matchedField = null;
 
-      // Kiểm tra với từ điển hệ thống
       for (const [sysField, aliases] of Object.entries(this.headerAliasDictionary)) {
         if (recognizedFields.has(sysField)) continue;
-        if (aliases.some(alias => cleanHeader === alias || cleanHeader.includes(alias))) {
+
+        // Bộ lọc an toàn: Tránh nhận diện nhầm mã số thành kết quả xét nghiệm
+        if (sysField === 'interpretation') {
+          // Nếu tiêu đề chứa mã, code, id, số, phiếu, ngày -> Không thể là kết quả AST
+          if (/mã|code|id|số|stt|phiếu|ngay|date/.test(cleanHeader)) {
+            continue;
+          }
+        }
+        if (sysField === 'collection_date') {
+          // Tránh nhầm ngày sinh với ngày lấy mẫu
+          if (/sinh|yob|birth/.test(cleanHeader)) {
+            continue;
+          }
+        }
+
+        if (aliases.some(alias => cleanHeader.includes(alias))) {
           matchedField = sysField;
           recognizedFields.add(sysField);
           break;
         }
       }
 
-      // Nếu không khớp với trường hành chính, kiểm tra xem có phải cột Kháng sinh (AMP, CRO, MEM...)
-      if (!matchedField) {
-        const normAbx = window.DataNormalization.normalizeAntibiotic(header);
-        if (normAbx && (normAbx in window.DataNormalization.antibioticDictionary || header.length <= 4)) {
-          antibioticColumns.push({
+      if (matchedField) {
+        mapping[colIndex] = {
+          colIndex,
+          rawHeader: header,
+          systemField: matchedField,
+          isAntibiotic: false
+        };
+      }
+    });
+
+    // Vòng 3: Phân tích nội dung dữ liệu thực tế (Data Content Sampling)
+    headers.forEach((header, colIndex) => {
+      const current = mapping[colIndex];
+      const samples = getSampleValues(colIndex);
+      if (samples.length === 0) return;
+
+      // 1. Kiểm tra xem có phải cột Mã định danh / Mã bệnh nhân / Mã mẫu (010126-130011, 23031418...)
+      const idMatches = samples.filter(s => Norm.isLikelyIdentifier && Norm.isLikelyIdentifier(s)).length;
+      const isMostlyId = samples.length > 0 && (idMatches / samples.length) >= 0.5;
+
+      if (isMostlyId) {
+        // Nếu cột này bị nhận diện nhầm là interpretation -> Hủy ngay lập tức!
+        if (current && current.systemField === 'interpretation') {
+          recognizedFields.delete('interpretation');
+          current.systemField = 'ignore';
+        }
+        // Nếu chưa có patient_code -> Gán làm patient_code
+        if (!recognizedFields.has('patient_code') && (!current || current.systemField === 'ignore')) {
+          mapping[colIndex] = {
             colIndex,
-            headerName: header,
-            antibioticCode: normAbx
-          });
-          matchedField = `antibiotic_${normAbx}`;
+            rawHeader: header,
+            systemField: 'patient_code',
+            isAntibiotic: false
+          };
+          recognizedFields.add('patient_code');
+          return;
         }
       }
 
-      mapping[colIndex] = {
-        colIndex,
-        rawHeader: header,
-        systemField: matchedField || 'ignore',
-        isAntibiotic: !!matchedField?.startsWith('antibiotic_')
-      };
+      // 2. Kiểm tra xem có phải cột Kết quả AST S/I/R
+      const astMatches = samples.filter(s => {
+        if (!Norm.normalizeAST) return false;
+        const res = Norm.normalizeAST(s);
+        return res.isValid && res.normalized_value !== 'UNKNOWN' && !res.isIdentifier;
+      }).length;
+      const isMostlyAST = samples.length > 0 && (astMatches / samples.length) >= 0.5;
+
+      if (isMostlyAST && !recognizedFields.has('interpretation')) {
+        // Chỉ gán interpretation nếu đây không phải là cột kháng sinh trong bảng ngang
+        if (!current || current.systemField === 'ignore') {
+          mapping[colIndex] = {
+            colIndex,
+            rawHeader: header,
+            systemField: 'interpretation',
+            isAntibiotic: false
+          };
+          recognizedFields.add('interpretation');
+          return;
+        }
+      }
+
+      // 3. Kiểm tra xem có phải cột Tên Vi khuẩn
+      const orgMatches = samples.filter(s => Norm.normalizeOrganism && Norm.normalizeOrganism(s).isValid).length;
+      if (samples.length > 0 && (orgMatches / samples.length) >= 0.4 && !recognizedFields.has('organism_name')) {
+        mapping[colIndex] = {
+          colIndex,
+          rawHeader: header,
+          systemField: 'organism_name',
+          isAntibiotic: false
+        };
+        recognizedFields.add('organism_name');
+        return;
+      }
+
+      // 4. Kiểm tra xem có phải cột Ngày lấy mẫu
+      const dateMatches = samples.filter(s => Norm.normalizeDate && Norm.normalizeDate(s).isValid).length;
+      if (samples.length > 0 && (dateMatches / samples.length) >= 0.6 && !recognizedFields.has('collection_date')) {
+        mapping[colIndex] = {
+          colIndex,
+          rawHeader: header,
+          systemField: 'collection_date',
+          isAntibiotic: false
+        };
+        recognizedFields.add('collection_date');
+        return;
+      }
+    });
+
+    // Vòng 4: Nhận diện cột Kháng sinh cho bảng định dạng ngang (Wide format)
+    headers.forEach((header, colIndex) => {
+      if (mapping[colIndex] && mapping[colIndex].systemField !== 'ignore') {
+        return;
+      }
+
+      const cleanHeader = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (Norm.nonAntibioticBlacklist && Norm.nonAntibioticBlacklist.has(cleanHeader)) {
+        mapping[colIndex] = {
+          colIndex,
+          rawHeader: header,
+          systemField: 'ignore',
+          isAntibiotic: false
+        };
+        return;
+      }
+
+      const normAbx = Norm.normalizeAntibiotic ? Norm.normalizeAntibiotic(header) : null;
+      const samples = getSampleValues(colIndex);
+      const isAstContent = samples.length === 0 || samples.some(s => {
+        if (!Norm.normalizeAST) return false;
+        const res = Norm.normalizeAST(s);
+        return res.isValid && !res.isIdentifier;
+      });
+
+      if (normAbx && ((Norm.antibioticDictionary && normAbx in Norm.antibioticDictionary) || (/^[A-Z]{3,4}$/.test(normAbx) && isAstContent))) {
+        antibioticColumns.push({
+          colIndex,
+          headerName: header,
+          antibioticCode: normAbx
+        });
+        mapping[colIndex] = {
+          colIndex,
+          rawHeader: header,
+          systemField: `antibiotic_${normAbx}`,
+          isAntibiotic: true
+        };
+      } else {
+        mapping[colIndex] = {
+          colIndex,
+          rawHeader: header,
+          systemField: 'ignore',
+          isAntibiotic: false
+        };
+      }
     });
 
     return {
       columnMap: mapping,
       antibioticColumns,
-      isWideFormat: antibioticColumns.length > 0
+      isWideFormat: antibioticColumns.length >= 3 // Cần tối thiểu 3 cột kháng sinh để xác định là bảng ngang
     };
   },
 
   /**
    * Chuyển đổi dữ liệu ma trận (Excel) thành danh sách đối tượng AST chuẩn hóa
+   * Hỗ trợ Forward-fill dòng gộp và Tự động sinh mã bệnh nhân nếu thiếu
    */
-  transformData(dataRows = [], mappingInfo = {}) {
+  transformData(dataRows = [], mappingInfo = {}, options = {}) {
+    const Norm = (typeof window !== 'undefined' && window.DataNormalization) ? window.DataNormalization : (typeof DataNormalization !== 'undefined' ? DataNormalization : {});
+    const { autoForwardFill = true, autoGeneratePatientCode = true } = options;
     const columnMap = mappingInfo.columnMap || {};
     const isWide = mappingInfo.isWideFormat;
     const records = [];
 
-    dataRows.forEach((row) => {
+    // Bộ nhớ đệm lưu thông tin bệnh nhân của dòng trước đó (Forward-Fill cho ô merged)
+    let lastPatient = {
+      patient_code: '',
+      patient_name: '',
+      age: null,
+      sex: 'Unknown',
+      department: '',
+      specimen_type: '',
+      collection_date: '',
+      organism_name: ''
+    };
+
+    dataRows.forEach((row, rowIdx) => {
+      const rowNum = rowIdx + 2;
       const baseInfo = {
         patient_code: '',
         patient_name: '',
@@ -197,30 +407,50 @@ const ImportService = {
         organism_name: ''
       };
 
-      // Đọc thông tin cơ bản
+      // Đọc thông tin cơ bản từ dòng hiện tại
       for (const colIndex in columnMap) {
         const field = columnMap[colIndex].systemField;
         const val = row[colIndex];
         if (field && !field.startsWith('antibiotic_') && field !== 'ignore') {
-          baseInfo[field] = val;
+          baseInfo[field] = val !== undefined && val !== null ? String(val).trim() : '';
         }
       }
 
       if (isWide) {
-        // Định dạng Ngang (Mỗi cột là 1 kháng sinh) -> Xoay thành nhiều dòng AST
+        // --- ĐỊNH DẠNG BẢNG NGANG (Mỗi cột là 1 kháng sinh) ---
+        // Áp dụng Forward-fill nếu dòng hiện tại bị trống thông tin bệnh nhân
+        if (autoForwardFill) {
+          if (!baseInfo.patient_code && lastPatient.patient_code) baseInfo.patient_code = lastPatient.patient_code;
+          if (!baseInfo.patient_name && lastPatient.patient_name) baseInfo.patient_name = lastPatient.patient_name;
+          if (!baseInfo.collection_date && lastPatient.collection_date) baseInfo.collection_date = lastPatient.collection_date;
+          if (!baseInfo.specimen_type && lastPatient.specimen_type) baseInfo.specimen_type = lastPatient.specimen_type;
+          if (!baseInfo.organism_name && lastPatient.organism_name) baseInfo.organism_name = lastPatient.organism_name;
+        }
+
+        // Tự động sinh mã bệnh nhân nếu vẫn trống
+        if (!baseInfo.patient_code && autoGeneratePatientCode) {
+          baseInfo.patient_code = `BN_AUTO_${rowNum}`;
+        }
+
+        // Cập nhật lastPatient nếu dòng hiện tại có thông tin
+        if (baseInfo.patient_code && !baseInfo.patient_code.startsWith('BN_AUTO_')) {
+          lastPatient = { ...baseInfo };
+        }
+
+        // Xoay các cột kháng sinh thành các bản ghi AST
         mappingInfo.antibioticColumns.forEach(abxCol => {
           const rawResult = row[abxCol.colIndex];
           if (rawResult !== undefined && rawResult !== null && String(rawResult).trim() !== '') {
             records.push({
               ...baseInfo,
               antibiotic_code: abxCol.antibioticCode,
-              raw_result: rawResult,
-              interpretation: rawResult
+              raw_result: String(rawResult).trim(),
+              interpretation: String(rawResult).trim()
             });
           }
         });
       } else {
-        // Định dạng Dọc (Mỗi dòng là 1 kết quả)
+        // --- ĐỊNH DẠNG BẢNG DỌC (Mỗi dòng là 1 kết quả) ---
         let abxCode = '';
         let interp = '';
         for (const colIndex in columnMap) {
@@ -229,11 +459,46 @@ const ImportService = {
           if (field === 'interpretation') interp = row[colIndex];
         }
 
+        const rawAbxStr = abxCode !== undefined && abxCode !== null ? String(abxCode).trim() : '';
+        const rawInterpStr = interp !== undefined && interp !== null ? String(interp).trim() : '';
+
+        // Kiểm tra xem dòng này có phải là dòng tiêu đề phụ / mã mẫu của nhóm xét nghiệm không
+        const isMetadataRow = Norm.isLikelyIdentifier && Norm.isLikelyIdentifier(rawInterpStr) && !rawAbxStr;
+        if (isMetadataRow) {
+          // Dòng này chứa mã số tiếp nhận / mã mẫu -> Cập nhật vào lastPatient để các dòng kháng sinh phía dưới kế thừa
+          lastPatient.patient_code = rawInterpStr;
+          return; // Bỏ qua không đẩy thành bản ghi AST rác
+        }
+
+        // Forward-fill từ dòng trước nếu các trường hành chính bị trống
+        if (autoForwardFill) {
+          if (!baseInfo.patient_code && lastPatient.patient_code) baseInfo.patient_code = lastPatient.patient_code;
+          if (!baseInfo.patient_name && lastPatient.patient_name) baseInfo.patient_name = lastPatient.patient_name;
+          if (!baseInfo.collection_date && lastPatient.collection_date) baseInfo.collection_date = lastPatient.collection_date;
+          if (!baseInfo.specimen_type && lastPatient.specimen_type) baseInfo.specimen_type = lastPatient.specimen_type;
+          if (!baseInfo.organism_name && lastPatient.organism_name) baseInfo.organism_name = lastPatient.organism_name;
+        }
+
+        // Tự động sinh mã bệnh nhân nếu vẫn trống
+        if (!baseInfo.patient_code && autoGeneratePatientCode) {
+          baseInfo.patient_code = `BN_AUTO_${rowNum}`;
+        }
+
+        // Cập nhật lastPatient
+        if (baseInfo.patient_code && !baseInfo.patient_code.startsWith('BN_AUTO_')) {
+          lastPatient = { ...baseInfo };
+        }
+
+        // Bỏ qua dòng hoàn toàn rỗng không có kháng sinh và không có kết quả
+        if (!rawAbxStr && !rawInterpStr) {
+          return;
+        }
+
         records.push({
           ...baseInfo,
-          antibiotic_code: abxCode,
-          raw_result: interp,
-          interpretation: interp
+          antibiotic_code: rawAbxStr,
+          raw_result: rawInterpStr,
+          interpretation: rawInterpStr
         });
       }
     });

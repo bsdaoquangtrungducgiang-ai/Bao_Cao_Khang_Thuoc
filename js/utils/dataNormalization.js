@@ -28,7 +28,9 @@ const DataNormalization = {
       clean === 'nhay' ||
       clean.startsWith('nhay') ||
       clean.startsWith('sens') ||
-      clean.startsWith('susc')
+      clean.startsWith('susc') ||
+      /\b[sS]\b/.test(str) ||
+      /\([sS]\)/.test(str)
     ) {
       return { raw_value: str, normalized_value: 'S', isValid: true };
     }
@@ -39,7 +41,9 @@ const DataNormalization = {
       clean === 'intermediate' ||
       clean === 'trung gian' ||
       clean.startsWith('trung gian') ||
-      clean.startsWith('inter')
+      clean.startsWith('inter') ||
+      /\b[iI]\b/.test(str) ||
+      /\([iI]\)/.test(str)
     ) {
       return { raw_value: str, normalized_value: 'I', isValid: true };
     }
@@ -51,7 +55,9 @@ const DataNormalization = {
       clean === 'resistance' ||
       clean === 'khang' ||
       clean.startsWith('khang') ||
-      clean.startsWith('resist')
+      clean.startsWith('resist') ||
+      /\b[rR]\b/.test(str) ||
+      /\([rR]\)/.test(str)
     ) {
       return { raw_value: str, normalized_value: 'R', isValid: true };
     }
@@ -66,8 +72,22 @@ const DataNormalization = {
       return { raw_value: str, normalized_value: 'NS', isValid: true };
     }
 
+    // Phát hiện giá trị là Mã định danh / Mã mẫu / Barcode thay vì kết quả AST
+    const isIdentifier = this.isLikelyIdentifier(str);
+
     // Không thể chuẩn hóa tự động
-    return { raw_value: str, normalized_value: 'UNKNOWN', isValid: false };
+    return { raw_value: str, normalized_value: 'UNKNOWN', isValid: false, isIdentifier };
+  },
+
+  // Kiểm tra chuỗi có phải là mã số / mã mẫu / barcode y tế
+  isLikelyIdentifier(str) {
+    if (!str) return false;
+    const clean = String(str).trim();
+    // Ví dụ: 010126-130011, 23031418, BN00123, SC-98213
+    if (/^\d{4,10}$/.test(clean)) return true; // Chuỗi toàn số (Mã BN, Số hồ sơ)
+    if (/^\d{4,8}[-_/]\d{4,8}$/.test(clean)) return true; // Định dạng mã mẫu ngày-số
+    if (/^[A-Za-z]{1,4}[-_]?\d{4,10}$/.test(clean)) return true; // BN00123, XN2301
+    return false;
   },
 
   // 2. Chuẩn hóa Tên vi khuẩn (Organism Aliases)
@@ -178,13 +198,53 @@ const DataNormalization = {
     'dox': 'DOX', 'doxycycline': 'DOX',
     'tgc': 'TGC', 'tigecycline': 'TGC',
     'col': 'COL', 'colistin': 'COL',
-    'pol': 'POL', 'polymyxin b': 'POL'
+    'pol': 'POL', 'polymyxin b': 'POL',
+    'fox': 'FOX', 'cefoxitin': 'FOX',
+    'oxa': 'OXA', 'oxacillin': 'OXA',
+    'pen': 'PEN', 'penicillin': 'PEN',
+    'amx': 'AMX', 'amoxicillin': 'AMX',
+    'dor': 'DOR', 'doripenem': 'DOR',
+    'nit': 'NIT', 'nitrofurantoin': 'NIT',
+    'fos': 'FOS', 'fosfomycin': 'FOS',
+    'azm': 'AZM', 'azithromycin': 'AZM',
+    'clr': 'CLR', 'clarithromycin': 'CLR',
+    'czo': 'CZO', 'cefazolin': 'CFZ',
+    'ctz': 'CTZ', 'ceftazidime': 'CAZ',
+    'cpt': 'CPT', 'ceftaroline': 'CPT'
   },
+
+  // Danh sách từ khóa hành chính / phi kháng sinh tuyệt đối không được nhận diện là kháng sinh
+  nonAntibioticBlacklist: new Set([
+    'stt', 'ma', 'mabn', 'manguoibenh', 'manb', 'maxn', 'id', 'pid', 'mrn', 'khoa', 'phong',
+    'tuoi', 'nam', 'gioi', 'ngay', 'kq', 'note', 'ten', 'hoten', 'benhpham', 'vikhuan', 'mau',
+    'sophieu', 'maphieu', 'matiepnhan', 'sotiepnhan', 'makcb', 'malk', 'no', 'order', 'barcode',
+    'bacsi', 'chandoan', 'doituong', 'bhyt', 'ghichu', 'result', 'ketqua', 'date', 'age', 'sex',
+    'patient', 'specimen', 'organism', 'dept', 'department', 'ward', 'note', 'comment', 'status'
+  ]),
 
   normalizeAntibiotic(rawAbx) {
     if (!rawAbx) return null;
-    const clean = String(rawAbx).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    return this.antibioticDictionary[clean] || String(rawAbx).trim().toUpperCase();
+    const clean = String(rawAbx).trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]/g, '');
+    if (!clean) return null;
+    
+    // Nếu nằm trong danh sách đen các từ khóa quản trị -> Bỏ qua
+    if (this.nonAntibioticBlacklist.has(clean)) {
+      return null;
+    }
+
+    if (this.antibioticDictionary[clean]) {
+      return this.antibioticDictionary[clean];
+    }
+
+    // Nếu không nằm trong từ điển, chỉ coi là kháng sinh nếu không chứa số và độ dài phù hợp (3-4 ký tự viết tắt)
+    const upper = clean.toUpperCase();
+    if (/^[A-Z]{3,4}$/.test(upper)) {
+      return upper;
+    }
+    return upper;
   },
 
   // 4. Chuẩn hóa Giới tính (Nam, Nữ, Khác)

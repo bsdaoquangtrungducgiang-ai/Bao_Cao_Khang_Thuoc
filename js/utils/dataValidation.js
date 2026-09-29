@@ -11,6 +11,7 @@ const DataValidation = {
    * @returns {Object} { isValid, summary, validRecords, warningRecords, errorRecords, errorList }
    */
   validateBatch(rawRows = [], existingFingerprints = new Set()) {
+    const Norm = (typeof window !== 'undefined' && window.DataNormalization) ? window.DataNormalization : (typeof DataNormalization !== 'undefined' ? DataNormalization : {});
     const errorList = [];
     const validRecords = [];
     const warningRecords = [];
@@ -31,8 +32,16 @@ const DataValidation = {
           row: rowNum,
           field: 'patient_code',
           value: '',
-          error: 'Thiếu mã bệnh nhân (Bắt buộc)',
+          error: 'Thiếu mã bệnh nhân (Bắt buộc - Bấm "Tự động sửa lỗi" để tự sinh mã)',
           severity: 'error'
+        });
+      } else if (patientCode.startsWith('BN_AUTO_')) {
+        rowWarnings.push({
+          row: rowNum,
+          field: 'patient_code',
+          value: patientCode,
+          error: `Mã bệnh nhân được tự động gán ("${patientCode}") do file gốc để trống`,
+          severity: 'warning'
         });
       }
 
@@ -50,7 +59,7 @@ const DataValidation = {
 
       // 3. Kiểm tra Ngày lấy mẫu (Collection Date)
       const rawDate = row.collection_date;
-      const dateCheck = window.DataNormalization.normalizeDate(rawDate);
+      const dateCheck = Norm.normalizeDate ? Norm.normalizeDate(rawDate) : { isValid: true, dateStr: rawDate };
       if (!rawDate) {
         rowErrors.push({
           row: rowNum,
@@ -85,7 +94,7 @@ const DataValidation = {
 
       // 5. Kiểm tra Vi khuẩn (Organism Name)
       const rawOrg = row.organism_name;
-      const orgCheck = window.DataNormalization.normalizeOrganism(rawOrg);
+      const orgCheck = Norm.normalizeOrganism ? Norm.normalizeOrganism(rawOrg) : { isValid: true, name: rawOrg, raw: rawOrg };
       if (!rawOrg) {
         rowErrors.push({
           row: rowNum,
@@ -106,7 +115,7 @@ const DataValidation = {
 
       // 6. Kiểm tra Kháng sinh & Kết quả AST
       const rawAbx = row.antibiotic_code;
-      const normAbx = window.DataNormalization.normalizeAntibiotic(rawAbx);
+      const normAbx = Norm.normalizeAntibiotic ? Norm.normalizeAntibiotic(rawAbx) : rawAbx;
       if (!rawAbx) {
         rowErrors.push({
           row: rowNum,
@@ -117,26 +126,37 @@ const DataValidation = {
         });
       }
 
-      const astCheck = window.DataNormalization.normalizeAST(row.raw_result || row.interpretation);
+      const astCheck = Norm.normalizeAST ? Norm.normalizeAST(row.raw_result || row.interpretation) : { isValid: true, normalized_value: row.interpretation, raw_value: row.raw_result };
       if (!astCheck.isValid) {
-        rowErrors.push({
-          row: rowNum,
-          field: 'interpretation',
-          value: String(row.raw_result || row.interpretation || ''),
-          error: `Kết quả kháng sinh đồ không thuộc S/I/R ("${row.raw_result || row.interpretation}")`,
-          severity: 'error'
-        });
+        const valStr = String(row.raw_result || row.interpretation || '');
+        if (astCheck.isIdentifier) {
+          rowErrors.push({
+            row: rowNum,
+            field: 'interpretation',
+            value: valStr,
+            error: `Giá trị này có dạng Mã xét nghiệm/Mã BN ("${valStr}"). Vui lòng kiểm tra lại Bước 3 (Khớp nối Cột) để gán đúng cột Kết quả AST`,
+            severity: 'error'
+          });
+        } else {
+          rowErrors.push({
+            row: rowNum,
+            field: 'interpretation',
+            value: valStr,
+            error: `Kết quả kháng sinh đồ không thuộc S/I/R ("${valStr}")`,
+            severity: 'error'
+          });
+        }
       }
 
       // 7. Kiểm tra Trùng lặp (Duplicate Detection - Section XXXIV)
       const validDate = dateCheck.isValid ? dateCheck.dateStr : 'NO-DATE';
-      const fp = window.DataNormalization.generateFingerprint(
+      const fp = Norm.generateFingerprint ? Norm.generateFingerprint(
         patientCode,
         specimenType,
         validDate,
         orgCheck.name,
         normAbx
-      );
+      ) : `${patientCode}|${specimenType}|${validDate}|${orgCheck.name}|${normAbx}`;
 
       let isDuplicate = false;
       if (batchFingerprints.has(fp) || existingFingerprints.has(fp)) {
@@ -160,7 +180,7 @@ const DataValidation = {
         patient_code: patientCode,
         patient_name: row.patient_name || `Bệnh nhân ${patientCode}`,
         age: !isNaN(Number(row.age)) ? Number(row.age) : null,
-        sex: window.DataNormalization.normalizeSex(row.sex),
+        sex: Norm.normalizeSex ? Norm.normalizeSex(row.sex) : (row.sex || 'Unknown'),
         department: row.department || 'Khoa Vi sinh',
         specimen_type: specimenType || 'Khác',
         collection_date: dateCheck.isValid ? dateCheck.dateStr : null,
@@ -197,6 +217,62 @@ const DataValidation = {
       warningRecords,
       errorRecords,
       errorList
+    };
+  },
+
+  /**
+   * Tự động sửa lỗi hàng loạt:
+   * - Tự động điền mã BN còn thiếu
+   * - Tự động điền ngày hiện tại nếu thiếu
+   * - Chuẩn hóa khoảng trắng dư thừa
+   * - Bỏ qua các dòng tiêu đề phụ/phi AST
+   */
+  autoFixBatch(rawRows = [], existingFingerprints = new Set()) {
+    const Norm = (typeof window !== 'undefined' && window.DataNormalization) ? window.DataNormalization : (typeof DataNormalization !== 'undefined' ? DataNormalization : {});
+    const fixedRows = [];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    rawRows.forEach((row, idx) => {
+      const fixed = { ...row };
+      const rowNum = idx + 2;
+
+      // 1. Sửa mã bệnh nhân
+      if (!fixed.patient_code || !String(fixed.patient_code).trim()) {
+        fixed.patient_code = `BN_AUTO_${rowNum}`;
+      } else {
+        fixed.patient_code = String(fixed.patient_code).trim();
+      }
+
+      // 2. Sửa ngày tháng
+      if (!fixed.collection_date || !String(fixed.collection_date).trim()) {
+        fixed.collection_date = todayStr;
+      }
+
+      // 3. Sửa loại bệnh phẩm
+      if (!fixed.specimen_type || !String(fixed.specimen_type).trim()) {
+        fixed.specimen_type = 'Khác';
+      }
+
+      // 4. Chuẩn hóa kết quả AST (loại bỏ khoảng trắng, dấu ngoặc)
+      if (fixed.interpretation) {
+        fixed.interpretation = String(fixed.interpretation).trim();
+      }
+      if (fixed.raw_result) {
+        fixed.raw_result = String(fixed.raw_result).trim();
+      }
+
+      // Bỏ qua dòng nếu kết quả AST là mã định danh và không có kháng sinh
+      const astCheck = Norm.normalizeAST ? Norm.normalizeAST(fixed.raw_result || fixed.interpretation) : { isIdentifier: false };
+      if (astCheck.isIdentifier && (!fixed.antibiotic_code || !String(fixed.antibiotic_code).trim())) {
+        return;
+      }
+
+      fixedRows.push(fixed);
+    });
+
+    return {
+      fixedRows,
+      validation: this.validateBatch(fixedRows, existingFingerprints)
     };
   }
 };

@@ -617,6 +617,22 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 </p>
               </div>
 
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; gap: 16px; align-items: center; font-size: 12.5px;">
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="chk-auto-forward-fill" checked>
+                    <span>Tự động điền dữ liệu dòng gộp (Forward-fill)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="chk-auto-gen-patient-code" checked>
+                    <span>Tự động sinh mã BN nếu thiếu</span>
+                  </label>
+                </div>
+                <button class="btn-reset-filters" id="btn-reauto-detect" style="font-size: 12px; padding: 4px 10px;">
+                  <i class="fa-solid fa-arrows-rotate"></i> Nhận diện lại tự động
+                </button>
+              </div>
+
               <div class="mapping-cards-grid" id="mapping-cards-container"></div>
 
               <div class="wizard-footer-actions">
@@ -654,13 +670,18 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 </div>
               </div>
 
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <h4 style="font-size: 13.5px; font-weight: 700; color: var(--text-main);">
                   <i class="fa-solid fa-triangle-exclamation"></i> Chi tiết các dòng cần kiểm tra hoặc có lỗi:
                 </h4>
-                <button class="btn-reset-filters" id="btn-export-errors" style="color: #dc2626;">
-                  <i class="fa-solid fa-file-excel"></i> Xuất file Excel báo cáo lỗi
-                </button>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn-setup-action" id="btn-autofix-errors" style="background: #2563eb; padding: 6px 14px; font-size: 12.5px;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> ⚡ Tự động sửa lỗi & Chuẩn hóa
+                  </button>
+                  <button class="btn-reset-filters" id="btn-export-errors" style="color: #dc2626;">
+                    <i class="fa-solid fa-file-excel"></i> Xuất file Excel báo cáo lỗi
+                  </button>
+                </div>
               </div>
 
               <div class="preview-table-container" style="max-height: 280px;">

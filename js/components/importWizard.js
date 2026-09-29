@@ -103,6 +103,34 @@ const ImportWizard = {
         }
       });
     }
+
+    // 7. Nút tự động nhận diện lại cột ở Bước 3
+    const btnReAuto = document.getElementById('btn-reauto-detect');
+    if (btnReAuto) {
+      btnReAuto.addEventListener('click', () => {
+        if (this.parsedData) {
+          this.mappingState = window.ImportService.autoDetectColumns(this.parsedData.rawHeaders, this.parsedData.dataRows.slice(0, 30));
+          this.renderStep3Mapping();
+          window.Toast.success('Đã tự động nhận diện lại toàn bộ các cột!');
+        }
+      });
+    }
+
+    // 8. Nút Tự động sửa lỗi & Chuẩn hóa ở Bước 4
+    const btnAutoFix = document.getElementById('btn-autofix-errors');
+    if (btnAutoFix) {
+      btnAutoFix.addEventListener('click', () => {
+        if (!this.transformedData || this.transformedData.length === 0) {
+          window.Toast.warning('Chưa có dữ liệu để sửa!');
+          return;
+        }
+        const fixResult = window.DataValidation.autoFixBatch(this.transformedData);
+        this.transformedData = fixResult.fixedRows;
+        this.validationResult = fixResult.validation;
+        this.renderValidationUI();
+        window.Toast.success(`Đã tự động xử lý và chuẩn hóa! Hiện có ${(this.validationResult.validCount + this.validationResult.warningCount).toLocaleString()} bản ghi sẵn sàng nạp.`);
+      });
+    }
   },
 
   async handleFileSelected(file) {
@@ -225,11 +253,22 @@ const ImportWizard = {
       const isAbx = col.systemField.startsWith('antibiotic_');
       const abxCode = isAbx ? col.systemField.replace('antibiotic_', '') : '';
 
+      // Lấy 3 giá trị mẫu từ dữ liệu thực tế của cột này
+      const sampleVals = (this.parsedData.previewRows || [])
+        .map(r => r[colIndex])
+        .filter(v => v !== undefined && v !== null && String(v).trim() !== '')
+        .slice(0, 3)
+        .map(v => String(v).trim());
+      const sampleText = sampleVals.length > 0 ? sampleVals.join(' | ') : '(Cột trống)';
+
       card.innerHTML = `
         <div class="mapping-col-left">
           <div class="mapping-col-index">Cột ${parseInt(colIndex) + 1}</div>
           <div class="mapping-raw-header" title="${col.rawHeader}">
             <strong>${col.rawHeader}</strong>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;" title="${sampleText}">
+            Mẫu: <span style="color: var(--primary); font-weight: 500;">${sampleText}</span>
           </div>
         </div>
         <div class="mapping-arrow">
@@ -265,7 +304,7 @@ const ImportWizard = {
           }
         }
         this.mappingState.antibioticColumns = abxList;
-        this.mappingState.isWideFormat = abxList.length > 0;
+        this.mappingState.isWideFormat = abxList.length >= 3;
       });
 
       container.appendChild(card);
@@ -276,17 +315,30 @@ const ImportWizard = {
   runValidationStep() {
     window.Toast.info('Đang kiểm tra chất lượng dữ liệu...');
 
+    // Đọc tùy chọn người dùng
+    const autoForwardFill = document.getElementById('chk-auto-forward-fill')?.checked !== false;
+    const autoGeneratePatientCode = document.getElementById('chk-auto-gen-patient-code')?.checked !== false;
+
     // 1. Chuyển đổi dữ liệu thô theo mapping
     const transformed = window.ImportService.transformData(
       this.parsedData.dataRows,
-      this.mappingState
+      this.mappingState,
+      { autoForwardFill, autoGeneratePatientCode }
     );
+    this.transformedData = transformed;
 
     // 2. Chạy Validation Engine
     const validation = window.DataValidation.validateBatch(transformed);
     this.validationResult = validation;
 
     // 3. Render giao diện Bước 4
+    this.renderValidationUI();
+  },
+
+  renderValidationUI() {
+    const validation = this.validationResult;
+    if (!validation) return;
+
     document.getElementById('val-stat-total').textContent = validation.total.toLocaleString();
     document.getElementById('val-stat-valid').textContent = validation.validCount.toLocaleString();
     document.getElementById('val-stat-warning').textContent = validation.warningCount.toLocaleString();

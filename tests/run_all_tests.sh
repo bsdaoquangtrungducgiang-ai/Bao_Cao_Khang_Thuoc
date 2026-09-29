@@ -23,9 +23,13 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/phase7_8_tests.js
     P4_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ]; then
+    echo "5. Chạy Bộ Test Xử lý Dữ liệu Thực tế Bệnh viện (23.792 dòng & Auto-Fix)..."
+    "$JSC_BIN" tests/hospital_large_import_test.js
+    P5_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ]; then
         echo "================================================================"
-        echo "  ✔ TOÀN BỘ 175 BÀI TEST ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
+        echo "  ✔ TOÀN BỘ 208 BÀI TEST ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"
         exit 0
     else
