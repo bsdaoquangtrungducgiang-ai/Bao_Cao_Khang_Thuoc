@@ -15,7 +15,17 @@ const KPICards = {
     const elOrganisms = document.getElementById('kpi-organisms');
     const elAntibiotics = document.getElementById('kpi-antibiotics');
 
-    if (elPatients) elPatients.textContent = (stats.totalPatients || 0).toLocaleString();
+    if (elPatients) {
+      elPatients.textContent = (stats.totalPatients || 0).toLocaleString();
+      const elSub = document.getElementById('kpi-patients-subtext');
+      if (elSub) {
+        if (stats.distinctPatients && stats.distinctPatients !== stats.totalPatients) {
+          elSub.textContent = `${stats.distinctPatients.toLocaleString()} bệnh nhân duy nhất (PID)`;
+        } else {
+          elSub.textContent = 'Hồ sơ bệnh nhân nội / ngoại trú';
+        }
+      }
+    }
     if (elSpecimens) elSpecimens.textContent = (stats.totalSpecimens || 0).toLocaleString();
     if (elCultures) elCultures.textContent = (stats.totalCultures || 0).toLocaleString();
     if (elAst) elAst.textContent = (stats.totalAst || 0).toLocaleString();

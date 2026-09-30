@@ -16,6 +16,14 @@ const ReportExportService = {
 
     // Áp dụng bộ lọc nếu có
     let filteredAst = allAst;
+    let reportCultures = allCultures;
+    let reportSpecimens = allSpecimens;
+
+    if (filters.file && filters.file !== 'ALL') {
+      filteredAst = filteredAst.filter(a => a.file_name === filters.file || a.import_job_id === filters.file);
+      reportCultures = reportCultures.filter(c => c.file_name === filters.file || c.import_job_id === filters.file);
+      reportSpecimens = reportSpecimens.filter(s => s.file_name === filters.file || s.import_job_id === filters.file);
+    }
     if (filters.organism && filters.organism !== 'ALL') {
       filteredAst = filteredAst.filter(a => a.organism_name === filters.organism);
     }
@@ -27,10 +35,10 @@ const ReportExportService = {
     const kpiRates = window.AnalyticsService.calculateRates(filteredAst);
 
     // 2. Phân bố vi khuẩn
-    const orgDist = window.AnalyticsService.getOrganismDistribution(allCultures);
+    const orgDist = window.AnalyticsService.getOrganismDistribution(reportCultures);
 
     // 3. Phân bố bệnh phẩm
-    const specDist = window.AnalyticsService.getSpecimenDistribution(allSpecimens);
+    const specDist = window.AnalyticsService.getSpecimenDistribution(reportSpecimens);
 
     // 4. Antibiogram
     const targetOrg = filters.organism !== 'ALL' ? filters.organism : 'Escherichia coli';

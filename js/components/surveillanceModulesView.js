@@ -162,8 +162,16 @@ const SurveillanceModulesView = {
     const data = window.App?.state?.surveillanceData || window.DemoDataService?.getAll();
     if (!data) return;
 
-    const orgDist = window.AnalyticsService.getOrganismDistribution(data.cultures || []);
-    const specDist = window.AnalyticsService.getSpecimenDistribution(data.specimens || []);
+    const f = window.App?.state?.filters;
+    let cultures = data.cultures || [];
+    let specimens = data.specimens || [];
+    if (f && f.file && f.file !== 'ALL') {
+      cultures = cultures.filter(c => c.file_name === f.file || c.import_job_id === f.file);
+      specimens = specimens.filter(s => s.file_name === f.file || s.import_job_id === f.file);
+    }
+
+    const orgDist = window.AnalyticsService.getOrganismDistribution(cultures);
+    const specDist = window.AnalyticsService.getSpecimenDistribution(specimens);
 
     const ctxOrg = document.getElementById('chart-epi-org')?.getContext('2d');
     if (ctxOrg && typeof Chart !== 'undefined') {

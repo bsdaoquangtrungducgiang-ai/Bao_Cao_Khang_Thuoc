@@ -835,15 +835,46 @@ const ImportService = {
     if (!demo.astResults) demo.astResults = [];
 
     const existingPatientCodes = new Set(demo.patients.map(p => p.patient_code));
-    const existingSpecimenKeys = new Set(demo.specimens.map(s => `${s.patient_code}|${s.specimen_type}`));
-    const existingCultureKeys = new Set(demo.cultures.map(c => `${c.patient_code}|${c.organism_name}`));
+    const existingSpecimenIds = new Set(demo.specimens.map(s => s.id));
+    const existingCultureIds = new Set(demo.cultures.map(c => c.id));
     const nowIso = new Date().toISOString();
 
+    const cultureIdMap = new Map();
+    const specimenIdMap = new Map();
+
     validatedRecords.forEach((rec, i) => {
-      const cultId = rec.culture_id || ('imported-cult-' + jobId + '-' + (rec.patient_code || i));
+      const cultKey = rec.source_row 
+        ? (`cult-${jobId}-${rec.source_row}`) 
+        : `${rec.patient_code}|${rec.organism_name}|${rec.collection_date || ''}|${rec.specimen_type || ''}`;
+
+      let cultId = rec.culture_id;
+      if (!cultId) {
+        if (cultureIdMap.has(cultKey)) {
+          cultId = cultureIdMap.get(cultKey);
+        } else {
+          cultId = 'imported-cult-' + jobId + '-' + (rec.source_row ? ('row-' + rec.source_row) : (encodeURIComponent(rec.patient_code || 'p') + '-' + cultureIdMap.size));
+          cultureIdMap.set(cultKey, cultId);
+        }
+      }
+
+      const specKey = rec.source_row 
+        ? (`spec-${jobId}-${rec.source_row}`) 
+        : `${rec.patient_code}|${rec.specimen_type || ''}|${rec.collection_date || ''}`;
+
+      let specId = rec.specimen_id;
+      if (!specId) {
+        if (specimenIdMap.has(specKey)) {
+          specId = specimenIdMap.get(specKey);
+        } else {
+          specId = 'spec-imp-' + (rec.source_row ? ('row-' + rec.source_row) : (Date.now() + '-' + specimenIdMap.size));
+          specimenIdMap.set(specKey, specId);
+        }
+      }
+
       demo.astResults.push({
         id: 'imported-ast-' + Date.now() + '-' + i,
         culture_id: cultId,
+        source_row: rec.source_row || null,
         patient_code: rec.patient_code,
         patient_name: rec.patient_name,
         age: rec.age,
@@ -869,31 +900,35 @@ const ImportService = {
           patient_name: rec.patient_name,
           age: rec.age,
           sex: rec.sex,
-          department: rec.department
+          department: rec.department,
+          file_name: fileName,
+          import_job_id: jobId
         });
       }
 
-      const specKey = `${rec.patient_code}|${rec.specimen_type}`;
-      if (!existingSpecimenKeys.has(specKey)) {
-        existingSpecimenKeys.add(specKey);
+      if (!existingSpecimenIds.has(specId)) {
+        existingSpecimenIds.add(specId);
         demo.specimens.push({
-          id: 'spec-imp-' + Date.now() + '-' + i,
+          id: specId,
           patient_code: rec.patient_code,
           specimen_type: rec.specimen_type,
           collection_date: rec.collection_date,
-          requesting_department: rec.department
+          requesting_department: rec.department,
+          file_name: fileName,
+          import_job_id: jobId
         });
       }
 
-      const cultKey = `${rec.patient_code}|${rec.organism_name}`;
-      if (!existingCultureKeys.has(cultKey)) {
-        existingCultureKeys.add(cultKey);
+      if (!existingCultureIds.has(cultId)) {
+        existingCultureIds.add(cultId);
         demo.cultures.push({
-          id: 'cult-imp-' + Date.now() + '-' + i,
+          id: cultId,
           patient_code: rec.patient_code,
           organism_name: rec.organism_name,
+          specimen_type: rec.specimen_type,
           culture_date: rec.collection_date,
-          file_name: fileName
+          file_name: fileName,
+          import_job_id: jobId
         });
       }
     });

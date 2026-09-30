@@ -118,17 +118,50 @@ const SystemCatalogsView = {
     }
 
     if (abxTbody) {
-      abxTbody.innerHTML = '';
-      (demo.antibiotics || []).forEach(a => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${a.antibiotic_code}</strong></td>
-          <td>${a.antibiotic_name}</td>
-          <td><span class="badge-tag">${a.antibiotic_group || '-'}</span></td>
-          <td>${a.antibiotic_class || '-'}</td>
-        `;
-        abxTbody.appendChild(tr);
-      });
+      const allAbx = (demo.antibiotics && demo.antibiotics.length > 0) 
+        ? demo.antibiotics 
+        : (window.DataNormalization?.antibioticCatalog || []);
+
+      const renderAbxList = (list) => {
+        abxTbody.innerHTML = '';
+        if (list.length === 0) {
+          abxTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">Không tìm thấy kháng sinh phù hợp</td></tr>';
+          return;
+        }
+        list.forEach((a, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="text-align: center; font-weight: 600; color: var(--text-muted);">${a.stt || (idx + 1)}</td>
+            <td><code><strong>${a.antibiotic_code || a.code}</strong></code></td>
+            <td><strong>${a.antibiotic_name || a.name}</strong></td>
+            <td><span style="font-size: 12.5px; color: #334155;">${a.indication || '-'}</span></td>
+            <td><span class="badge-tag">${a.antibiotic_group || a.group || '-'}</span></td>
+          `;
+          abxTbody.appendChild(tr);
+        });
+      };
+
+      renderAbxList(allAbx);
+
+      const searchInput = document.getElementById('search-catalog-abx');
+      if (searchInput && !searchInput.dataset.bound) {
+        searchInput.dataset.bound = 'true';
+        searchInput.addEventListener('input', (e) => {
+          const q = (e.target.value || '').trim().toLowerCase();
+          if (!q) {
+            renderAbxList(allAbx);
+            return;
+          }
+          const filtered = allAbx.filter(a => {
+            const code = (a.antibiotic_code || a.code || '').toLowerCase();
+            const name = (a.antibiotic_name || a.name || '').toLowerCase();
+            const ind = (a.indication || '').toLowerCase();
+            const grp = (a.antibiotic_group || a.group || '').toLowerCase();
+            return code.includes(q) || name.includes(q) || ind.includes(q) || grp.includes(q);
+          });
+          renderAbxList(filtered);
+        });
+      }
     }
   },
 

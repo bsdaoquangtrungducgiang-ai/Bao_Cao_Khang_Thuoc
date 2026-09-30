@@ -35,25 +35,38 @@ const DemoDataService = {
       { id: 'org-8', organism_code: 'PROMIR', organism_name: 'Proteus mirabilis', vietnamese_name: 'Trực khuẩn Proteus', gram_stain: 'negative', family: 'Morganellaceae' }
     ];
 
-    // 2. Danh mục Kháng sinh
-    this.data.antibiotics = [
-      { id: 'abx-1', antibiotic_code: 'AMP', antibiotic_name: 'Ampicillin', antibiotic_group: 'Penicillins', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-2', antibiotic_code: 'AMC', antibiotic_name: 'Amoxicillin/Clavulanate', antibiotic_group: 'Beta-lactam combo', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-3', antibiotic_code: 'TZP', antibiotic_name: 'Piperacillin/Tazobactam', antibiotic_group: 'Beta-lactam combo', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-4', antibiotic_code: 'CTX', antibiotic_name: 'Cefotaxime', antibiotic_group: 'Cephalosporins 3rd', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-5', antibiotic_code: 'CRO', antibiotic_name: 'Ceftriaxone', antibiotic_group: 'Cephalosporins 3rd', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-6', antibiotic_code: 'CAZ', antibiotic_name: 'Ceftazidime', antibiotic_group: 'Cephalosporins 3rd', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-7', antibiotic_code: 'FEP', antibiotic_name: 'Cefepime', antibiotic_group: 'Cephalosporins 4th', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-8', antibiotic_code: 'MEM', antibiotic_name: 'Meropenem', antibiotic_group: 'Carbapenems', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-9', antibiotic_code: 'IPM', antibiotic_name: 'Imipenem', antibiotic_group: 'Carbapenems', antibiotic_class: 'Beta-lactam' },
-      { id: 'abx-10', antibiotic_code: 'CIP', antibiotic_name: 'Ciprofloxacin', antibiotic_group: 'Fluoroquinolones', antibiotic_class: 'Quinolones' },
-      { id: 'abx-11', antibiotic_code: 'LEV', antibiotic_name: 'Levofloxacin', antibiotic_group: 'Fluoroquinolones', antibiotic_class: 'Quinolones' },
-      { id: 'abx-12', antibiotic_code: 'GEN', antibiotic_name: 'Gentamicin', antibiotic_group: 'Aminoglycosides', antibiotic_class: 'Aminoglycosides' },
-      { id: 'abx-13', antibiotic_code: 'AMK', antibiotic_name: 'Amikacin', antibiotic_group: 'Aminoglycosides', antibiotic_class: 'Aminoglycosides' },
-      { id: 'abx-14', antibiotic_code: 'SXT', antibiotic_name: 'Trimethoprim/Sulfamethoxazole', antibiotic_group: 'Folate inhibitors', antibiotic_class: 'Sulfonamides' },
-      { id: 'abx-15', antibiotic_code: 'VAN', antibiotic_name: 'Vancomycin', antibiotic_group: 'Glycopeptides', antibiotic_class: 'Glycopeptides' },
-      { id: 'abx-16', antibiotic_code: 'LZD', antibiotic_name: 'Linezolid', antibiotic_group: 'Oxazolidinones', antibiotic_class: 'Oxazolidinones' }
-    ];
+    // 2. Danh mục 63 Kháng sinh & Chỉ định lâm sàng chuẩn hóa
+    const NormRef = (typeof window !== 'undefined' && window.DataNormalization) ? window.DataNormalization : (typeof DataNormalization !== 'undefined' ? DataNormalization : null);
+    if (NormRef && NormRef.antibioticCatalog) {
+      this.data.antibiotics = NormRef.antibioticCatalog.map(a => ({
+        id: 'abx-' + a.stt,
+        stt: a.stt,
+        antibiotic_code: a.code,
+        antibiotic_name: a.name,
+        indication: a.indication,
+        antibiotic_group: a.group,
+        antibiotic_class: a.class
+      }));
+    } else {
+      this.data.antibiotics = [
+        { id: 'abx-1', stt: 1, antibiotic_code: 'AMP', antibiotic_name: 'Ampicillin', indication: 'Kháng sinh nhóm Penicillin phổ rộng', antibiotic_group: 'Penicillins', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-2', stt: 2, antibiotic_code: 'AMC', antibiotic_name: 'Amoxicillin/Clavulanate', indication: 'Kháng sinh phối hợp chất ức chế beta-lactamase', antibiotic_group: 'Beta-lactam combo', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-3', stt: 3, antibiotic_code: 'TZP', antibiotic_name: 'Piperacillin/Tazobactam', indication: 'Kháng sinh phối hợp chất ức chế beta-lactamase', antibiotic_group: 'Beta-lactam combo', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-4', stt: 4, antibiotic_code: 'CTX', antibiotic_name: 'Cefotaxime', indication: 'Cephalosporin thế hệ 3', antibiotic_group: 'Cephalosporins 3rd', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-5', stt: 5, antibiotic_code: 'CRO', antibiotic_name: 'Ceftriaxone', indication: 'Cephalosporin thế hệ 3', antibiotic_group: 'Cephalosporins 3rd', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-6', stt: 6, antibiotic_code: 'CAZ', antibiotic_name: 'Ceftazidime', indication: 'Cephalosporin thế hệ 3', antibiotic_group: 'Cephalosporins 3rd', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-7', stt: 7, antibiotic_code: 'FEP', antibiotic_name: 'Cefepime', indication: 'Cephalosporin thế hệ 4', antibiotic_group: 'Cephalosporins 4th', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-8', stt: 8, antibiotic_code: 'MEM', antibiotic_name: 'Meropenem', indication: 'Carbapenem', antibiotic_group: 'Carbapenems', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-9', stt: 9, antibiotic_code: 'IPM', antibiotic_name: 'Imipenem', indication: 'Carbapenem', antibiotic_group: 'Carbapenems', antibiotic_class: 'Beta-lactam' },
+        { id: 'abx-10', stt: 10, antibiotic_code: 'CIP', antibiotic_name: 'Ciprofloxacin', indication: 'Nhóm Fluoroquinolone', antibiotic_group: 'Fluoroquinolones', antibiotic_class: 'Quinolones' },
+        { id: 'abx-11', stt: 11, antibiotic_code: 'LEV', antibiotic_name: 'Levofloxacin', indication: 'Nhóm Fluoroquinolone', antibiotic_group: 'Fluoroquinolones', antibiotic_class: 'Quinolones' },
+        { id: 'abx-12', stt: 12, antibiotic_code: 'GEN', antibiotic_name: 'Gentamicin', indication: 'Nhóm Aminoglycoside', antibiotic_group: 'Aminoglycosides', antibiotic_class: 'Aminoglycosides' },
+        { id: 'abx-13', stt: 13, antibiotic_code: 'AMK', antibiotic_name: 'Amikacin', indication: 'Nhóm Aminoglycoside', antibiotic_group: 'Aminoglycosides', antibiotic_class: 'Aminoglycosides' },
+        { id: 'abx-14', stt: 14, antibiotic_code: 'SXT', antibiotic_name: 'Trimethoprim/Sulfamethoxazole', indication: 'Cotrimoxazole', antibiotic_group: 'Folate inhibitors', antibiotic_class: 'Sulfonamides' },
+        { id: 'abx-15', stt: 15, antibiotic_code: 'VAN', antibiotic_name: 'Vancomycin', indication: 'Nhóm Glycopeptide', antibiotic_group: 'Glycopeptides', antibiotic_class: 'Glycopeptides' },
+        { id: 'abx-16', stt: 16, antibiotic_code: 'LZD', antibiotic_name: 'Linezolid', indication: 'Nhóm Oxazolidinone', antibiotic_group: 'Oxazolidinones', antibiotic_class: 'Oxazolidinones' }
+      ];
+    }
 
     // 3. Danh mục Khoa và Bệnh phẩm
     this.data.departments = ['ICU (Hồi sức tích cực)', 'Cấp cứu', 'Nội Hô hấp', 'Ngoại Tổng hợp', 'Ngoại Tiết niệu', 'Nhi Sơ sinh', 'Truyền nhiễm'];

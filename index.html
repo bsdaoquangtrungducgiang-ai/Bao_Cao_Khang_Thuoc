@@ -280,7 +280,7 @@
                 </div>
               </div>
               <div class="kpi-value" id="kpi-patients">100</div>
-              <div class="kpi-subtext">Hồ sơ bệnh nhân nội / ngoại trú</div>
+              <div class="kpi-subtext" id="kpi-patients-subtext">Hồ sơ bệnh nhân nội / ngoại trú</div>
             </div>
 
             <!-- 2. Bệnh phẩm -->
@@ -1618,17 +1618,23 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
           </div>
 
           <div class="data-panel-card">
-            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">
-              <i class="fa-solid fa-capsules"></i> Danh Mục Kháng Sinh Thử Nghiệm
-            </h3>
-            <div class="preview-table-container" style="max-height: 250px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="font-size: 15px; font-weight: 700; margin: 0;">
+                <i class="fa-solid fa-capsules"></i> Danh Mục 63 Kháng Sinh &amp; Chỉ Định Kháng Sinh Đồ Chuẩn
+              </h3>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="search-catalog-abx" placeholder="Tìm theo mã, tên gốc, chỉ định..." style="padding: 6px 12px; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; font-size: 13px; width: 280px;">
+              </div>
+            </div>
+            <div class="preview-table-container" style="max-height: 480px; overflow-y: auto;">
               <table class="table-lab">
                 <thead>
                   <tr>
-                    <th>Mã Kháng Sinh</th>
-                    <th>Tên Hoạt Chất</th>
-                    <th>Nhóm Kháng Sinh</th>
-                    <th>Lớp Hoạt Chất</th>
+                    <th style="width: 50px; text-align: center;">STT</th>
+                    <th style="width: 110px;">Mã Viết Tắt</th>
+                    <th style="width: 230px;">Tên Gốc Kháng Sinh</th>
+                    <th>Phiên Giải Dùng (Chỉ Định / Ý Nghĩa Trong Kháng Sinh Đồ)</th>
+                    <th style="width: 170px;">Nhóm Kháng Sinh</th>
                   </tr>
                 </thead>
                 <tbody id="table-catalog-abx-body"></tbody>

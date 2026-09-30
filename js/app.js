@@ -255,14 +255,18 @@ const App = {
     // 1. Tính toán KPIs tổng quan
     const rates = window.AnalyticsService.calculateRates(filtered);
     const uniquePatients = new Set(filtered.map(a => a.patient_code || a.patient_id)).size || (this.state.surveillanceData.patients?.length || 0);
-    const uniqueSpecimens = new Set(filtered.map(a => a.culture_id)).size || (this.state.surveillanceData.specimens?.length || 0);
+    const totalEncounters = new Set(filtered.map(a => a.source_row ? `row-${a.source_row}` : (a.culture_id || `${a.patient_code}|${a.tested_date}`))).size || (this.state.surveillanceData.cultures?.length || 0);
+    const uniqueSpecimens = totalEncounters || (this.state.surveillanceData.specimens?.length || 0);
+    const uniqueCultures = totalEncounters || (this.state.surveillanceData.cultures?.length || 200);
     const uniqueOrganisms = new Set(filtered.map(a => a.organism_name)).size;
     const uniqueAntibiotics = new Set(filtered.map(a => a.antibiotic_code)).size;
 
     window.KPICards?.render({
-      totalPatients: uniquePatients,
+      totalPatients: (f.file && f.file !== 'ALL') ? totalEncounters : (uniquePatients || totalEncounters),
+      distinctPatients: uniquePatients,
+      totalEncounters: totalEncounters,
       totalSpecimens: uniqueSpecimens,
-      totalCultures: this.state.surveillanceData.cultures?.length || 200,
+      totalCultures: uniqueCultures,
       totalAst: rates.denominator || filtered.length,
       sRate: rates.sRate,
       iRate: rates.iRate,
@@ -349,9 +353,46 @@ const App = {
       return;
     }
 
-    const cultures = this.state.surveillanceData?.cultures || [];
-    const specimens = this.state.surveillanceData?.specimens || [];
+    const f = this.state.filters;
+    let cultures = this.state.surveillanceData?.cultures || [];
+    let specimens = this.state.surveillanceData?.specimens || [];
     const ast = this.state.filteredAst || [];
+
+    if (f.file && f.file !== 'ALL') {
+      cultures = cultures.filter(c => c.file_name === f.file || c.import_job_id === f.file);
+      specimens = specimens.filter(s => s.file_name === f.file || s.import_job_id === f.file);
+
+      // Fallback: nếu cultures chưa có thẻ file_name, trích xuất chuẩn xác từ ast đã lọc
+      if (cultures.length === 0 && ast.length > 0) {
+        const cultMap = new Map();
+        ast.forEach(a => {
+          const k = a.culture_id || (a.source_row ? ('row-' + a.source_row) : (`${a.patient_code}|${a.tested_date}|${a.organism_name}`));
+          if (!cultMap.has(k)) {
+            cultMap.set(k, {
+              organism_name: a.organism_name,
+              patient_code: a.patient_code,
+              specimen_type: a.specimen_type,
+              culture_date: a.tested_date,
+              department: a.department,
+              file_name: a.file_name
+            });
+          }
+        });
+        cultures = Array.from(cultMap.values());
+      }
+    }
+
+    if (f.department && f.department !== 'ALL') {
+      cultures = cultures.filter(c => c.department === f.department);
+      specimens = specimens.filter(s => s.requesting_department === f.department || s.department === f.department);
+    }
+    if (f.specimenType && f.specimenType !== 'ALL') {
+      cultures = cultures.filter(c => c.specimen_type === f.specimenType);
+      specimens = specimens.filter(s => s.specimen_type === f.specimenType);
+    }
+    if (f.organism && f.organism !== 'ALL') {
+      cultures = cultures.filter(c => c.organism_name === f.organism);
+    }
 
     // Chart 1: Phân bố Vi khuẩn (Organism Distribution)
     this.renderOrganismChart(cultures);
