@@ -173,6 +173,15 @@ if (htmlContent) {
   print('  [SKIP] Đọc file index.html qua JSC runtime');
 }
 
+// -------------------------------------------------------------
+// TEST SUITE 6: KIỂM TRA GIÁ TRỊ MẶC ĐỊNH (TẤT CẢ VI KHUẨN, TẤT CẢ BỆNH PHẨM, TOÀN VIỆN)
+// -------------------------------------------------------------
+print('\n--- TEST SUITE 6: KIỂM TRA GIÁ TRỊ MẶC ĐỊNH ---');
+var abgDefaultAll = AnalyticsService.generateAntibiogram(allAst, 'ALL', 'ALL', 'ALL', 'ALL');
+assert(abgDefaultAll.length > 0, 'Antibiogram mặc định (Tất cả vi khuẩn, Tất cả bệnh phẩm, Toàn viện) sinh ra kết quả chuẩn xác');
+var totalAllDefault = abgDefaultAll.reduce(function(acc, r) { return acc + r.total; }, 0);
+assert(totalAllDefault === allAst.length, 'Mặc định bao trùm chính xác 100% mẫu xét nghiệm toàn viện (' + allAst.length + ' bản ghi)');
+
 print('\n================================================================');
 print('  KẾT QUẢ KIỂM THỬ: TẤT CẢ CÁC TEST ĐA TIÊU CHÍ ĐỀU ĐẠT 100%!');
 print('================================================================\n');

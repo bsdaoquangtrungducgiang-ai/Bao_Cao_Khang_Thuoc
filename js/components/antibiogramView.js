@@ -8,9 +8,9 @@
 const AntibiogramView = {
   currentChart: null,
 
-  // Bộ lọc hiện tại
+  // Bộ lọc hiện tại (Mặc định: Tất cả vi khuẩn, Tất cả bệnh phẩm, Toàn viện)
   state: {
-    selectedOrganisms: new Set(['Escherichia coli']),
+    selectedOrganisms: new Set(['ALL']),
     selectedSpecimens: new Set(['ALL']),
     selectedDepartments: new Set(['ALL']),
     selectedGender: 'ALL',
@@ -43,7 +43,7 @@ const AntibiogramView = {
       btnAllId: 'btn-ms-org-all',
       btnClearId: 'btn-ms-org-clear',
       allOptionText: 'Tất cả vi khuẩn',
-      defaultItem: 'Escherichia coli'
+      defaultItem: 'ALL'
     });
 
     this.setupMultiSelectComponent({
@@ -70,7 +70,7 @@ const AntibiogramView = {
       badgeId: 'badge-ms-department',
       btnAllId: 'btn-ms-dept-all',
       btnClearId: 'btn-ms-dept-clear',
-      allOptionText: 'Tất cả khoa phòng',
+      allOptionText: 'Toàn viện (Tất cả khoa)',
       defaultItem: 'ALL'
     });
 
@@ -198,10 +198,10 @@ const AntibiogramView = {
   },
 
   /**
-   * Đặt lại bộ lọc Antibiogram về mặc định
+   * Đặt lại bộ lọc Antibiogram về mặc định (Tất cả vi khuẩn, Tất cả bệnh phẩm, Toàn viện)
    */
   resetFilters() {
-    this.state.selectedOrganisms = new Set(this.state.availableOrganisms.includes('Escherichia coli') ? ['Escherichia coli'] : (this.state.availableOrganisms.slice(0, 1) || ['ALL']));
+    this.state.selectedOrganisms = new Set(['ALL']);
     this.state.selectedSpecimens = new Set(['ALL']);
     this.state.selectedDepartments = new Set(['ALL']);
     this.state.selectedGender = 'ALL';
@@ -215,7 +215,7 @@ const AntibiogramView = {
 
     this.renderMultiSelectOptions('selectedOrganisms', 'list-ms-organism', this.state.availableOrganisms, 'Tất cả vi khuẩn');
     this.renderMultiSelectOptions('selectedSpecimens', 'list-ms-specimen', this.state.availableSpecimens, 'Tất cả bệnh phẩm');
-    this.renderMultiSelectOptions('selectedDepartments', 'list-ms-department', this.state.availableDepartments, 'Tất cả khoa phòng');
+    this.renderMultiSelectOptions('selectedDepartments', 'list-ms-department', this.state.availableDepartments, 'Toàn viện (Tất cả khoa)');
 
     this.updateMultiSelectUI({
       key: 'selectedOrganisms',
@@ -233,7 +233,7 @@ const AntibiogramView = {
       key: 'selectedDepartments',
       labelId: 'label-ms-department',
       badgeId: 'badge-ms-department',
-      allOptionText: 'Tất cả khoa phòng'
+      allOptionText: 'Toàn viện (Tất cả khoa)'
     });
 
     window.Toast?.info('Đã đặt lại bộ lọc Antibiogram về mặc định');
@@ -265,9 +265,9 @@ const AntibiogramView = {
       .map(([name, count]) => ({ name, count }));
     this.state.availableOrganisms = sortedOrgs.map(o => o.name);
 
-    // Mặc định chọn E. coli nếu chưa có lựa chọn
-    if (this.state.selectedOrganisms.size === 0 || (this.state.selectedOrganisms.has('Escherichia coli') && !this.state.availableOrganisms.includes('Escherichia coli') && this.state.availableOrganisms.length > 0)) {
-      this.state.selectedOrganisms = new Set([this.state.availableOrganisms[0]]);
+    // Mặc định: Tất cả vi khuẩn
+    if (!this.state.selectedOrganisms || this.state.selectedOrganisms.size === 0) {
+      this.state.selectedOrganisms = new Set(['ALL']);
     }
 
     // 2. Bệnh phẩm
@@ -311,7 +311,7 @@ const AntibiogramView = {
     // Render checkbox options
     this.renderMultiSelectOptions('selectedOrganisms', 'list-ms-organism', sortedOrgs, 'Tất cả vi khuẩn');
     this.renderMultiSelectOptions('selectedSpecimens', 'list-ms-specimen', sortedSpecs, 'Tất cả bệnh phẩm');
-    this.renderMultiSelectOptions('selectedDepartments', 'list-ms-department', sortedDepts, 'Tất cả khoa phòng');
+    this.renderMultiSelectOptions('selectedDepartments', 'list-ms-department', sortedDepts, 'Toàn viện (Tất cả khoa)');
 
     // Cập nhật text hiển thị trên nút trigger
     this.updateMultiSelectUI({
@@ -330,7 +330,7 @@ const AntibiogramView = {
       key: 'selectedDepartments',
       labelId: 'label-ms-department',
       badgeId: 'badge-ms-department',
-      allOptionText: 'Tất cả khoa phòng'
+      allOptionText: 'Toàn viện (Tất cả khoa)'
     });
   },
 
@@ -438,7 +438,7 @@ const AntibiogramView = {
     const configMap = {
       selectedOrganisms: { key: 'selectedOrganisms', labelId: 'label-ms-organism', badgeId: 'badge-ms-organism', allOptionText: 'Tất cả vi khuẩn' },
       selectedSpecimens: { key: 'selectedSpecimens', labelId: 'label-ms-specimen', badgeId: 'badge-ms-specimen', allOptionText: 'Tất cả bệnh phẩm' },
-      selectedDepartments: { key: 'selectedDepartments', labelId: 'label-ms-department', badgeId: 'badge-ms-department', allOptionText: 'Tất cả khoa phòng' }
+      selectedDepartments: { key: 'selectedDepartments', labelId: 'label-ms-department', badgeId: 'badge-ms-department', allOptionText: 'Toàn viện (Tất cả khoa)' }
     };
     if (configMap[stateKey]) {
       this.updateMultiSelectUI(configMap[stateKey]);

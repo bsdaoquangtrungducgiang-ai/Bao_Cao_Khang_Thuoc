@@ -913,12 +913,12 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
           <div class="data-panel-card">
             <div class="data-toolbar" style="align-items: flex-start; padding: 14px 16px; background: #ffffff; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
               <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; flex: 1;">
-                <!-- 1. Chọn Vi Khuẩn (1 hoặc nhiều hoặc Tất cả) -->
+                <!-- 1. Chọn Vi Khuẩn (1 hoặc nhiều hoặc Tất cả - Mặc định: Tất cả) -->
                 <div class="filter-item custom-multiselect" id="ms-abg-organism">
-                  <span class="filter-label"><i class="fa-solid fa-virus"></i> Vi Khuẩn (chọn 1 hoặc nhiều):</span>
+                  <span class="filter-label"><i class="fa-solid fa-virus"></i> Vi Khuẩn (mặc định: Tất cả):</span>
                   <button type="button" class="ms-trigger-btn" id="btn-ms-organism" title="Chọn vi khuẩn">
-                    <span class="ms-label-text" id="label-ms-organism">Escherichia coli</span>
-                    <span class="ms-badge" id="badge-ms-organism" style="display:none;">1</span>
+                    <span class="ms-label-text" id="label-ms-organism">Tất cả vi khuẩn</span>
+                    <span class="ms-badge" id="badge-ms-organism">Tất cả</span>
                     <i class="fa-solid fa-chevron-down ms-chevron"></i>
                   </button>
                   <div class="ms-dropdown-menu" id="menu-ms-organism" style="display: none;">
@@ -934,12 +934,12 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <select class="filter-select" id="abg-select-organism" style="display:none;"></select>
                 </div>
 
-                <!-- 2. Loại Bệnh Phẩm (1 hoặc nhiều hoặc Tất cả) -->
+                <!-- 2. Loại Bệnh Phẩm (1 hoặc nhiều hoặc Tất cả - Mặc định: Tất cả) -->
                 <div class="filter-item custom-multiselect" id="ms-abg-specimen">
-                  <span class="filter-label"><i class="fa-solid fa-vial"></i> Bệnh Phẩm (1 hoặc nhiều / tất cả):</span>
+                  <span class="filter-label"><i class="fa-solid fa-vial"></i> Bệnh Phẩm (mặc định: Tất cả):</span>
                   <button type="button" class="ms-trigger-btn" id="btn-ms-specimen" title="Chọn bệnh phẩm">
                     <span class="ms-label-text" id="label-ms-specimen">Tất cả bệnh phẩm</span>
-                    <span class="ms-badge" id="badge-ms-specimen" style="display:none;">0</span>
+                    <span class="ms-badge" id="badge-ms-specimen">Tất cả</span>
                     <i class="fa-solid fa-chevron-down ms-chevron"></i>
                   </button>
                   <div class="ms-dropdown-menu" id="menu-ms-specimen" style="display: none;">
@@ -955,12 +955,12 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <select class="filter-select" id="abg-select-specimen" style="display:none;"></select>
                 </div>
 
-                <!-- 3. Bổ sung Khoa Phòng (Mặc định: Tất cả) -->
+                <!-- 3. Bổ sung Khoa Phòng (Mặc định: Toàn viện) -->
                 <div class="filter-item custom-multiselect" id="ms-abg-department">
-                  <span class="filter-label"><i class="fa-solid fa-hospital-user"></i> Khoa Phòng (mặc định: Tất cả):</span>
+                  <span class="filter-label"><i class="fa-solid fa-hospital-user"></i> Khoa Phòng (mặc định: Toàn viện):</span>
                   <button type="button" class="ms-trigger-btn" id="btn-ms-department" title="Chọn khoa phòng">
-                    <span class="ms-label-text" id="label-ms-department">Tất cả khoa phòng</span>
-                    <span class="ms-badge" id="badge-ms-department" style="display:none;">0</span>
+                    <span class="ms-label-text" id="label-ms-department">Toàn viện (Tất cả khoa)</span>
+                    <span class="ms-badge" id="badge-ms-department">Toàn viện</span>
                     <i class="fa-solid fa-chevron-down ms-chevron"></i>
                   </button>
                   <div class="ms-dropdown-menu" id="menu-ms-department" style="display: none;">
@@ -1014,7 +1014,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
             <!-- Tiêu đề báo cáo và huy hiệu lọc -->
             <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin: 10px 0 16px;">
               <h3 id="abg-report-title" style="font-size: 16px; margin: 0; color: var(--text-main); font-weight: 700;">
-                Antibiogram: Escherichia coli — Nước tiểu (2026)
+                Antibiogram: Tất cả vi khuẩn — Tất cả bệnh phẩm (2026)
               </h3>
               <div id="abg-active-filter-badges" style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px;"></div>
             </div>
