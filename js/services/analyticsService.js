@@ -94,21 +94,127 @@ const AnalyticsService = {
   /**
    * Tạo bảng ANTIBIOGRAM cho vi khuẩn đã chọn (Section XX)
    * @param {Array} astList Danh sách kết quả AST
-   * @param {string} organismName Tên vi khuẩn (hoặc 'ALL')
-   * @param {string} specimenType Loại bệnh phẩm (hoặc 'ALL')
+   * @param {string|Array|Object} organismName Tên vi khuẩn hoặc mảng các vi khuẩn (hoặc 'ALL', hoặc options object)
+   * @param {string|Array} specimenType Loại bệnh phẩm hoặc mảng các bệnh phẩm (hoặc 'ALL')
+   * @param {string|Array} department Khoa phòng hoặc mảng các khoa phòng (mặc định 'ALL')
+   * @param {string} gender Giới tính (mặc định 'ALL')
+   * @param {string} year Năm xét nghiệm (mặc định 'ALL')
    * @returns {Array} Bảng kết quả từng kháng sinh { antibiotic, sCount, iCount, rCount, total, sRate, iRate, rRate }
    */
-  generateAntibiogram(astList = [], organismName = 'ALL', specimenType = 'ALL') {
-    let filtered = astList;
-
-    if (organismName && organismName !== 'ALL') {
-      filtered = filtered.filter(item => 
-        item.organism_name === organismName || item.organism_code === organismName
-      );
+  generateAntibiogram(astList = [], organismName = 'ALL', specimenType = 'ALL', department = 'ALL', gender = 'ALL', year = 'ALL') {
+    // Hỗ trợ truyền theo dạng options object: generateAntibiogram(astList, { organism, specimen, department, gender, year })
+    if (organismName && typeof organismName === 'object' && !Array.isArray(organismName)) {
+      const opts = organismName;
+      organismName = opts.organism || opts.organismName || opts.organisms || 'ALL';
+      specimenType = opts.specimen || opts.specimenType || opts.specimens || 'ALL';
+      department = opts.department || opts.departments || 'ALL';
+      gender = opts.gender || opts.sex || 'ALL';
+      year = opts.year || 'ALL';
     }
 
+    let patMap = null;
+    const getPatInfo = (item) => {
+      let dept = item.department || item.requesting_department || '';
+      let sex = item.sex || item.gender || '';
+      if (!dept || !sex) {
+        if (!patMap) {
+          patMap = new Map();
+          const patients = (typeof window !== 'undefined' && (window.App?.state?.surveillanceData?.patients || window.DemoDataService?.data?.patients)) || [];
+          patients.forEach(p => {
+            if (p.patient_code) patMap.set(p.patient_code, p);
+            if (p.id) patMap.set(p.id, p);
+          });
+        }
+        const pat = (item.patient_code && patMap.get(item.patient_code)) || (item.patient_id && patMap.get(item.patient_id));
+        if (pat) {
+          if (!dept) dept = pat.department || '';
+          if (!sex) sex = pat.sex || pat.gender || '';
+        }
+      }
+      return { department: dept, sex: sex };
+    };
+
+    let filtered = astList;
+
+    // 1. Lọc Vi khuẩn (1 hoặc nhiều vi khuẩn hoặc tất cả)
+    if (organismName && organismName !== 'ALL') {
+      if (Array.isArray(organismName)) {
+        if (organismName.length > 0 && !organismName.includes('ALL')) {
+          const orgSet = new Set(organismName.map(o => String(o).trim().toLowerCase()));
+          filtered = filtered.filter(item => {
+            const o1 = String(item.organism_name || '').trim().toLowerCase();
+            const o2 = String(item.organism_code || '').trim().toLowerCase();
+            return orgSet.has(o1) || orgSet.has(o2);
+          });
+        }
+      } else {
+        const orgTarget = String(organismName).trim().toLowerCase();
+        filtered = filtered.filter(item => 
+          String(item.organism_name || '').trim().toLowerCase() === orgTarget || 
+          String(item.organism_code || '').trim().toLowerCase() === orgTarget
+        );
+      }
+    }
+
+    // 2. Lọc Bệnh phẩm (1 hoặc nhiều bệnh phẩm hoặc tất cả)
     if (specimenType && specimenType !== 'ALL') {
-      filtered = filtered.filter(item => item.specimen_type === specimenType);
+      if (Array.isArray(specimenType)) {
+        if (specimenType.length > 0 && !specimenType.includes('ALL')) {
+          const specSet = new Set(specimenType.map(s => String(s).trim().toLowerCase()));
+          filtered = filtered.filter(item => 
+            specSet.has(String(item.specimen_type || '').trim().toLowerCase())
+          );
+        }
+      } else {
+        const specTarget = String(specimenType).trim().toLowerCase();
+        filtered = filtered.filter(item => 
+          String(item.specimen_type || '').trim().toLowerCase() === specTarget
+        );
+      }
+    }
+
+    // 3. Lọc Khoa phòng (1 hoặc nhiều khoa phòng hoặc tất cả - mặc định: tất cả)
+    if (department && department !== 'ALL') {
+      if (Array.isArray(department)) {
+        if (department.length > 0 && !department.includes('ALL')) {
+          const deptSet = new Set(department.map(d => String(d).trim().toLowerCase()));
+          filtered = filtered.filter(item => {
+            const info = getPatInfo(item);
+            return deptSet.has(String(info.department || '').trim().toLowerCase());
+          });
+        }
+      } else {
+        const deptTarget = String(department).trim().toLowerCase();
+        filtered = filtered.filter(item => {
+          const info = getPatInfo(item);
+          return String(info.department || '').trim().toLowerCase() === deptTarget;
+        });
+      }
+    }
+
+    // 4. Lọc Giới tính (mặc định: tất cả)
+    if (gender && gender !== 'ALL') {
+      const g = String(gender).trim().toLowerCase();
+      filtered = filtered.filter(item => {
+        const info = getPatInfo(item);
+        const itemGender = String(info.sex || '').trim().toLowerCase();
+        if (g === 'nam' || g === 'm' || g === 'male') {
+          return itemGender === 'nam' || itemGender === 'm' || itemGender === 'male';
+        }
+        if (g === 'nu' || g === 'nữ' || g === 'f' || g === 'female') {
+          return itemGender === 'nu' || itemGender === 'nữ' || itemGender === 'f' || itemGender === 'female';
+        }
+        return itemGender === g;
+      });
+    }
+
+    // 5. Lọc Năm (nếu có)
+    if (year && year !== 'ALL') {
+      const yStr = String(year).trim();
+      filtered = filtered.filter(item => {
+        const d = String(item.tested_date || item.culture_date || item.collection_date || '');
+        return d.startsWith(yStr);
+      });
     }
 
     // Nhóm theo Kháng sinh

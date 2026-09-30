@@ -31,9 +31,13 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/file_fifo_analytics_test.js
     P6_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ]; then
+    echo "7. Chạy Bộ Test Antibiogram Đa Tiêu Chí (Đa Vi Khuẩn, Đa Bệnh Phẩm, Khoa, Giới Tính & Menu Brand)..."
+    "$JSC_BIN" tests/antibiogram_multi_filter_test.js
+    P7_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ]; then
         echo "================================================================"
-        echo "  ✔ TOÀN BỘ 233 BÀI TEST ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
+        echo "  ✔ TOÀN BỘ 251 BÀI TEST ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"
         exit 0
     else

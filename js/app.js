@@ -277,6 +277,11 @@ const App = {
 
     // 2. Render Charts
     this.renderCharts();
+
+    if (window.Navigation?.currentTab === 'analytics_antibiogram') {
+      window.AntibiogramView?.populateDropdowns();
+      window.AntibiogramView?.renderAntibiogram();
+    }
   },
 
   updateFileBanner() {
