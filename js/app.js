@@ -14,6 +14,7 @@ const App = {
       trendLine: null
     },
     filters: {
+      file: 'ALL',
       time: 'ALL',
       department: 'ALL',
       specimenType: 'ALL',
@@ -39,6 +40,7 @@ const App = {
     window.PDFImportView?.init();
     window.ReportView?.init();
     window.SystemCatalogsView?.init();
+    window.FileManagerView?.init();
 
     // 2. Khởi tạo đồng hồ thời gian thực và tiêu chuẩn CLSI/EUCAST
     this.initClock();
@@ -121,6 +123,7 @@ const App = {
       }
     };
 
+    bindSelect('filter-file', 'file');
     bindSelect('filter-time', 'time');
     bindSelect('filter-department', 'department');
     bindSelect('filter-specimen', 'specimenType');
@@ -131,13 +134,13 @@ const App = {
     const resetBtn = document.getElementById('btn-reset-filters');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
-        this.state.filters = { time: 'ALL', department: 'ALL', specimenType: 'ALL', organism: 'ALL', gram: 'ALL' };
-        ['filter-time', 'filter-department', 'filter-specimen', 'filter-organism', 'filter-gram'].forEach(id => {
+        this.state.filters = { file: 'ALL', time: 'ALL', department: 'ALL', specimenType: 'ALL', organism: 'ALL', gram: 'ALL' };
+        ['filter-file', 'filter-time', 'filter-department', 'filter-specimen', 'filter-organism', 'filter-gram'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = 'ALL';
         });
         this.applyFiltersAndRender();
-        window.Toast.info('Đã xóa tất cả bộ lọc');
+        window.Toast?.info('Đã xóa tất cả bộ lọc');
       });
     }
   },
@@ -150,11 +153,48 @@ const App = {
       this.applyFiltersAndRender();
     } catch (err) {
       console.error('[App] Tải dữ liệu thất bại:', err);
-      window.Toast.error('Lỗi tải dữ liệu xét nghiệm: ' + err.message);
+      window.Toast?.error('Lỗi tải dữ liệu xét nghiệm: ' + err.message);
     }
   },
 
   populateFilterDropdowns(data) {
+    // Populate file list
+    const fileSelect = document.getElementById('filter-file');
+    if (fileSelect) {
+      const currentVal = this.state.filters.file || 'ALL';
+      fileSelect.innerHTML = '<option value="ALL">📁 Tất cả các file (Toàn viện)</option>';
+
+      const fileMap = new Map();
+      (data.importJobs || []).forEach(j => {
+        if (j.file_name) {
+          fileMap.set(j.file_name, {
+            name: j.file_name,
+            type: j.file_type || (j.file_name.endsWith('.pdf') ? 'pdf' : (j.file_name.endsWith('.csv') ? 'csv' : 'xlsx')),
+            count: j.record_count || 0
+          });
+        }
+      });
+      (data.astResults || []).forEach(a => {
+        if (a.file_name && !fileMap.has(a.file_name)) {
+          fileMap.set(a.file_name, {
+            name: a.file_name,
+            type: a.file_name.endsWith('.pdf') ? 'pdf' : (a.file_name.endsWith('.csv') ? 'csv' : 'xlsx'),
+            count: 0
+          });
+        }
+      });
+
+      fileMap.forEach((info, fileName) => {
+        const opt = document.createElement('option');
+        opt.value = fileName;
+        const icon = info.type === 'pdf' ? '📄 [PDF]' : (info.type === 'csv' ? '📊 [CSV]' : '📗 [Excel]');
+        opt.textContent = `${icon} ${fileName}`;
+        fileSelect.appendChild(opt);
+      });
+
+      fileSelect.value = currentVal;
+    }
+
     // Populate departments
     const deptSelect = document.getElementById('filter-department');
     if (deptSelect && deptSelect.options.length <= 1) {
@@ -199,6 +239,9 @@ const App = {
     const f = this.state.filters;
 
     const filtered = rawAst.filter(item => {
+      if (f.file && f.file !== 'ALL') {
+        if (item.file_name !== f.file && item.import_job_id !== f.file) return false;
+      }
       if (f.department !== 'ALL' && item.department !== f.department) return false;
       if (f.specimenType !== 'ALL' && item.specimen_type !== f.specimenType) return false;
       if (f.organism !== 'ALL' && item.organism_name !== f.organism) return false;
@@ -207,6 +250,7 @@ const App = {
     });
 
     this.state.filteredAst = filtered;
+    this.updateFileBanner();
 
     // 1. Tính toán KPIs tổng quan
     const rates = window.AnalyticsService.calculateRates(filtered);
@@ -229,6 +273,70 @@ const App = {
 
     // 2. Render Charts
     this.renderCharts();
+  },
+
+  updateFileBanner() {
+    const banner = document.getElementById('dashboard-file-banner');
+    if (!banner) return;
+    const f = this.state.filters.file;
+    if (f && f !== 'ALL') {
+      const count = this.state.filteredAst?.length || 0;
+      banner.innerHTML = `
+        <div class="active-file-alert">
+          <div class="active-file-info">
+            <i class="fa-solid fa-file-waveform fa-beat-fade"></i>
+            <span>Đang phân tích chuyên sâu dữ liệu từ file: <strong>${f}</strong> (${count.toLocaleString()} kết quả AST)</span>
+          </div>
+          <div class="active-file-actions">
+            <button class="btn-banner-clear" id="btn-banner-clear-file" title="Quay lại phân tích toàn viện">
+              <i class="fa-solid fa-rotate-left"></i> Toàn viện (Tất cả file)
+            </button>
+            <a href="#data_files" class="btn-banner-manage" title="Mở trang Quản lý File">
+              <i class="fa-solid fa-folder-tree"></i> Quản lý files
+            </a>
+          </div>
+        </div>
+      `;
+      banner.style.display = 'block';
+
+      const clearBtn = document.getElementById('btn-banner-clear-file');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          this.state.filters.file = 'ALL';
+          const fileSelect = document.getElementById('filter-file');
+          if (fileSelect) fileSelect.value = 'ALL';
+          this.applyFiltersAndRender();
+        });
+      }
+    } else {
+      banner.style.display = 'none';
+    }
+  },
+
+  selectFileForAnalysis(fileName) {
+    this.state.filters.file = fileName;
+    const fileSelect = document.getElementById('filter-file');
+    if (fileSelect) {
+      let opt = Array.from(fileSelect.options).find(o => o.value === fileName);
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.value = fileName;
+        opt.textContent = `📄 ${fileName}`;
+        fileSelect.appendChild(opt);
+      }
+      fileSelect.value = fileName;
+    }
+    window.Navigation?.navigateTo('dashboard');
+    this.applyFiltersAndRender();
+    window.Toast?.success(`Đang phân tích chuyên sâu cho file "${fileName}"!`);
+  },
+
+  getActiveAstRecords() {
+    const f = this.state.filters?.file;
+    const data = this.state.surveillanceData || window.DemoDataService?.getAll();
+    const rawAst = data?.astResults || [];
+    if (!f || f === 'ALL') return rawAst;
+    return rawAst.filter(a => a.file_name === f || a.import_job_id === f);
   },
 
   renderDashboard() {

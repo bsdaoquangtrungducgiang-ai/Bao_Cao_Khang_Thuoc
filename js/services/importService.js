@@ -131,6 +131,48 @@ const ImportService = {
     return new Promise((resolve, reject) => {
       const isCsv = file.name && (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.txt') || file.name.toLowerCase().endsWith('.tsv'));
 
+      const isPdf = file.name && file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type === 'application/pdf');
+      if (isPdf) {
+        if (typeof window !== 'undefined' && window.PDFImportService) {
+          window.PDFImportService.parsePDF(file).then(pdfResult => {
+            const rawHeaders = [
+              'Mã bệnh nhân', 'Họ tên', 'Tuổi', 'Giới tính', 'Khoa',
+              'Bệnh phẩm', 'Ngày lấy mẫu', 'Tên vi khuẩn', 'Mã kháng sinh', 'Kết quả AST'
+            ];
+            const dataRows = (pdfResult.astRecords || []).map(ast => [
+              pdfResult.extractedInfo?.patientCode || '',
+              pdfResult.extractedInfo?.patientName || '',
+              pdfResult.extractedInfo?.age || '',
+              pdfResult.extractedInfo?.sex || '',
+              pdfResult.extractedInfo?.department || 'Khoa Vi sinh',
+              pdfResult.extractedInfo?.specimenType || 'Khác',
+              pdfResult.extractedInfo?.collectionDate || new Date().toISOString().split('T')[0],
+              pdfResult.extractedInfo?.organismName || 'Chưa định danh',
+              ast.antibiotic_code,
+              ast.raw_result || ast.normalized_result || ast.interpretation
+            ]);
+
+            const detectedMapping = this.autoDetectColumns(rawHeaders, dataRows.slice(0, 30));
+            resolve({
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: 'pdf',
+              sheetNames: ['PDF_Report'],
+              activeSheet: 'PDF_Report',
+              headers: rawHeaders,
+              totalRows: dataRows.length,
+              totalCols: rawHeaders.length,
+              detectedMapping,
+              rawHeaders,
+              previewRows: dataRows.slice(0, 20),
+              dataRows,
+              pdfExtraction: pdfResult
+            });
+          }).catch(reject);
+          return;
+        }
+      }
+
       // Ưu tiên đọc file dạng Text nếu là CSV / TXT / TSV
       if (isCsv) {
         const textReader = new FileReader();
@@ -658,19 +700,32 @@ const ImportService = {
 
   /**
    * Lưu các bản ghi hợp lệ vào Database (Supabase hoặc Fallback Store)
+   * Tự động kiểm tra dung lượng và kích hoạt FIFO xóa dữ liệu cũ nhất khi đầy bộ nhớ
    */
   async commitImport(validatedRecords = [], metadata = {}) {
+    const successful = validatedRecords.length;
+    const fileName = metadata.fileName || 'import_data.xlsx';
+    const fileType = metadata.fileType || (fileName.endsWith('.pdf') ? 'pdf' : (fileName.endsWith('.csv') ? 'csv' : 'xlsx'));
+    let jobId = 'job-' + Date.now();
+
+    // 0. Kiểm tra bộ nhớ và tự động dọn dẹp FIFO nếu vượt hạn mức
+    if (typeof window !== 'undefined' && window.StorageQuotaManager) {
+      try {
+        await window.StorageQuotaManager.ensureCapacity(successful);
+      } catch (e) {
+        console.warn('[ImportService] FIFO check warning:', e);
+      }
+    }
+
     const sb = window.SupabaseManager?.client;
     const hasDb = window.SupabaseManager?.hasTables;
-
-    const successful = validatedRecords.length;
 
     if (sb && hasDb) {
       try {
         // 1. Tạo import job record
         const { data: job, error: jobErr } = await sb.from('import_jobs').insert([{
-          file_name: metadata.fileName || 'import_data.xlsx',
-          file_type: metadata.fileType || 'xlsx',
+          file_name: fileName,
+          file_type: fileType,
           file_size: metadata.fileSize || 0,
           record_count: metadata.totalRows || successful,
           successful_records: successful,
@@ -680,8 +735,9 @@ const ImportService = {
           file_fingerprint: metadata.fingerprint || null
         }]).select().single();
 
+        if (job?.id) jobId = job.id;
+
         // 2. Insert theo lô
-        // Lưu ý: Đối với Supabase RLS, ta có thể upsert hoặc insert theo bảng quan hệ
         for (const rec of validatedRecords) {
           // Check/Insert patient
           let patientId = null;
@@ -727,50 +783,117 @@ const ImportService = {
               normalized_result: rec.normalized_result,
               interpretation: rec.interpretation,
               fingerprint: rec.fingerprint,
-              tested_date: rec.collection_date
+              tested_date: rec.collection_date,
+              import_job_id: jobId
             }]);
           }
         }
 
         // 3. Ghi Audit Log
-        await window.AuditService?.log('IMPORT', 'import_jobs', job?.id, {
-          fileName: metadata.fileName,
+        await window.AuditService?.log('IMPORT', 'import_jobs', jobId, {
+          fileName: fileName,
           total: successful
         });
 
-        return { success: true, count: successful, mode: 'supabase' };
+        // Đồng bộ dữ liệu vào Local Store để truy vấn phân tích tức thời
+        const demo = window.DemoDataService?.getAll();
+        if (demo) {
+          this.syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata);
+        }
+
+        window.StorageQuotaManager?.notify();
+        return { success: true, count: successful, mode: 'supabase', jobId };
       } catch (err) {
         console.warn('[ImportService] Supabase commit error, saving to in-memory store:', err);
+        // Nếu lỗi do hạn mức bộ nhớ đầy -> tự động dọn dẹp FIFO
+        if (err.message && /quota|limit|full|exceeded|413/i.test(err.message)) {
+          await window.StorageQuotaManager?.purgeOldestUntilUnderQuota(successful);
+        }
       }
     }
 
     // Fallback: Lưu vào DemoDataService
     const demo = window.DemoDataService?.getAll();
     if (demo) {
-      validatedRecords.forEach((rec, i) => {
-        demo.astResults.push({
-          id: 'imported-ast-' + Date.now() + '-' + i,
-          culture_id: 'imported-cult-' + i,
-          patient_code: rec.patient_code,
-          specimen_type: rec.specimen_type,
-          organism_name: rec.organism_name,
-          antibiotic_code: rec.antibiotic_code,
-          raw_result: rec.raw_result,
-          normalized_result: rec.normalized_result,
-          interpretation: rec.interpretation,
-          tested_date: rec.collection_date,
-          created_at: new Date().toISOString()
-        });
-      });
+      this.syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata);
     }
 
     // Ghi Audit Log
-    await window.AuditService?.log('IMPORT', 'local_store', null, {
-      fileName: metadata.fileName,
+    await window.AuditService?.log('IMPORT', 'local_store', jobId, {
+      fileName: fileName,
       total: successful
     });
 
-    return { success: true, count: successful, mode: 'local' };
+    window.StorageQuotaManager?.notify();
+    return { success: true, count: successful, mode: 'local', jobId };
+  },
+
+  syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata) {
+    if (!demo.importJobs) demo.importJobs = [];
+    if (!demo.importJobs.some(j => j.id === jobId || j.file_name === fileName)) {
+      demo.importJobs.push({
+        id: jobId,
+        file_name: fileName,
+        file_type: fileType,
+        file_size: metadata.fileSize || 0,
+        record_count: validatedRecords.length,
+        created_at: new Date().toISOString()
+      });
+    }
+
+    validatedRecords.forEach((rec, i) => {
+      const cultId = rec.culture_id || ('imported-cult-' + jobId + '-' + (rec.patient_code || i));
+      demo.astResults.push({
+        id: 'imported-ast-' + Date.now() + '-' + i,
+        culture_id: cultId,
+        patient_code: rec.patient_code,
+        patient_name: rec.patient_name,
+        age: rec.age,
+        sex: rec.sex,
+        department: rec.department,
+        specimen_type: rec.specimen_type,
+        organism_name: rec.organism_name,
+        antibiotic_code: rec.antibiotic_code,
+        raw_result: rec.raw_result,
+        normalized_result: rec.normalized_result,
+        interpretation: rec.interpretation,
+        tested_date: rec.collection_date,
+        file_name: fileName,
+        import_job_id: jobId,
+        created_at: new Date().toISOString()
+      });
+
+      if (!demo.patients.some(p => p.patient_code === rec.patient_code)) {
+        demo.patients.push({
+          id: 'pat-imp-' + rec.patient_code,
+          patient_code: rec.patient_code,
+          patient_name: rec.patient_name,
+          age: rec.age,
+          sex: rec.sex,
+          department: rec.department
+        });
+      }
+
+      if (!demo.specimens.some(s => s.specimen_type === rec.specimen_type && s.patient_code === rec.patient_code)) {
+        demo.specimens.push({
+          id: 'spec-imp-' + Date.now() + '-' + i,
+          patient_code: rec.patient_code,
+          specimen_type: rec.specimen_type,
+          collection_date: rec.collection_date,
+          requesting_department: rec.department
+        });
+      }
+
+      if (!demo.cultures.some(c => c.organism_name === rec.organism_name && c.patient_code === rec.patient_code)) {
+        demo.cultures.push({
+          id: 'cult-imp-' + Date.now() + '-' + i,
+          patient_code: rec.patient_code,
+          organism_name: rec.organism_name,
+          culture_date: rec.collection_date,
+          file_name: fileName
+        });
+      }
+    });
   },
 
   /**

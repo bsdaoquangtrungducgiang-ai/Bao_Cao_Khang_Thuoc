@@ -14,7 +14,8 @@ const DemoDataService = {
     organisms: [],
     antibiotics: [],
     departments: [],
-    specimenTypes: []
+    specimenTypes: [],
+    importJobs: []
   },
 
   isInitialized: false,
@@ -199,11 +200,26 @@ const DemoDataService = {
           testing_method: 'Vitek AST',
           guideline: 'CLSI',
           guideline_version: 'M100 2025',
-          tested_date: cult.culture_date
+          tested_date: cult.culture_date,
+          file_name: 'Du_lieu_mau_benh_vien_2026.xlsx',
+          import_job_id: 'job-seed-2026'
         });
         astIndex++;
       }
     }
+
+    this.data.importJobs = [
+      {
+        id: 'job-seed-2026',
+        file_name: 'Du_lieu_mau_benh_vien_2026.xlsx',
+        file_type: 'xlsx',
+        file_size: 245760,
+        record_count: this.data.astResults.length,
+        status: 'COMPLETED',
+        processing_status: 'completed',
+        created_at: '2026-01-01T08:00:00.000Z'
+      }
+    ];
 
     this.isInitialized = true;
     console.log(`[DemoDataService] Initialized: ${this.data.patients.length} patients, ${this.data.specimens.length} specimens, ${this.data.cultures.length} cultures, ${this.data.astResults.length} AST results.`);

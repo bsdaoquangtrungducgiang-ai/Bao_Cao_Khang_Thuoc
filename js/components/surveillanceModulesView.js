@@ -6,6 +6,10 @@
 const SurveillanceModulesView = {
   charts: {},
 
+  getAstList(data) {
+    return window.App?.getActiveAstRecords ? window.App.getActiveAstRecords() : (data?.astResults || []);
+  },
+
   init() {
     window.addEventListener('tabChanged', (e) => {
       const tab = e.detail.tab;
@@ -23,7 +27,8 @@ const SurveillanceModulesView = {
     const data = window.App?.state?.surveillanceData || window.DemoDataService?.getAll();
     if (!data) return;
 
-    const res = window.SpecializedAMRService.analyzeMDR(data.astResults || [], data.cultures || []);
+    const astList = this.getAstList(data);
+    const res = window.SpecializedAMRService.analyzeMDR(astList, data.cultures || []);
 
     document.getElementById('mdr-stat-total').textContent = res.totalIsolates;
     document.getElementById('mdr-stat-count').textContent = res.mdrCount;
@@ -56,7 +61,7 @@ const SurveillanceModulesView = {
     const data = window.App?.state?.surveillanceData || window.DemoDataService?.getAll();
     if (!data) return;
 
-    const res = window.SpecializedAMRService.analyzeESBL(data.astResults || []);
+    const res = window.SpecializedAMRService.analyzeESBL(this.getAstList(data));
 
     document.getElementById('esbl-stat-total').textContent = res.totalCultures;
     document.getElementById('esbl-stat-count').textContent = res.esblCount;
@@ -90,7 +95,7 @@ const SurveillanceModulesView = {
     const data = window.App?.state?.surveillanceData || window.DemoDataService?.getAll();
     if (!data) return;
 
-    const res = window.SpecializedAMRService.analyzeCarbapenemResistance(data.astResults || []);
+    const res = window.SpecializedAMRService.analyzeCarbapenemResistance(this.getAstList(data));
     const tbody = document.getElementById('table-carbapenem-body');
     if (!tbody) return;
 
@@ -122,7 +127,7 @@ const SurveillanceModulesView = {
     const data = window.App?.state?.surveillanceData || window.DemoDataService?.getAll();
     if (!data) return;
 
-    const res = window.SpecializedAMRService.analyzeMRSA(data.astResults || []);
+    const res = window.SpecializedAMRService.analyzeMRSA(this.getAstList(data));
 
     document.getElementById('mrsa-stat-total').textContent = res.totalStaph;
     document.getElementById('mrsa-stat-count').textContent = res.mrsaCount;
@@ -208,7 +213,7 @@ const SurveillanceModulesView = {
     if (!data) return;
 
     const res = window.AnalyticsService.getResistanceByDepartment(
-      data.astResults || [],
+      this.getAstList(data),
       data.specimens || [],
       'Escherichia coli',
       'CRO'

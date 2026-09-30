@@ -77,14 +77,19 @@ const AntibiogramView = {
     const org = document.getElementById('abg-select-organism')?.value || 'Escherichia coli';
     const spec = document.getElementById('abg-select-specimen')?.value || 'Nước tiểu';
     const year = document.getElementById('abg-select-year')?.value || '2026';
+    const activeFile = window.App?.state?.filters?.file;
 
     const titleEl = document.getElementById('abg-report-title');
     if (titleEl) {
-      titleEl.textContent = `Antibiogram: ${org} — ${spec} (${year})`;
+      const fileSuffix = (activeFile && activeFile !== 'ALL') ? ` — [Nguồn: ${activeFile}]` : '';
+      titleEl.textContent = `Antibiogram: ${org} — ${spec} (${year})${fileSuffix}`;
     }
 
+    // Lấy tập dữ liệu AST (lọc theo file nếu người dùng đã chọn file)
+    const astList = window.App?.getActiveAstRecords ? window.App.getActiveAstRecords() : (data.astResults || []);
+
     // Sinh bảng Antibiogram qua AnalyticsService
-    const rows = window.AnalyticsService.generateAntibiogram(data.astResults || [], org, spec);
+    const rows = window.AnalyticsService.generateAntibiogram(astList, org, spec);
     this.renderTable(rows);
     this.renderChart(rows);
   },

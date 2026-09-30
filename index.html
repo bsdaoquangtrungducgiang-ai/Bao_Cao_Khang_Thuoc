@@ -78,6 +78,10 @@
               <i class="fa-solid fa-paste"></i>
               <span>Dữ liệu Văn bản</span>
             </a>
+            <a href="#data_files" class="menu-item" data-tab="data_files">
+              <i class="fa-solid fa-folder-tree"></i>
+              <span>Quản Lý File Đã Nạp</span>
+            </a>
           </div>
         </div>
 
@@ -248,6 +252,9 @@
       <main class="content-body">
         <!-- ================= VIEW: DASHBOARD ================= -->
         <section class="view-panel active" id="view-dashboard">
+          <!-- Active File Analysis Alert Banner -->
+          <div class="dashboard-file-banner-container" id="dashboard-file-banner" style="display: none;"></div>
+
           <!-- Setup Banner -->
           <div class="setup-alert-banner">
             <div class="setup-alert-left">
@@ -375,6 +382,13 @@
           <!-- Filter Toolbar (Section XVII) -->
           <div class="filter-toolbar">
             <div class="filter-group-wrap">
+              <div class="filter-item filter-file-highlight">
+                <span class="filter-label"><i class="fa-solid fa-file-waveform"></i> Nguồn / Tập Tin</span>
+                <select class="filter-select select-file-filter" id="filter-file">
+                  <option value="ALL">📁 Tất cả các file (Toàn viện)</option>
+                </select>
+              </div>
+
               <div class="filter-item">
                 <span class="filter-label"><i class="fa-regular fa-calendar"></i> Thời Gian</span>
                 <select class="filter-select" id="filter-time">
@@ -1459,6 +1473,101 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
           </div>
         </section>
 
+        <!-- ================= VIEW: QUẢN LÝ FILE & HẠN MỨC BỘ NHỚ (FIFO) ================= -->
+        <section class="view-panel" id="view-data_files">
+          <!-- Storage Quota & Capacity Summary (Yêu cầu 5: FIFO Purge) -->
+          <div class="storage-quota-grid">
+            <div class="quota-card">
+              <div class="quota-card-header">
+                <span class="quota-card-title"><i class="fa-solid fa-hard-drive"></i> Dung Lượng Bộ Nhớ Supabase</span>
+                <span class="badge-status badge-success" id="quota-status-badge">Tối ưu</span>
+              </div>
+              <div style="font-size: 20px; font-weight: 800; color: var(--text-main);">
+                <span id="quota-current-records">1,000</span> <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">/ <span id="quota-max-records">50,000</span> AST (Hạn mức Free)</span>
+              </div>
+              <div class="quota-bar-track">
+                <div class="quota-bar-fill bar-normal" id="quota-progress-bar" style="width: 2%;"></div>
+              </div>
+              <div class="quota-stats-row">
+                <span>Tỷ lệ lấp đầy: <strong id="quota-percent-text">2%</strong></span>
+                <span>Tổng số file nạp: <strong id="quota-total-files-count">1</strong> file</span>
+              </div>
+            </div>
+
+            <div class="quota-card">
+              <div class="quota-card-header">
+                <span class="quota-card-title"><i class="fa-solid fa-arrows-rotate"></i> Cơ Chế Tự Động Xóa Dữ Liệu Cũ (FIFO)</span>
+                <span class="chart-badge">Tự động hóa</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">
+                Khi Supabase đạt 95% - 100% dung lượng hạn mức, hệ thống sẽ tự động tìm và xóa các đợt nạp (import jobs) cũ nhất theo thứ tự thời gian (First-In, First-Out) để giải phóng bộ nhớ cho dữ liệu mới.
+              </p>
+              <div class="quota-fifo-setting">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <label class="switch-toggle">
+                    <input type="checkbox" id="toggle-fifo-auto" checked>
+                    <span class="switch-slider"></span>
+                  </label>
+                  <span style="font-size: 13px; font-weight: 600;">FIFO Tự Động Xóa Khi Đầy</span>
+                </div>
+                <button class="btn-banner-clear" id="btn-purge-fifo-manual" title="Chủ động giải phóng các đợt nạp cũ nhất">
+                  <i class="fa-solid fa-broom"></i> Dọn Dẹp FIFO Thủ Công
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- File List Table Card (Yêu cầu 4: Lựa chọn file phân tích chuyên sâu) -->
+          <div class="data-panel-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+              <div>
+                <h3 style="font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-folder-open" style="color: var(--primary);"></i> Danh Sách Tập Tin Đã Nạp &amp; Phân Tích Chuyên Sâu
+                  <span class="badge-tag" id="files-table-count-badge">--</span>
+                </h3>
+                <span style="font-size: 12px; color: var(--text-muted);">
+                  Chọn bất kỳ file Excel, CSV hoặc PDF để kích hoạt bộ lọc phân tích chuyên sâu Antibiogram, Heatmap và Giám sát AMR
+                </span>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" id="search-file-manager" placeholder="Tìm tên file..." style="padding: 7px 12px; font-size: 13px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); outline: none; width: 190px;">
+                <select id="filter-file-format" style="padding: 7px 12px; font-size: 13px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); outline: none;">
+                  <option value="ALL">Tất cả định dạng</option>
+                  <option value="xlsx">📗 File Excel (.xlsx)</option>
+                  <option value="csv">📊 File CSV (.csv)</option>
+                  <option value="pdf">📄 Kết quả PDF (.pdf)</option>
+                </select>
+                <button class="btn-setup-action" id="btn-open-upload-modal">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Nạp File Mới
+                </button>
+              </div>
+            </div>
+
+            <div class="preview-table-container">
+              <table class="table-lab">
+                <thead>
+                  <tr>
+                    <th style="width: 45px; text-align: center;">#</th>
+                    <th>Tên Tập Tin</th>
+                    <th style="text-align: center; width: 90px;">Định Dạng</th>
+                    <th style="text-align: center; width: 100px;">Dung Lượng</th>
+                    <th style="text-align: center; width: 120px;">Số Bản Ghi AST</th>
+                    <th style="width: 150px;">Thời Gian Nạp</th>
+                    <th style="text-align: center; width: 140px;">Lưu Trữ</th>
+                    <th style="text-align: right; width: 250px;">Hành Động Phân Tích</th>
+                  </tr>
+                </thead>
+                <tbody id="table-files-manager-body">
+                  <tr>
+                    <td colspan="8" style="text-align: center; padding: 20px;">Đang tải danh sách file...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <!-- ================= VIEW: LỊCH SỬ IMPORT (MỤC XXXIII) ================= -->
         <section class="view-panel" id="view-import_history">
           <div class="data-panel-card">
@@ -1722,6 +1831,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/services/analyticsService.js"></script>
   <script src="js/services/authService.js"></script>
   <script src="js/services/auditService.js"></script>
+  <script src="js/services/storageQuotaManager.js"></script>
   <script src="js/services/astService.js"></script>
   <script src="js/services/importService.js"></script>
   <script src="js/services/specializedAMRService.js"></script>
@@ -1739,6 +1849,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/components/pdfImportView.js"></script>
   <script src="js/components/reportView.js"></script>
   <script src="js/components/systemCatalogsView.js"></script>
+  <script src="js/components/fileManagerView.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

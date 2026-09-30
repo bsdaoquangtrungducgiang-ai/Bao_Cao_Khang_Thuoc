@@ -52,7 +52,8 @@ const HeatmapView = {
 
     const targetAbxs = ['AMP', 'AMC', 'TZP', 'CTX', 'CRO', 'CAZ', 'FEP', 'MEM', 'IPM', 'CIP', 'LEV', 'GEN', 'AMK', 'SXT', 'VAN'];
 
-    const result = window.AnalyticsService.generateHeatmap(data.astResults || [], targetOrgs, targetAbxs);
+    const astList = window.App?.getActiveAstRecords ? window.App.getActiveAstRecords() : (data.astResults || []);
+    const result = window.AnalyticsService.generateHeatmap(astList, targetOrgs, targetAbxs);
 
     const thead = document.getElementById('table-heatmap-head');
     const tbody = document.getElementById('table-heatmap-body');
