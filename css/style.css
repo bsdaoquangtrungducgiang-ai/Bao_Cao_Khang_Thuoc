@@ -2015,6 +2015,7 @@ body {
   width: 15px;
   height: 15px;
   margin: 0;
+  pointer-events: none;
 }
 
 .ms-option-name {

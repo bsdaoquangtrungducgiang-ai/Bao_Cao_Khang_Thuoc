@@ -183,7 +183,7 @@ const AntibiogramView = {
       btnAll.addEventListener('click', () => {
         this.state[config.key].clear();
         this.state[config.key].add('ALL');
-        this.updateMultiSelectUI(config);
+        this.refreshCheckboxesInList(config.listId, config.key, config.allOptionText);
         this.renderAntibiogram();
       });
     }
@@ -191,7 +191,7 @@ const AntibiogramView = {
     if (btnClear) {
       btnClear.addEventListener('click', () => {
         this.state[config.key].clear();
-        this.updateMultiSelectUI(config);
+        this.refreshCheckboxesInList(config.listId, config.key, config.allOptionText);
         this.renderAntibiogram();
       });
     }
@@ -417,7 +417,8 @@ const AntibiogramView = {
     if (!container) return;
 
     const selectedSet = this.state[stateKey];
-    const isAll = selectedSet.has('ALL') || selectedSet.size === 0;
+    const isAll = selectedSet.has('ALL');
+    const isEmpty = selectedSet.size === 0;
 
     const items = container.querySelectorAll('.ms-option-item');
     items.forEach(item => {
@@ -427,7 +428,7 @@ const AntibiogramView = {
         if (chk) chk.checked = isAll;
         item.classList.toggle('selected', isAll);
       } else {
-        const checked = !isAll && selectedSet.has(val);
+        const checked = !isAll && !isEmpty && selectedSet.has(val);
         if (chk) chk.checked = checked;
         item.classList.toggle('selected', checked);
       }
@@ -435,15 +436,12 @@ const AntibiogramView = {
 
     // Cập nhật text trên nút
     const configMap = {
-      selectedOrganisms: { labelId: 'label-ms-organism', badgeId: 'badge-ms-organism', allOptionText: 'Tất cả vi khuẩn' },
-      selectedSpecimens: { labelId: 'label-ms-specimen', badgeId: 'badge-ms-specimen', allOptionText: 'Tất cả bệnh phẩm' },
-      selectedDepartments: { labelId: 'label-ms-department', badgeId: 'badge-ms-department', allOptionText: 'Tất cả khoa phòng' }
+      selectedOrganisms: { key: 'selectedOrganisms', labelId: 'label-ms-organism', badgeId: 'badge-ms-organism', allOptionText: 'Tất cả vi khuẩn' },
+      selectedSpecimens: { key: 'selectedSpecimens', labelId: 'label-ms-specimen', badgeId: 'badge-ms-specimen', allOptionText: 'Tất cả bệnh phẩm' },
+      selectedDepartments: { key: 'selectedDepartments', labelId: 'label-ms-department', badgeId: 'badge-ms-department', allOptionText: 'Tất cả khoa phòng' }
     };
     if (configMap[stateKey]) {
-      this.updateMultiSelectUI({
-        key: stateKey,
-        ...configMap[stateKey]
-      });
+      this.updateMultiSelectUI(configMap[stateKey]);
     }
   },
 
@@ -456,27 +454,50 @@ const AntibiogramView = {
     if (!labelEl) return;
 
     const selectedSet = this.state[config.key];
-    const isAll = selectedSet.has('ALL') || selectedSet.size === 0;
+    const isAll = selectedSet.has('ALL');
+    const isEmpty = selectedSet.size === 0;
 
-    if (isAll) {
+    let totalAvailable = 0;
+    if (config.key === 'selectedOrganisms') totalAvailable = this.state.availableOrganisms?.length || 0;
+    else if (config.key === 'selectedSpecimens') totalAvailable = this.state.availableSpecimens?.length || 0;
+    else if (config.key === 'selectedDepartments') totalAvailable = this.state.availableDepartments?.length || 0;
+
+    if (isEmpty) {
+      labelEl.textContent = `Chọn ${config.allOptionText.replace('Tất cả ', '').toLowerCase()}...`;
+      if (badgeEl) {
+        badgeEl.textContent = '0';
+        badgeEl.style.display = 'inline-block';
+        badgeEl.style.background = '#94a3b8';
+      }
+    } else if (isAll) {
       labelEl.textContent = config.allOptionText;
-      if (badgeEl) badgeEl.style.display = 'none';
+      if (badgeEl) {
+        badgeEl.textContent = totalAvailable > 0 ? String(totalAvailable) : 'Tất cả';
+        badgeEl.style.display = 'inline-block';
+        badgeEl.style.background = '#0284c7';
+      }
     } else {
       const arr = Array.from(selectedSet);
       if (arr.length === 1) {
         labelEl.textContent = arr[0];
-        if (badgeEl) badgeEl.style.display = 'none';
+        if (badgeEl) {
+          badgeEl.textContent = '1';
+          badgeEl.style.display = 'inline-block';
+          badgeEl.style.background = '#0284c7';
+        }
       } else if (arr.length === 2) {
         labelEl.textContent = `${arr[0]}, ${arr[1]}`;
         if (badgeEl) {
           badgeEl.textContent = '2';
           badgeEl.style.display = 'inline-block';
+          badgeEl.style.background = '#0284c7';
         }
       } else {
-        labelEl.textContent = `${arr[0]}, ${arr[1]}...`;
+        labelEl.textContent = `${arr[0]}, ${arr[1]} (+${arr.length - 2})`;
         if (badgeEl) {
           badgeEl.textContent = String(arr.length);
           badgeEl.style.display = 'inline-block';
+          badgeEl.style.background = '#0284c7';
         }
       }
     }
@@ -484,10 +505,10 @@ const AntibiogramView = {
     // Đồng bộ vào select ẩn nếu có
     if (config.key === 'selectedOrganisms') {
       const sel = document.getElementById('abg-select-organism');
-      if (sel) sel.value = isAll ? 'ALL' : Array.from(selectedSet)[0];
+      if (sel) sel.value = isAll ? 'ALL' : (isEmpty ? '' : Array.from(selectedSet)[0]);
     } else if (config.key === 'selectedSpecimens') {
       const sel = document.getElementById('abg-select-specimen');
-      if (sel) sel.value = isAll ? 'ALL' : Array.from(selectedSet)[0];
+      if (sel) sel.value = isAll ? 'ALL' : (isEmpty ? '' : Array.from(selectedSet)[0]);
     }
   },
 
