@@ -717,115 +717,100 @@ const ImportService = {
       }
     }
 
+    // 1. Luôn đồng bộ dữ liệu vào Local Store trước tiên (đảm bảo tức thời & mượt mà)
+    const demo = window.DemoDataService?.getAll();
+    if (demo) {
+      this.syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata);
+    }
+
+    let mode = 'local';
     const sb = window.SupabaseManager?.client;
     const hasDb = window.SupabaseManager?.hasTables;
 
     if (sb && hasDb) {
       try {
-        // 1. Tạo import job record
-        const { data: job, error: jobErr } = await sb.from('import_jobs').insert([{
-          file_name: fileName,
-          file_type: fileType,
-          file_size: metadata.fileSize || 0,
-          record_count: metadata.totalRows || successful,
-          successful_records: successful,
-          error_records: metadata.errorCount || 0,
-          warning_records: metadata.warningCount || 0,
-          processing_status: 'completed',
-          file_fingerprint: metadata.fingerprint || null
-        }]).select().single();
+        const supabaseSyncPromise = (async () => {
+          // A. Tạo import job record
+          const { data: job, error: jobErr } = await sb.from('import_jobs').insert([{
+            file_name: fileName,
+            file_type: fileType,
+            file_size: metadata.fileSize || 0,
+            record_count: metadata.totalRows || successful,
+            successful_records: successful,
+            error_records: metadata.errorCount || 0,
+            warning_records: metadata.warningCount || 0,
+            processing_status: 'completed',
+            file_fingerprint: metadata.fingerprint || null
+          }]).select('id').single();
 
-        if (job?.id) jobId = job.id;
+          if (jobErr) throw jobErr;
+          if (job?.id) jobId = job.id;
 
-        // 2. Insert theo lô
-        for (const rec of validatedRecords) {
-          // Check/Insert patient
-          let patientId = null;
-          const { data: pat } = await sb.from('patients').upsert([{
-            patient_code: rec.patient_code,
-            patient_name: rec.patient_name,
-            age: rec.age,
-            sex: rec.sex,
-            department: rec.department
-          }], { onConflict: 'patient_code' }).select('id').single();
-
-          patientId = pat?.id;
-
-          // Insert specimen
-          let specimenId = null;
-          if (patientId) {
-            const { data: spec } = await sb.from('specimens').insert([{
-              patient_id: patientId,
-              specimen_type: rec.specimen_type,
-              collection_date: rec.collection_date || new Date().toISOString().split('T')[0],
-              requesting_department: rec.department
-            }]).select('id').single();
-            specimenId = spec?.id;
+          // B. Bulk Upsert Patients (deduplicated by patient_code, chunks of 100)
+          const patMap = new Map();
+          validatedRecords.forEach(r => {
+            if (r.patient_code && !patMap.has(r.patient_code)) {
+              patMap.set(r.patient_code, {
+                patient_code: r.patient_code,
+                patient_name: r.patient_name || '',
+                age: r.age || null,
+                sex: r.sex || '',
+                department: r.department || ''
+              });
+            }
+          });
+          const uniquePatients = Array.from(patMap.values());
+          for (let i = 0; i < uniquePatients.length; i += 100) {
+            const chunk = uniquePatients.slice(i, i + 100);
+            await sb.from('patients').upsert(chunk, { onConflict: 'patient_code' });
           }
 
-          // Insert culture
-          let cultureId = null;
-          if (specimenId) {
-            const { data: cult } = await sb.from('cultures').insert([{
-              specimen_id: specimenId,
-              culture_date: rec.collection_date || new Date().toISOString().split('T')[0],
-              organism_name: rec.organism_name
-            }]).select('id').single();
-            cultureId = cult?.id;
+          // C. Bulk Insert AST Results (chunks of 200)
+          const astRows = validatedRecords.map(rec => ({
+            antibiotic_code: rec.antibiotic_code,
+            raw_result: rec.raw_result || '',
+            normalized_result: rec.normalized_result || '',
+            interpretation: rec.interpretation || '',
+            fingerprint: rec.fingerprint || null,
+            tested_date: rec.collection_date || new Date().toISOString().split('T')[0],
+            import_job_id: jobId,
+            file_name: fileName
+          }));
+
+          for (let i = 0; i < astRows.length; i += 200) {
+            const chunk = astRows.slice(i, i + 200);
+            await sb.from('ast_results').insert(chunk);
           }
 
-          // Insert AST result
-          if (cultureId) {
-            await sb.from('ast_results').insert([{
-              culture_id: cultureId,
-              antibiotic_code: rec.antibiotic_code,
-              raw_result: rec.raw_result,
-              normalized_result: rec.normalized_result,
-              interpretation: rec.interpretation,
-              fingerprint: rec.fingerprint,
-              tested_date: rec.collection_date,
-              import_job_id: jobId
-            }]);
-          }
-        }
+          return true;
+        })();
 
-        // 3. Ghi Audit Log
-        await window.AuditService?.log('IMPORT', 'import_jobs', jobId, {
-          fileName: fileName,
-          total: successful
+        // Giới hạn timeout 3.5s để bảo đảm UI không bao giờ bị đơ
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Supabase sync timeout (>3.5s)')), 3500);
         });
 
-        // Đồng bộ dữ liệu vào Local Store để truy vấn phân tích tức thời
-        const demo = window.DemoDataService?.getAll();
-        if (demo) {
-          this.syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata);
-        }
-
-        window.StorageQuotaManager?.notify();
-        return { success: true, count: successful, mode: 'supabase', jobId };
+        await Promise.race([supabaseSyncPromise, timeoutPromise]);
+        mode = 'supabase';
       } catch (err) {
-        console.warn('[ImportService] Supabase commit error, saving to in-memory store:', err);
-        // Nếu lỗi do hạn mức bộ nhớ đầy -> tự động dọn dẹp FIFO
+        console.warn('[ImportService] Supabase sync skipped hoặc có lỗi (sử dụng Local Store):', err.message);
         if (err.message && /quota|limit|full|exceeded|413/i.test(err.message)) {
           await window.StorageQuotaManager?.purgeOldestUntilUnderQuota(successful);
         }
       }
     }
 
-    // Fallback: Lưu vào DemoDataService
-    const demo = window.DemoDataService?.getAll();
-    if (demo) {
-      this.syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata);
-    }
-
     // Ghi Audit Log
-    await window.AuditService?.log('IMPORT', 'local_store', jobId, {
-      fileName: fileName,
-      total: successful
-    });
+    try {
+      await window.AuditService?.log('IMPORT', mode === 'supabase' ? 'import_jobs' : 'local_store', jobId, {
+        fileName: fileName,
+        total: successful,
+        mode
+      });
+    } catch (e) {}
 
     window.StorageQuotaManager?.notify();
-    return { success: true, count: successful, mode: 'local', jobId };
+    return { success: true, count: successful, mode, jobId };
   },
 
   syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata) {

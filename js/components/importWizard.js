@@ -186,6 +186,14 @@ const ImportWizard = {
     // Kích hoạt logic khi vào từng bước cụ thể
     if (step === 4) {
       this.runValidationStep();
+    } else if (step === 5) {
+      document.getElementById('import-complete-summary')?.classList.add('hidden');
+      document.getElementById('import-step5-actions')?.classList.remove('hidden');
+      const btn = document.getElementById('btn-execute-import');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận & Nạp vào Database';
+      }
     }
   },
 
@@ -396,36 +404,48 @@ const ImportWizard = {
     const btn = document.getElementById('btn-execute-import');
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang nạp dữ liệu...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang nạp ' + validToImport.length.toLocaleString() + ' bản ghi AST...';
     }
+
+    const currentFileName = this.parsedData?.fileName || ('Du_lieu_nạp_' + new Date().toISOString().slice(0, 10) + '.csv');
 
     try {
       const res = await window.ImportService.commitImport(validToImport, {
-        fileName: this.parsedData.fileName,
-        fileType: this.parsedData.fileType,
-        fileSize: this.parsedData.fileSize,
-        totalRows: this.parsedData.totalRows,
-        errorCount: this.validationResult.errorCount,
-        warningCount: this.validationResult.warningCount
+        fileName: currentFileName,
+        fileType: this.parsedData?.fileType || 'csv',
+        fileSize: this.parsedData?.fileSize || 0,
+        totalRows: this.parsedData?.totalRows || validToImport.length,
+        errorCount: this.validationResult?.errorCount || 0,
+        warningCount: this.validationResult?.warningCount || 0
       });
 
       // Hiển thị kết quả thành công
-      document.getElementById('import-complete-summary').classList.remove('hidden');
-      document.getElementById('import-step5-actions').classList.add('hidden');
+      const summaryEl = document.getElementById('import-complete-summary');
+      const actionsEl = document.getElementById('import-step5-actions');
+      if (summaryEl) summaryEl.classList.remove('hidden');
+      if (actionsEl) actionsEl.classList.add('hidden');
 
-      document.getElementById('sum-imported-count').textContent = res.count.toLocaleString();
-      document.getElementById('sum-warning-count').textContent = this.validationResult.warningCount.toLocaleString();
-      document.getElementById('sum-rejected-count').textContent = this.validationResult.errorCount.toLocaleString();
+      const sumImported = document.getElementById('sum-imported-count');
+      const sumWarning = document.getElementById('sum-warning-count');
+      const sumRejected = document.getElementById('sum-rejected-count');
 
-      window.Toast.success(`Import hoàn tất! Đã lưu thành công ${res.count} kết quả AST.`);
+      const importedCount = (res?.count || validToImport.length);
+      if (sumImported) sumImported.textContent = importedCount.toLocaleString();
+      if (sumWarning) sumWarning.textContent = (this.validationResult?.warningCount || 0).toLocaleString();
+      if (sumRejected) sumRejected.textContent = (this.validationResult?.errorCount || 0).toLocaleString();
 
-      // Refresh Dashboard data
-      if (window.App && window.App.refreshData) {
-        window.App.refreshData();
+      window.Toast?.success(`Import hoàn tất! Đã lưu thành công ${importedCount.toLocaleString()} kết quả AST.`);
+
+      // Refresh Dashboard data & select file for analysis
+      if (window.App) {
+        if (window.App.state?.filters) {
+          window.App.state.filters.file = currentFileName;
+        }
+        await window.App.refreshData();
       }
     } catch (err) {
-      console.error(err);
-      window.Toast.error('Lỗi khi nạp dữ liệu vào cơ sở dữ liệu: ' + err.message);
+      console.error('[ImportWizard] Commit error:', err);
+      window.Toast?.error('Lỗi khi nạp dữ liệu: ' + err.message);
     } finally {
       if (btn) {
         btn.disabled = false;
