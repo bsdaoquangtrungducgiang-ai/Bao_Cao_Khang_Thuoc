@@ -21,7 +21,7 @@ const DataValidation = {
     let duplicateCount = 0;
 
     rawRows.forEach((row, index) => {
-      const rowNum = index + 2; // Dòng 1 thường là header Excel, dữ liệu bắt đầu từ dòng 2
+      const rowNum = row.source_row || row.rowNumber || (index + 2);
       const rowErrors = [];
       const rowWarnings = [];
 
@@ -130,8 +130,8 @@ const DataValidation = {
       }
 
       // 6. Kiểm tra Kháng sinh & Kết quả AST
-      const rawAbx = row.antibiotic_code;
-      const normAbx = Norm.normalizeAntibiotic ? Norm.normalizeAntibiotic(rawAbx) : rawAbx;
+      const rawAbx = String(row.antibiotic_raw || row.antibiotic_code || '').trim();
+      const normAbx = Norm.normalizeAntibiotic ? (Norm.normalizeAntibiotic(rawAbx) || row.antibiotic_code || rawAbx) : (row.antibiotic_code || rawAbx);
       if (!rawAbx) {
         rowErrors.push({
           row: rowNum,
@@ -171,18 +171,20 @@ const DataValidation = {
         specimenType,
         validDate,
         orgCheck.name,
-        normAbx
-      ) : `${patientCode}|${specimenType}|${validDate}|${orgCheck.name}|${normAbx}`;
+        normAbx,
+        rawAbx
+      ) : `${patientCode}|${specimenType}|${validDate}|${orgCheck.name}|${normAbx}|${rawAbx}`;
 
       let isDuplicate = false;
       if (batchFingerprints.has(fp) || existingFingerprints.has(fp)) {
         isDuplicate = true;
         duplicateCount++;
+        const abxLabel = (rawAbx && rawAbx.toUpperCase() !== normAbx) ? `${normAbx} (${rawAbx})` : normAbx;
         rowWarnings.push({
           row: rowNum,
           field: 'duplicate',
-          value: `${patientCode} - ${orgCheck.name} - ${normAbx}`,
-          error: 'Bản ghi nghi vấn trùng lặp (Cùng BN, ngày, vi khuẩn & kháng sinh)',
+          value: `${patientCode} - ${orgCheck.name} - ${abxLabel}`,
+          error: 'Bản ghi nghi vấn trùng lặp (Cùng BN, ngày, vi khuẩn, kháng sinh & phương pháp thử)',
           severity: 'warning'
         });
       } else {
@@ -192,6 +194,7 @@ const DataValidation = {
       // Bản ghi đã được chuẩn hóa
       const processedRecord = {
         ...row,
+        source_row: rowNum,
         rowNumber: rowNum,
         patient_code: patientCode,
         patient_name: row.patient_name || `Bệnh nhân ${patientCode}`,

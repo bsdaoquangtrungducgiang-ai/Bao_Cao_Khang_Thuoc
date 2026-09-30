@@ -589,6 +589,7 @@ const ImportService = {
     dataRows.forEach((row, rowIdx) => {
       const rowNum = rowIdx + 2;
       const baseInfo = {
+        source_row: rowNum,
         patient_code: '',
         patient_name: '',
         age: null,
@@ -636,6 +637,7 @@ const ImportService = {
             records.push({
               ...baseInfo,
               antibiotic_code: abxCol.antibioticCode,
+              antibiotic_raw: abxCol.headerName,
               raw_result: String(rawResult).trim(),
               interpretation: String(rawResult).trim()
             });
@@ -689,6 +691,7 @@ const ImportService = {
         records.push({
           ...baseInfo,
           antibiotic_code: rawAbxStr,
+          antibiotic_raw: rawAbxStr,
           raw_result: rawInterpStr,
           interpretation: rawInterpStr
         });
@@ -826,6 +829,16 @@ const ImportService = {
       });
     }
 
+    if (!demo.patients) demo.patients = [];
+    if (!demo.specimens) demo.specimens = [];
+    if (!demo.cultures) demo.cultures = [];
+    if (!demo.astResults) demo.astResults = [];
+
+    const existingPatientCodes = new Set(demo.patients.map(p => p.patient_code));
+    const existingSpecimenKeys = new Set(demo.specimens.map(s => `${s.patient_code}|${s.specimen_type}`));
+    const existingCultureKeys = new Set(demo.cultures.map(c => `${c.patient_code}|${c.organism_name}`));
+    const nowIso = new Date().toISOString();
+
     validatedRecords.forEach((rec, i) => {
       const cultId = rec.culture_id || ('imported-cult-' + jobId + '-' + (rec.patient_code || i));
       demo.astResults.push({
@@ -845,10 +858,11 @@ const ImportService = {
         tested_date: rec.collection_date,
         file_name: fileName,
         import_job_id: jobId,
-        created_at: new Date().toISOString()
+        created_at: nowIso
       });
 
-      if (!demo.patients.some(p => p.patient_code === rec.patient_code)) {
+      if (rec.patient_code && !existingPatientCodes.has(rec.patient_code)) {
+        existingPatientCodes.add(rec.patient_code);
         demo.patients.push({
           id: 'pat-imp-' + rec.patient_code,
           patient_code: rec.patient_code,
@@ -859,7 +873,9 @@ const ImportService = {
         });
       }
 
-      if (!demo.specimens.some(s => s.specimen_type === rec.specimen_type && s.patient_code === rec.patient_code)) {
+      const specKey = `${rec.patient_code}|${rec.specimen_type}`;
+      if (!existingSpecimenKeys.has(specKey)) {
+        existingSpecimenKeys.add(specKey);
         demo.specimens.push({
           id: 'spec-imp-' + Date.now() + '-' + i,
           patient_code: rec.patient_code,
@@ -869,7 +885,9 @@ const ImportService = {
         });
       }
 
-      if (!demo.cultures.some(c => c.organism_name === rec.organism_name && c.patient_code === rec.patient_code)) {
+      const cultKey = `${rec.patient_code}|${rec.organism_name}`;
+      if (!existingCultureKeys.has(cultKey)) {
+        existingCultureKeys.add(cultKey);
         demo.cultures.push({
           id: 'cult-imp-' + Date.now() + '-' + i,
           patient_code: rec.patient_code,

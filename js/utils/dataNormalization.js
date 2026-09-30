@@ -234,6 +234,11 @@ const DataNormalization = {
     'mmo': 'Morganella morganii',
 
     // Other Gram Negative
+    'aeromonas hydrophila': 'Aeromonas hydrophila',
+    'aeromonas hydrophyla': 'Aeromonas hydrophila',
+    'aeromonas spp': 'Aeromonas spp.',
+    'aeromonas': 'Aeromonas spp.',
+    'ahy': 'Aeromonas hydrophila',
     'stenotrophomonas maltophilia': 'Stenotrophomonas maltophilia',
     'pma': 'Stenotrophomonas maltophilia',
     'burkholderia cepacia': 'Burkholderia cepacia',
@@ -462,15 +467,16 @@ const DataNormalization = {
   },
 
   // 6. Tạo Fingerprint để phát hiện bản ghi trùng lặp (Section XXXIV)
-  generateFingerprint(patientCode, specimenType, collectionDate, organismName, antibioticCode) {
+  generateFingerprint(patientCode, specimenType, collectionDate, organismName, antibioticCode, rawAntibiotic = '') {
     const p = String(patientCode || '').trim().toLowerCase();
     const s = String(specimenType || '').trim().toLowerCase();
     const d = String(collectionDate || '').trim();
     const o = String(organismName || '').trim().toLowerCase();
     const a = String(antibioticCode || '').trim().toUpperCase();
+    const raw = String(rawAntibiotic || '').trim().toLowerCase();
 
-    // Simple robust hash
-    const text = `${p}|${s}|${d}|${o}|${a}`;
+    // Simple robust hash - nếu có rawAntibiotic thì kết hợp để phân biệt các cột xét nghiệm chuyên biệt (như peng02 vs peng04, oxsf vs oxa, ctx02 vs ctx03)
+    const text = raw ? `${p}|${s}|${d}|${o}|${a}|${raw}` : `${p}|${s}|${d}|${o}|${a}`;
     let hash = 0;
     for (let i = 0; i < text.length; i++) {
       const char = text.charCodeAt(i);
