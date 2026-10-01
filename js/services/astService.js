@@ -12,7 +12,19 @@ const ASTService = {
 
     if (sb && hasDb) {
       try {
-        return await this.fetchFromSupabase(filters);
+        const res = await this.fetchFromSupabase(filters);
+        const hasClinicalInfo = res && res.astResults && res.astResults.length > 0 && res.astResults.some(r =>
+          r.organism_name && r.organism_name !== 'Chưa định danh' && r.organism_name !== 'Khác'
+        );
+        if (hasClinicalInfo) {
+          return res;
+        }
+        // Nếu Supabase rỗng hoặc thiếu thông tin lâm sàng (do đứt gãy quan hệ culture), tự động fallback
+        const local = this.fetchFromDemoData(filters);
+        if (local && local.astResults && local.astResults.length > 0) {
+          return local;
+        }
+        return res;
       } catch (err) {
         console.warn('[ASTService] Supabase query failed, falling back to local demo data:', err);
       }
@@ -46,10 +58,14 @@ const ASTService = {
     if (filters.startDate) astQuery = astQuery.gte('tested_date', filters.startDate);
     if (filters.endDate) astQuery = astQuery.lte('tested_date', filters.endDate);
     if (filters.file && filters.file !== 'ALL') {
-      astQuery = astQuery.or(`file_name.eq.${filters.file},import_job_id.eq.${filters.file}`);
+      try {
+        astQuery = astQuery.or(`file_name.eq."${filters.file}",import_job_id.eq."${filters.file}"`);
+      } catch (e) {
+        astQuery = astQuery.eq('file_name', filters.file);
+      }
     }
 
-    const { data: rawAst, error } = await astQuery.limit(2000);
+    const { data: rawAst, error } = await astQuery.limit(5000);
     if (error) throw error;
 
     // Flatten nested structure

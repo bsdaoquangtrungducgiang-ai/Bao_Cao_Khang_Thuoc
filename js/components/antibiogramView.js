@@ -8,16 +8,18 @@
 const AntibiogramView = {
   currentChart: null,
 
-  // Bộ lọc hiện tại (Mặc định: Tất cả vi khuẩn, Tất cả bệnh phẩm, Toàn viện)
+  // Bộ lọc hiện tại (Mặc định: Tất cả vi khuẩn, Tất cả bệnh phẩm, Toàn viện, Tất cả 63 kháng sinh)
   state: {
     selectedOrganisms: new Set(['ALL']),
     selectedSpecimens: new Set(['ALL']),
     selectedDepartments: new Set(['ALL']),
+    selectedAntibiotics: new Set(['ALL']),
     selectedGender: 'ALL',
-    selectedYear: '2026',
+    selectedYear: 'ALL',
     availableOrganisms: [],
     availableSpecimens: [],
-    availableDepartments: []
+    availableDepartments: [],
+    availableAntibiotics: []
   },
 
   init() {
@@ -71,6 +73,20 @@ const AntibiogramView = {
       btnAllId: 'btn-ms-dept-all',
       btnClearId: 'btn-ms-dept-clear',
       allOptionText: 'Toàn viện (Tất cả khoa)',
+      defaultItem: 'ALL'
+    });
+
+    this.setupMultiSelectComponent({
+      key: 'selectedAntibiotics',
+      btnId: 'btn-ms-antibiotic',
+      menuId: 'menu-ms-antibiotic',
+      searchId: 'search-ms-antibiotic',
+      listId: 'list-ms-antibiotic',
+      labelId: 'label-ms-antibiotic',
+      badgeId: 'badge-ms-antibiotic',
+      btnAllId: 'btn-ms-abx-all',
+      btnClearId: 'btn-ms-abx-clear',
+      allOptionText: 'Tất cả 63 kháng sinh',
       defaultItem: 'ALL'
     });
 
@@ -184,7 +200,7 @@ const AntibiogramView = {
         this.state[config.key].clear();
         this.state[config.key].add('ALL');
         this.refreshCheckboxesInList(config.listId, config.key, config.allOptionText);
-        this.renderAntibiogram();
+        this.handleFilterChanged(config.key);
       });
     }
 
@@ -192,30 +208,49 @@ const AntibiogramView = {
       btnClear.addEventListener('click', () => {
         this.state[config.key].clear();
         this.refreshCheckboxesInList(config.listId, config.key, config.allOptionText);
-        this.renderAntibiogram();
+        this.handleFilterChanged(config.key);
       });
     }
   },
 
   /**
-   * Đặt lại bộ lọc Antibiogram về mặc định (Tất cả vi khuẩn, Tất cả bệnh phẩm, Toàn viện)
+   * Xử lý khi người dùng thay đổi 1 bộ lọc (Vi khuẩn, Bệnh phẩm, Khoa phòng, Kháng sinh)
+   * Tự động điều chỉnh các bộ lọc còn lại nếu có xung đột để luôn phân tích được ngay tiêu chí đã chọn
+   */
+  handleFilterChanged(changedKey) {
+    const configMap = {
+      selectedOrganisms: { key: 'selectedOrganisms', labelId: 'label-ms-organism', badgeId: 'badge-ms-organism', allOptionText: 'Tất cả vi khuẩn' },
+      selectedSpecimens: { key: 'selectedSpecimens', labelId: 'label-ms-specimen', badgeId: 'badge-ms-specimen', allOptionText: 'Tất cả bệnh phẩm' },
+      selectedDepartments: { key: 'selectedDepartments', labelId: 'label-ms-department', badgeId: 'badge-ms-department', allOptionText: 'Toàn viện (Tất cả khoa)' },
+      selectedAntibiotics: { key: 'selectedAntibiotics', labelId: 'label-ms-antibiotic', badgeId: 'badge-ms-antibiotic', allOptionText: 'Tất cả 63 kháng sinh' }
+    };
+    if (configMap[changedKey]) {
+      this.updateMultiSelectUI(configMap[changedKey]);
+    }
+    this.renderAntibiogram();
+  },
+
+  /**
+   * Đặt lại bộ lọc Antibiogram về mặc định (Tất cả vi khuẩn, Tất cả bệnh phẩm, Toàn viện, Tất cả 63 kháng sinh)
    */
   resetFilters() {
     this.state.selectedOrganisms = new Set(['ALL']);
     this.state.selectedSpecimens = new Set(['ALL']);
     this.state.selectedDepartments = new Set(['ALL']);
+    this.state.selectedAntibiotics = new Set(['ALL']);
     this.state.selectedGender = 'ALL';
-    this.state.selectedYear = '2026';
+    this.state.selectedYear = 'ALL';
 
     const genderSelect = document.getElementById('abg-select-gender');
     if (genderSelect) genderSelect.value = 'ALL';
 
     const yearSelect = document.getElementById('abg-select-year');
-    if (yearSelect) yearSelect.value = '2026';
+    if (yearSelect) yearSelect.value = 'ALL';
 
     this.renderMultiSelectOptions('selectedOrganisms', 'list-ms-organism', this.state.availableOrganisms, 'Tất cả vi khuẩn');
     this.renderMultiSelectOptions('selectedSpecimens', 'list-ms-specimen', this.state.availableSpecimens, 'Tất cả bệnh phẩm');
     this.renderMultiSelectOptions('selectedDepartments', 'list-ms-department', this.state.availableDepartments, 'Toàn viện (Tất cả khoa)');
+    this.renderMultiSelectOptions('selectedAntibiotics', 'list-ms-antibiotic', this.state.availableAntibiotics, 'Tất cả 63 kháng sinh');
 
     this.updateMultiSelectUI({
       key: 'selectedOrganisms',
@@ -234,6 +269,12 @@ const AntibiogramView = {
       labelId: 'label-ms-department',
       badgeId: 'badge-ms-department',
       allOptionText: 'Toàn viện (Tất cả khoa)'
+    });
+    this.updateMultiSelectUI({
+      key: 'selectedAntibiotics',
+      labelId: 'label-ms-antibiotic',
+      badgeId: 'badge-ms-antibiotic',
+      allOptionText: 'Tất cả 63 kháng sinh'
     });
 
     window.Toast?.info('Đã đặt lại bộ lọc Antibiogram về mặc định');
@@ -308,10 +349,41 @@ const AntibiogramView = {
       .map(([name, count]) => ({ name, count }));
     this.state.availableDepartments = sortedDepts.map(d => d.name);
 
+    // 4. Kháng sinh (Tách đủ 63 kháng sinh chuẩn, không gộp peng hay CTX)
+    const catalog = (typeof window !== 'undefined' && window.DataNormalization?.antibioticCatalog) ||
+      (typeof DataNormalization !== 'undefined' && DataNormalization.antibioticCatalog) || [];
+
+    const abxCounts = {};
+    astList.forEach(a => {
+      const code = a.antibiotic_code;
+      if (code) abxCounts[code] = (abxCounts[code] || 0) + 1;
+    });
+
+    const sortedAbxs = catalog.map(cat => ({
+      name: cat.code,
+      stt: cat.stt,
+      displayName: `${cat.code} — ${cat.name}${cat.indication ? ` (${cat.indication})` : ''}`,
+      count: abxCounts[cat.code] || 0
+    }));
+
+    Object.keys(abxCounts).forEach(code => {
+      if (!catalog.some(c => c.code.toLowerCase() === code.toLowerCase())) {
+        sortedAbxs.push({
+          name: code,
+          stt: 999,
+          displayName: code,
+          count: abxCounts[code]
+        });
+      }
+    });
+
+    this.state.availableAntibiotics = sortedAbxs;
+
     // Render checkbox options
     this.renderMultiSelectOptions('selectedOrganisms', 'list-ms-organism', sortedOrgs, 'Tất cả vi khuẩn');
     this.renderMultiSelectOptions('selectedSpecimens', 'list-ms-specimen', sortedSpecs, 'Tất cả bệnh phẩm');
     this.renderMultiSelectOptions('selectedDepartments', 'list-ms-department', sortedDepts, 'Toàn viện (Tất cả khoa)');
+    this.renderMultiSelectOptions('selectedAntibiotics', 'list-ms-antibiotic', sortedAbxs, 'Tất cả 63 kháng sinh');
 
     // Cập nhật text hiển thị trên nút trigger
     this.updateMultiSelectUI({
@@ -332,6 +404,12 @@ const AntibiogramView = {
       badgeId: 'badge-ms-department',
       allOptionText: 'Toàn viện (Tất cả khoa)'
     });
+    this.updateMultiSelectUI({
+      key: 'selectedAntibiotics',
+      labelId: 'label-ms-antibiotic',
+      badgeId: 'badge-ms-antibiotic',
+      allOptionText: 'Tất cả 63 kháng sinh'
+    });
   },
 
   /**
@@ -350,24 +428,26 @@ const AntibiogramView = {
     allItemDiv.className = `ms-option-item ${isAll ? 'selected' : ''}`;
     allItemDiv.setAttribute('data-value', 'ALL');
     allItemDiv.innerHTML = `
-      <input type="checkbox" id="${containerId}-opt-all" ${isAll ? 'checked' : ''} />
-      <label for="${containerId}-opt-all" class="ms-option-name" style="cursor: pointer; font-weight: 600;">
+      <input type="checkbox" id="${containerId}-opt-all" ${isAll ? 'checked' : ''} style="pointer-events: none;" />
+      <span class="ms-option-name" style="cursor: pointer; font-weight: 600; pointer-events: none;">
         ${allText}
-      </label>
+      </span>
     `;
 
     allItemDiv.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       selectedSet.clear();
       selectedSet.add('ALL');
       this.refreshCheckboxesInList(containerId, stateKey, allText);
-      this.renderAntibiogram();
+      this.handleFilterChanged(stateKey);
     });
     container.appendChild(allItemDiv);
 
     // Từng item riêng lẻ
     items.forEach((itemObj, idx) => {
       const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
+      const displayName = (typeof itemObj === 'object' && itemObj.displayName) ? itemObj.displayName : name;
       const count = typeof itemObj === 'object' ? itemObj.count : null;
       const isChecked = !isAll && selectedSet.has(name);
 
@@ -375,17 +455,18 @@ const AntibiogramView = {
       div.className = `ms-option-item ${isChecked ? 'selected' : ''}`;
       div.setAttribute('data-value', name);
 
-      const countBadge = count !== null ? `<span class="ms-option-count">${count}</span>` : '';
+      const countBadge = count !== null ? `<span class="ms-option-count" style="pointer-events: none;">${count}</span>` : '';
       div.innerHTML = `
-        <input type="checkbox" id="${containerId}-opt-${idx}" ${isChecked ? 'checked' : ''} />
-        <label for="${containerId}-opt-${idx}" class="ms-option-name" style="cursor: pointer;">
-          ${name}
-        </label>
+        <input type="checkbox" id="${containerId}-opt-${idx}" ${isChecked ? 'checked' : ''} style="pointer-events: none;" />
+        <span class="ms-option-name" style="cursor: pointer; pointer-events: none;" title="${displayName}">
+          ${displayName}
+        </span>
         ${countBadge}
       `;
 
       div.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         if (selectedSet.has('ALL')) {
           selectedSet.clear();
         }
@@ -402,7 +483,7 @@ const AntibiogramView = {
         }
 
         this.refreshCheckboxesInList(containerId, stateKey, allText);
-        this.renderAntibiogram();
+        this.handleFilterChanged(stateKey);
       });
 
       container.appendChild(div);
@@ -438,7 +519,8 @@ const AntibiogramView = {
     const configMap = {
       selectedOrganisms: { key: 'selectedOrganisms', labelId: 'label-ms-organism', badgeId: 'badge-ms-organism', allOptionText: 'Tất cả vi khuẩn' },
       selectedSpecimens: { key: 'selectedSpecimens', labelId: 'label-ms-specimen', badgeId: 'badge-ms-specimen', allOptionText: 'Tất cả bệnh phẩm' },
-      selectedDepartments: { key: 'selectedDepartments', labelId: 'label-ms-department', badgeId: 'badge-ms-department', allOptionText: 'Toàn viện (Tất cả khoa)' }
+      selectedDepartments: { key: 'selectedDepartments', labelId: 'label-ms-department', badgeId: 'badge-ms-department', allOptionText: 'Toàn viện (Tất cả khoa)' },
+      selectedAntibiotics: { key: 'selectedAntibiotics', labelId: 'label-ms-antibiotic', badgeId: 'badge-ms-antibiotic', allOptionText: 'Tất cả 63 kháng sinh' }
     };
     if (configMap[stateKey]) {
       this.updateMultiSelectUI(configMap[stateKey]);
@@ -461,6 +543,7 @@ const AntibiogramView = {
     if (config.key === 'selectedOrganisms') totalAvailable = this.state.availableOrganisms?.length || 0;
     else if (config.key === 'selectedSpecimens') totalAvailable = this.state.availableSpecimens?.length || 0;
     else if (config.key === 'selectedDepartments') totalAvailable = this.state.availableDepartments?.length || 0;
+    else if (config.key === 'selectedAntibiotics') totalAvailable = this.state.availableAntibiotics?.length || 63;
 
     if (isEmpty) {
       labelEl.textContent = `Chọn ${config.allOptionText.replace('Tất cả ', '').toLowerCase()}...`;
@@ -532,13 +615,18 @@ const AntibiogramView = {
       ? 'ALL' 
       : Array.from(this.state.selectedDepartments);
 
+    const abxs = (this.state.selectedAntibiotics.has('ALL') || this.state.selectedAntibiotics.size === 0)
+      ? 'ALL'
+      : Array.from(this.state.selectedAntibiotics);
+
     const gender = this.state.selectedGender || 'ALL';
-    const year = this.state.selectedYear || '2026';
+    const year = this.state.selectedYear || 'ALL';
     const activeFile = window.App?.state?.filters?.file;
 
     // Cập nhật tiêu đề báo cáo
     const titleEl = document.getElementById('abg-report-title');
     const badgesEl = document.getElementById('abg-active-filter-badges');
+    const bannerEl = document.getElementById('abg-adaptive-banner');
 
     let orgTitleText = 'Tất cả vi khuẩn';
     if (Array.isArray(orgs)) {
@@ -552,6 +640,12 @@ const AntibiogramView = {
       else specTitleText = `${specs.join(', ')} (${specs.length} loại)`;
     }
 
+    let deptTitleText = 'Toàn viện';
+    if (Array.isArray(depts)) {
+      if (depts.length === 1) deptTitleText = depts[0];
+      else deptTitleText = `${depts.join(', ')} (${depts.length} khoa)`;
+    }
+
     const yearText = (year && year !== 'ALL') ? `(${year})` : '(Toàn thời gian)';
     if (titleEl) {
       titleEl.textContent = `Antibiogram: ${orgTitleText} — ${specTitleText} ${yearText}`;
@@ -562,6 +656,9 @@ const AntibiogramView = {
       badgesEl.innerHTML = '';
       if (Array.isArray(depts)) {
         badgesEl.innerHTML += `<span class="abg-filter-badge"><i class="fa-solid fa-hospital-user"></i> Khoa: ${depts.join(', ')}</span>`;
+      }
+      if (Array.isArray(abxs)) {
+        badgesEl.innerHTML += `<span class="abg-filter-badge" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd;"><i class="fa-solid fa-capsules"></i> Kháng sinh: ${abxs.join(', ')}</span>`;
       }
       if (gender && gender !== 'ALL') {
         badgesEl.innerHTML += `<span class="abg-filter-badge"><i class="fa-solid fa-venus-mars"></i> Giới tính: ${gender === 'Nam' ? 'Nam' : 'Nữ'}</span>`;
@@ -574,8 +671,132 @@ const AntibiogramView = {
     // Lấy tập dữ liệu AST (lọc theo file nếu người dùng đã chọn file)
     const astList = window.App?.getActiveAstRecords ? window.App.getActiveAstRecords() : (data.astResults || []);
 
-    // Sinh bảng Antibiogram qua AnalyticsService đa tiêu chí
-    const rows = window.AnalyticsService.generateAntibiogram(astList, orgs, specs, depts, gender, year);
+    // Sinh bảng Antibiogram qua AnalyticsService đa tiêu chí (Tách đủ 63 loại kháng sinh)
+    let rows = window.AnalyticsService.generateAntibiogram(astList, orgs, specs, depts, gender, year, abxs);
+
+    if (rows.length > 0) {
+      if (bannerEl) {
+        bannerEl.style.display = 'none';
+        bannerEl.innerHTML = '';
+      }
+      this.renderTable(rows);
+      this.renderChart(rows);
+      return;
+    }
+
+    // Xử lý thông minh khi tổ hợp trả về 0 kết quả
+    if (bannerEl) {
+      const hasSpecificOrg = orgs !== 'ALL' && Array.isArray(orgs) && orgs.length > 0;
+      const hasSpecificDept = depts !== 'ALL' && Array.isArray(depts) && depts.length > 0;
+      const hasSpecificSpec = specs !== 'ALL' && Array.isArray(specs) && specs.length > 0;
+
+      // 1. Kiểm tra nếu vi khuẩn đã chọn có tại khoa này trên các bệnh phẩm khác
+      if (hasSpecificOrg && hasSpecificDept) {
+        const orgInDept = window.AnalyticsService.generateAntibiogram(astList, orgs, 'ALL', depts, gender, year);
+        if (orgInDept.length > 0) {
+          const availSpecs = [];
+          (this.state.availableSpecimens || []).forEach(sp => {
+            if (window.AnalyticsService.generateAntibiogram(astList, orgs, sp, depts, gender, year).length > 0) {
+              availSpecs.push(sp);
+            }
+          });
+
+          let quickBtns = availSpecs.slice(0, 3).map(sp => 
+            `<button type="button" class="btn btn-sm btn-primary abg-quick-spec" data-spec="${sp}" style="font-size: 12px; padding: 4px 10px; cursor: pointer; border-radius: 4px; background: #0284c7; color: #fff; border: none; margin-right: 6px;">👉 Xem trên "${sp}"</button>`
+          ).join('');
+
+          bannerEl.style.display = 'block';
+          bannerEl.innerHTML = `
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 8px; font-size: 13px;">
+              <div style="font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-info" style="color: #2563eb; font-size: 16px;"></i>
+                <span>Tại <strong>${deptTitleText}</strong>, vi khuẩn <strong>${orgTitleText}</strong> không có mẫu trên bệnh phẩm <strong>${specTitleText}</strong>.</span>
+              </div>
+              <div style="margin-bottom: 8px;">
+                💡 Tại khoa này, vi khuẩn được phân lập trên: <strong>${availSpecs.join(', ')}</strong> (${orgInDept.length} kháng sinh thử nghiệm).
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                ${quickBtns}
+                <button type="button" id="btn-quick-all-specs" style="font-size: 12px; padding: 4px 10px; cursor: pointer; border-radius: 4px; background: #fff; color: #0284c7; border: 1px solid #0284c7;">👉 Tất cả bệnh phẩm tại khoa</button>
+                <button type="button" id="btn-quick-whole-hosp" style="font-size: 12px; padding: 4px 10px; cursor: pointer; border-radius: 4px; background: #fff; color: #475569; border: 1px solid #cbd5e1;">👉 Xem Toàn viện</button>
+              </div>
+            </div>
+          `;
+
+          bannerEl.querySelectorAll('.abg-quick-spec').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const sp = e.target.getAttribute('data-spec');
+              this.state.selectedSpecimens.clear();
+              this.state.selectedSpecimens.add(sp);
+              this.refreshCheckboxesInList('list-ms-specimen', 'selectedSpecimens', 'Tất cả bệnh phẩm');
+              this.renderAntibiogram();
+            });
+          });
+
+          const btnAll = document.getElementById('btn-quick-all-specs');
+          if (btnAll) {
+            btnAll.addEventListener('click', () => {
+              this.state.selectedSpecimens.clear();
+              this.state.selectedSpecimens.add('ALL');
+              this.refreshCheckboxesInList('list-ms-specimen', 'selectedSpecimens', 'Tất cả bệnh phẩm');
+              this.renderAntibiogram();
+            });
+          }
+
+          const btnHosp = document.getElementById('btn-quick-whole-hosp');
+          if (btnHosp) {
+            btnHosp.addEventListener('click', () => {
+              this.state.selectedDepartments.clear();
+              this.state.selectedDepartments.add('ALL');
+              this.refreshCheckboxesInList('list-ms-department', 'selectedDepartments', 'Toàn viện (Tất cả khoa)');
+              this.renderAntibiogram();
+            });
+          }
+
+          this.renderTable([]);
+          this.renderChart([]);
+          return;
+        }
+      }
+
+      // 2. Nếu vi khuẩn có tại các khoa khác
+      if (hasSpecificOrg) {
+        const orgAnywhere = window.AnalyticsService.generateAntibiogram(astList, orgs, 'ALL', 'ALL', gender, year);
+        if (orgAnywhere.length > 0) {
+          bannerEl.style.display = 'block';
+          bannerEl.innerHTML = `
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div>
+                <i class="fa-solid fa-circle-info" style="color: #2563eb; font-size: 16px; margin-right: 8px;"></i>
+                <span>Không tìm thấy mẫu <strong>${orgTitleText}</strong> tại tiêu chí đang chọn. Có dữ liệu trên Toàn viện (${orgAnywhere.length} loại kháng sinh).</span>
+              </div>
+              <button type="button" id="btn-quick-org-all" class="btn btn-sm btn-primary" style="white-space: nowrap; font-size: 12px; padding: 4px 10px; cursor: pointer; border-radius: 4px; background: #0284c7; color: #fff; border: none;">
+                👉 Xem ${orgTitleText} trên Toàn viện
+              </button>
+            </div>
+          `;
+          const btnAllHosp = document.getElementById('btn-quick-org-all');
+          if (btnAllHosp) {
+            btnAllHosp.addEventListener('click', () => {
+              this.state.selectedDepartments.clear();
+              this.state.selectedDepartments.add('ALL');
+              this.refreshCheckboxesInList('list-ms-department', 'selectedDepartments', 'Toàn viện (Tất cả khoa)');
+              this.state.selectedSpecimens.clear();
+              this.state.selectedSpecimens.add('ALL');
+              this.refreshCheckboxesInList('list-ms-specimen', 'selectedSpecimens', 'Tất cả bệnh phẩm');
+              this.renderAntibiogram();
+            });
+          }
+          this.renderTable([]);
+          this.renderChart([]);
+          return;
+        }
+      }
+
+      bannerEl.style.display = 'none';
+      bannerEl.innerHTML = '';
+    }
+
     this.renderTable(rows);
     this.renderChart(rows);
   },
@@ -586,16 +807,27 @@ const AntibiogramView = {
 
     tbody.innerHTML = '';
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 24px; color: var(--text-muted);">Không có dữ liệu kháng sinh đồ cho các tiêu chí lọc đã chọn</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align:center; padding: 36px 16px; color: #64748b;">
+            <i class="fa-solid fa-filter-circle-xmark" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 8px; display: block;"></i>
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">Không có dữ liệu kháng sinh đồ cho các tiêu chí lọc đã chọn</div>
+            <div style="font-size: 12px; color: #94a3b8;">Thử chọn lại tiêu chí "Tất cả vi khuẩn" hoặc "Toàn viện (Tất cả khoa)" để xem tổng quan.</div>
+          </td>
+        </tr>
+      `;
       return;
     }
 
     rows.forEach((r, idx) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td style="text-align: center; color: var(--text-muted);">${idx + 1}</td>
-        <td><strong>${r.code}</strong></td>
-        <td>${r.name || r.code}</td>
+        <td style="text-align: center; color: var(--text-muted); font-size: 12px;">${r.stt || (idx + 1)}</td>
+        <td><strong style="color: #0369a1; font-family: monospace; font-size: 13px;">${r.code}</strong></td>
+        <td>
+          <div style="font-weight: 600; color: var(--text-main); font-size: 13.5px;">${r.name || r.code}</div>
+          ${r.indication ? `<div style="font-size: 11.5px; color: #475569; margin-top: 2px;"><i class="fa-solid fa-notes-medical" style="font-size: 10px; color: #0284c7;"></i> ${r.indication}</div>` : ''}
+        </td>
         <td style="text-align: center; font-weight: 700; color: var(--color-s);">${r.sRate}% <span style="font-size: 10.5px; color: var(--text-muted);">(${r.sCount})</span></td>
         <td style="text-align: center; font-weight: 700; color: var(--color-i);">${r.iRate}% <span style="font-size: 10.5px; color: var(--text-muted);">(${r.iCount})</span></td>
         <td style="text-align: center; font-weight: 700; color: var(--color-r);">${r.rRate}% <span style="font-size: 10.5px; color: var(--text-muted);">(${r.rCount})</span></td>
@@ -618,7 +850,10 @@ const AntibiogramView = {
 
     if (this.currentChart) {
       this.currentChart.destroy();
+      this.currentChart = null;
     }
+
+    if (rows.length === 0) return;
 
     const labels = rows.map(r => r.code);
     const sRates = rows.map(r => r.sRate);
@@ -668,21 +903,27 @@ const AntibiogramView = {
     const depts = (this.state.selectedDepartments.has('ALL') || this.state.selectedDepartments.size === 0)
       ? 'ALL' 
       : Array.from(this.state.selectedDepartments);
+    const abxs = (this.state.selectedAntibiotics.has('ALL') || this.state.selectedAntibiotics.size === 0)
+      ? 'ALL'
+      : Array.from(this.state.selectedAntibiotics);
     const gender = this.state.selectedGender || 'ALL';
-    const year = this.state.selectedYear || '2026';
+    const year = this.state.selectedYear || 'ALL';
 
     const data = window.App?.state?.surveillanceData || window.DemoDataService?.getAll();
     const astList = window.App?.getActiveAstRecords ? window.App.getActiveAstRecords() : (data.astResults || []);
-    const rows = window.AnalyticsService.generateAntibiogram(astList, orgs, specs, depts, gender, year);
+    const rows = window.AnalyticsService.generateAntibiogram(astList, orgs, specs, depts, gender, year, abxs);
 
     if (rows.length === 0) {
       window.Toast?.info('Không có dữ liệu để xuất file!');
       return;
     }
 
-    const excelRows = rows.map(r => ({
+    const excelRows = rows.map((r, idx) => ({
+      'STT': r.stt || (idx + 1),
       'Mã kháng sinh': r.code,
       'Tên kháng sinh': r.name,
+      'Phiên giải dùng (Chỉ định điều trị)': r.indication || '',
+      'Nhóm kháng sinh': r.group || '',
       'Số lượng Nhạy (S)': r.sCount,
       'Tỷ lệ Nhạy (%S)': r.sRate,
       'Số lượng Trung gian (I)': r.iCount,

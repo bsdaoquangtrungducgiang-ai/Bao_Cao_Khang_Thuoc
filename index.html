@@ -975,7 +975,27 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   </div>
                 </div>
 
-                <!-- 4. Lựa chọn theo Giới Tính (Mặc định: Tất cả) -->
+                <!-- 4. Kháng Sinh (Tách đủ 63 loại kháng sinh theo danh mục chuẩn - Mặc định: Tất cả 63 loại) -->
+                <div class="filter-item custom-multiselect" id="ms-abg-antibiotic">
+                  <span class="filter-label"><i class="fa-solid fa-capsules"></i> Kháng Sinh (63 loại):</span>
+                  <button type="button" class="ms-trigger-btn" id="btn-ms-antibiotic" title="Chọn kháng sinh phân tích">
+                    <span class="ms-label-text" id="label-ms-antibiotic">Tất cả 63 kháng sinh</span>
+                    <span class="ms-badge" id="badge-ms-antibiotic">Tất cả (63)</span>
+                    <i class="fa-solid fa-chevron-down ms-chevron"></i>
+                  </button>
+                  <div class="ms-dropdown-menu" id="menu-ms-antibiotic" style="display: none; min-width: 320px;">
+                    <div class="ms-search-wrap">
+                      <input type="text" class="ms-search-input" id="search-ms-antibiotic" placeholder="Tìm theo mã hoặc tên kháng sinh..." />
+                    </div>
+                    <div class="ms-actions">
+                      <button type="button" class="ms-btn-action" id="btn-ms-abx-all">Chọn tất cả</button>
+                      <button type="button" class="ms-btn-action" id="btn-ms-abx-clear">Bỏ chọn</button>
+                    </div>
+                    <div class="ms-options-list" id="list-ms-antibiotic"></div>
+                  </div>
+                </div>
+
+                <!-- 5. Lựa chọn theo Giới Tính (Mặc định: Tất cả) -->
                 <div class="filter-item">
                   <span class="filter-label"><i class="fa-solid fa-venus-mars"></i> Giới Tính:</span>
                   <select class="filter-select" id="abg-select-gender">
@@ -985,12 +1005,12 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   </select>
                 </div>
 
-                <!-- 5. Năm -->
+                <!-- 6. Năm -->
                 <div class="filter-item">
                   <span class="filter-label"><i class="fa-regular fa-calendar"></i> Năm:</span>
                   <select class="filter-select" id="abg-select-year">
-                    <option value="ALL">Tất cả các năm</option>
-                    <option value="2026" selected>2026</option>
+                    <option value="ALL" selected>Tất cả các năm</option>
+                    <option value="2026">2026</option>
                     <option value="2025">2025</option>
                     <option value="2024">2024</option>
                   </select>
@@ -1014,10 +1034,13 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
             <!-- Tiêu đề báo cáo và huy hiệu lọc -->
             <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin: 10px 0 16px;">
               <h3 id="abg-report-title" style="font-size: 16px; margin: 0; color: var(--text-main); font-weight: 700;">
-                Antibiogram: Tất cả vi khuẩn — Tất cả bệnh phẩm (2026)
+                Antibiogram: Tất cả vi khuẩn — Tất cả bệnh phẩm
               </h3>
               <div id="abg-active-filter-badges" style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px;"></div>
             </div>
+
+            <!-- Banner tương thích thông minh khi lọc chéo tiêu chí -->
+            <div id="abg-adaptive-banner" style="display: none; margin-bottom: 14px;"></div>
 
             <!-- Grid: Bảng số liệu + Biểu đồ thanh -->
             <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px;">
@@ -1026,8 +1049,8 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <thead>
                     <tr>
                       <th style="width: 40px; text-align: center;">#</th>
-                      <th>Mã</th>
-                      <th>Kháng Sinh</th>
+                      <th style="width: 75px;">Mã KS</th>
+                      <th>Kháng Sinh & Chỉ Định Điều Trị</th>
                       <th style="text-align: center;">%S (Nhạy)</th>
                       <th style="text-align: center;">%I (TG)</th>
                       <th style="text-align: center;">%R (Kháng)</th>
@@ -1908,13 +1931,14 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/supabaseClient.js"></script>
   <script src="js/utils/dataNormalization.js"></script>
   <script src="js/utils/dataValidation.js"></script>
+  <script src="js/data/hospitalCsvData.js"></script>
+  <script src="js/services/importService.js"></script>
   <script src="js/services/demoDataService.js"></script>
   <script src="js/services/analyticsService.js"></script>
   <script src="js/services/authService.js"></script>
   <script src="js/services/auditService.js"></script>
   <script src="js/services/storageQuotaManager.js"></script>
   <script src="js/services/astService.js"></script>
-  <script src="js/services/importService.js"></script>
   <script src="js/services/specializedAMRService.js"></script>
   <script src="js/services/pdfImportService.js"></script>
   <script src="js/services/reportExportService.js"></script>

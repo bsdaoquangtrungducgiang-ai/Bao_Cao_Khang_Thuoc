@@ -202,7 +202,7 @@ const DataValidation = {
         sex: Norm.normalizeSex ? Norm.normalizeSex(row.sex) : (row.sex || 'Unknown'),
         department: row.department || 'Khoa Vi sinh',
         specimen_type: specimenType || 'Khác',
-        collection_date: dateCheck.isValid ? dateCheck.dateStr : null,
+        collection_date: dateCheck.isValid ? dateCheck.dateStr : (dateCheck.dateStr || row.collection_date || new Date().toISOString().split('T')[0]),
         organism_name: orgCheck.name,
         organism_raw: orgCheck.raw,
         antibiotic_code: normAbx,

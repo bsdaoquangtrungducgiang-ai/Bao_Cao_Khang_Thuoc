@@ -342,10 +342,49 @@ const App = {
 
   getActiveAstRecords() {
     const f = this.state.filters?.file;
-    const data = this.state.surveillanceData || window.DemoDataService?.getAll();
-    const rawAst = data?.astResults || [];
-    if (!f || f === 'ALL') return rawAst;
-    return rawAst.filter(a => a.file_name === f || a.import_job_id === f);
+    let data = this.state.surveillanceData;
+    let rawAst = data?.astResults || [];
+    const localData = window.DemoDataService?.getAll();
+
+    const hasClinicalInfo = (records) => {
+      return records && records.length > 0 && records.some(r => 
+        r.organism_name && r.organism_name !== 'Chưa định danh' && r.organism_name !== 'Khác'
+      );
+    };
+
+    // Nếu surveillanceData không có kết quả AST hoặc không có tên vi khuẩn thực tế, lấy từ Local Store
+    if ((!hasClinicalInfo(rawAst)) && hasClinicalInfo(localData?.astResults)) {
+      data = localData;
+      rawAst = localData.astResults || [];
+    }
+
+    if (!f || f === 'ALL') {
+      if ((!hasClinicalInfo(rawAst)) && hasClinicalInfo(localData?.astResults)) {
+        return localData.astResults;
+      }
+      return rawAst;
+    }
+
+    const target = String(f).trim().toLowerCase();
+    const cleanTarget = target.replace(/\.[a-z0-9]+$/i, '').replace(/[\s\.\(\)\-_]/g, '');
+    const filterFn = a => {
+      const fn = String(a.file_name || '').trim().toLowerCase();
+      const jid = String(a.import_job_id || '').trim().toLowerCase();
+      if (fn === target || jid === target || fn.includes(target) || target.includes(fn)) return true;
+      const cleanFn = fn.replace(/\.[a-z0-9]+$/i, '').replace(/[\s\.\(\)\-_]/g, '');
+      return cleanFn && cleanTarget && (cleanFn === cleanTarget || cleanFn.includes(cleanTarget) || cleanTarget.includes(cleanFn));
+    };
+
+    let matched = rawAst.filter(filterFn);
+    // Nếu chưa tìm thấy hoặc không có thông tin vi khuẩn thực tế nhưng Local Store có thì lấy từ Local Store
+    if ((!hasClinicalInfo(matched)) && localData?.astResults) {
+      const localMatched = localData.astResults.filter(filterFn);
+      if (hasClinicalInfo(localMatched)) {
+        matched = localMatched;
+      }
+    }
+
+    return matched;
   },
 
   renderDashboard() {

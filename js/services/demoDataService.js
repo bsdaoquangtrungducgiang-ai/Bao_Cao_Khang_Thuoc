@@ -235,12 +235,46 @@ const DemoDataService = {
     ];
 
     this.isInitialized = true;
+    this.loadHospitalDataset();
     console.log(`[DemoDataService] Initialized: ${this.data.patients.length} patients, ${this.data.specimens.length} specimens, ${this.data.cultures.length} cultures, ${this.data.astResults.length} AST results.`);
     return this.data;
   },
 
+  loadHospitalDataset() {
+    const csvData = (typeof window !== 'undefined' && window.HOSPITAL_CSV_DATA) ? window.HOSPITAL_CSV_DATA : (typeof HOSPITAL_CSV_DATA !== 'undefined' ? HOSPITAL_CSV_DATA : null);
+    if (!csvData) return;
+
+    if (this.data.importJobs && this.data.importJobs.some(j => j.file_name === 'ĐG Dương tính (010126. 230626).xls')) {
+      return;
+    }
+
+    try {
+      const ImportRef = (typeof window !== 'undefined' && window.ImportService) ? window.ImportService : (typeof ImportService !== 'undefined' ? ImportService : null);
+      if (!ImportRef || !ImportRef.parseText) return;
+
+      const parsed = ImportRef.parseText(csvData);
+      const transformed = ImportRef.transformData(parsed.dataRows, parsed.detectedMapping);
+      const DataValidationRef = (typeof window !== 'undefined' && window.DataValidation) ? window.DataValidation : (typeof DataValidation !== 'undefined' ? DataValidation : null);
+      const validated = DataValidationRef ? DataValidationRef.validateBatch(transformed) : { validRecords: transformed };
+
+      ImportRef.syncToLocalStore(
+        this.data,
+        validated.validRecords,
+        'job-dg-2026',
+        'ĐG Dương tính (010126. 230626).xls',
+        'xls',
+        { fileSize: 593103, totalRows: parsed.totalRows || 1466 }
+      );
+    } catch (e) {
+      console.warn('[DemoDataService] Could not preload hospital dataset:', e);
+    }
+  },
+
   getAll() {
     if (!this.isInitialized) this.init();
+    if (this.data && this.data.importJobs && !this.data.importJobs.some(j => j.file_name === 'ĐG Dương tính (010126. 230626).xls')) {
+      this.loadHospitalDataset();
+    }
     return this.data;
   }
 };

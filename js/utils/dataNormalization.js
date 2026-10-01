@@ -301,68 +301,128 @@ const DataNormalization = {
       }
     }
 
+    // Heuristics chống lỗi chính tả, dính chữ không dấu cách (vd: Streptococcuapneumoniae)
+    const noSpace = clean.replace(/[^a-z0-9]/g, '');
+    if (noSpace.includes('strepto') && noSpace.includes('pneumo')) {
+      return { raw: rawStr, name: 'Streptococcus pneumoniae', isValid: true };
+    }
+    if (noSpace.includes('staphylo') && noSpace.includes('aureus')) {
+      return { raw: rawStr, name: 'Staphylococcus aureus', isValid: true };
+    }
+    if (noSpace.includes('escher') && noSpace.includes('coli')) {
+      return { raw: rawStr, name: 'Escherichia coli', isValid: true };
+    }
+    if (noSpace.includes('kleb') && noSpace.includes('pneumo')) {
+      return { raw: rawStr, name: 'Klebsiella pneumoniae', isValid: true };
+    }
+    if (noSpace.includes('acineto') && (noSpace.includes('bauman') || noSpace.includes('baumani'))) {
+      return { raw: rawStr, name: 'Acinetobacter baumannii', isValid: true };
+    }
+    if (noSpace.includes('pseudo') && noSpace.includes('aerug')) {
+      return { raw: rawStr, name: 'Pseudomonas aeruginosa', isValid: true };
+    }
+    if (noSpace.includes('entero') && noSpace.includes('faecal')) {
+      return { raw: rawStr, name: 'Enterococcus faecalis', isValid: true };
+    }
+    if (noSpace.includes('entero') && noSpace.includes('faecium')) {
+      return { raw: rawStr, name: 'Enterococcus faecium', isValid: true };
+    }
+    if (noSpace.includes('haemo') && noSpace.includes('influen')) {
+      return { raw: rawStr, name: 'Haemophilus influenzae', isValid: true };
+    }
+    if (noSpace.includes('mora') && noSpace.includes('catarrh')) {
+      return { raw: rawStr, name: 'Moraxella catarrhalis', isValid: true };
+    }
+    if (noSpace.includes('proteus') && noSpace.includes('mirabil')) {
+      return { raw: rawStr, name: 'Proteus mirabilis', isValid: true };
+    }
+
     return { raw: rawStr, name: rawStr, isValid: false };
   },
 
-  // 3. Chuẩn hóa Kháng sinh (Mã chuẩn AMP, CTX, CRO, MEM...)
+  // 3. Chuẩn hóa Kháng sinh (Tách đủ 63 loại kháng sinh theo danh mục, bảo toàn phân giải điều trị riêng biệt)
   antibioticDictionary: {
-    'am': 'AMP', 'amp': 'AMP', 'ampicillin': 'AMP',
+    // 63 kháng sinh chuẩn hóa theo đúng danh mục điều trị
+    'am': 'AM',
     'amc': 'AMC', 'amoxicillin/clavulanic acid': 'AMC', 'amoxicillin-clavulanate': 'AMC', 'amox/clav': 'AMC',
-    'sam': 'SAM', 'ampicillin/sulbactam': 'SAM', 'amp/sul': 'SAM',
     'tzp': 'TZP', 'piperacillin/tazobactam': 'TZP', 'pip/tazo': 'TZP',
-    'ctx': 'CTX', 'cefotaxime': 'CTX', 'ctx02': 'CTX', 'ctx03': 'CTX',
-    'cro': 'CRO', 'ceftriaxone': 'CRO', 'cro02': 'CRO', 'cro03': 'CRO',
+    'czo': 'CZO', 'cefazolin': 'CZO', 'cfz': 'CZO',
+    'ctx': 'CTX', 'cefotaxime': 'CTX',
+    'ctx01': 'CTX01',
+    'ctx02': 'CTX02',
+    'ctx03': 'CTX03',
     'caz': 'CAZ', 'ceftazidime': 'CAZ',
     'fep': 'FEP', 'cefepime': 'FEP',
-    'cfz': 'CFZ', 'cefazolin': 'CFZ', 'czo': 'CFZ',
-    'cxm': 'CXM', 'cefuroxime': 'CXM',
-    'mem': 'MEM', 'meropenem': 'MEM',
-    'ipm': 'IPM', 'imipenem': 'IPM',
-    'imr': 'IMR', 'imipenem/relebactam': 'IMR', 'imipenem-relebactam': 'IMR',
     'etp': 'ETP', 'ertapenem': 'ETP',
-    'cip': 'CIP', 'ciprofloxacin': 'CIP',
-    'lev': 'LEV', 'levofloxacin': 'LEV', 'lvx': 'LEV',
-    'mox': 'MOX', 'moxifloxacin': 'MOX', 'mfx': 'MOX',
-    'gen': 'GEN', 'gentamicin': 'GEN',
+    'ipm': 'IPM', 'imipenem': 'IPM',
+    'mem': 'MEM', 'meropenem': 'MEM',
     'amk': 'AMK', 'amikacin': 'AMK',
+    'gen': 'GEN', 'gentamicin': 'GEN',
     'tob': 'TOB', 'tobramycin': 'TOB',
-    'sxt': 'SXT', 'trimethoprim/sulfamethoxazole': 'SXT', 'co-trimoxazole': 'SXT', 'bactrim': 'SXT',
-    'van': 'VAN', 'vancomycin': 'VAN',
-    'lzd': 'LZD', 'linezolid': 'LZD', 'lnz': 'LZD',
-    'tec': 'TEC', 'teicoplanin': 'TEC',
-    'cli': 'CLI', 'clindamycin': 'CLI',
-    'ery': 'ERY', 'erythromycin': 'ERY',
-    'tet': 'TET', 'tetracycline': 'TET', 'tcy': 'TET',
-    'dox': 'DOX', 'doxycycline': 'DOX',
-    'tgc': 'TGC', 'tigecycline': 'TGC',
-    'col': 'COL', 'colistin': 'COL',
-    'pol': 'POL', 'polymyxin b': 'POL',
-    'fox': 'FOX', 'cefoxitin': 'FOX',
-    'oxa': 'OXA', 'oxacillin': 'OXA', 'oxsf': 'OXA',
-    'pen': 'PEN', 'penicillin': 'PEN', 'peng': 'PEN', 'peng02': 'PEN', 'peng03': 'PEN', 'peng04': 'PEN', 'peng05': 'PEN',
-    'amx': 'AMX', 'amoxicillin': 'AMX',
-    'dor': 'DOR', 'doripenem': 'DOR',
+    'cip': 'CIP', 'ciprofloxacin': 'CIP',
     'nit': 'NIT', 'nitrofurantoin': 'NIT',
-    'fos': 'FOS', 'fosfomycin': 'FOS',
-    'azm': 'AZM', 'azithromycin': 'AZM',
-    'clr': 'CLR', 'clarithromycin': 'CLR',
-    'cpt': 'CPT', 'ceftaroline': 'CPT',
-    'chl': 'CHL', 'c': 'CHL', 'chloramphenicol': 'CHL',
+    'sxt': 'SXT', 'trimethoprim/sulfamethoxazole': 'SXT', 'co-trimoxazole': 'SXT', 'bactrim': 'SXT',
+    
+    // Tách riêng các biến thể Penicillin G theo chỉ định điều trị và vị trí nhiễm khuẩn (CLSI)
+    'peng': 'peng',
+    'peng01': 'peng01',
+    'peng02': 'peng02', // Đường uống (Oral)
+    'peng03': 'peng03', // Đường tiêm ngoài màng não (Parenteral non-meningitis)
+    'peng04': 'peng04', // Viêm phổi / Ngoài màng não (Non-meningitis)
+    'peng05': 'peng05', // Viêm màng não (Meningitis)
+    'pen': 'PEN', 'penicillin': 'PEN',
+
+    // Tách riêng các biến thể Ceftriaxone theo chỉ định điều trị (CLSI)
+    'cro': 'CRO', 'ceftriaxone': 'CRO',
+    'cro01': 'CRO01',
+    'cro02': 'CRO02', // Viêm màng não (Meningitis)
+    'cro03': 'CRO03', // Ngoài màng não (Non-meningitis)
+
+    'lvx': 'LVX', 'lev': 'LVX', 'levofloxacin': 'LVX',
+    'mfx': 'MFX', 'mox': 'MFX', 'moxifloxacin': 'MFX',
+    'ery': 'ERY', 'erythromycin': 'ERY',
+    'cli': 'CLI', 'clindamycin': 'CLI',
+    'lnz': 'LNZ', 'lzd': 'LNZ', 'linezolid': 'LNZ',
+    'van': 'VAN', 'vancomycin': 'VAN',
+    'tet': 'TET', 'tetracycline': 'TET',
+    'tgc': 'TGC', 'tigecycline': 'TGC',
+    'c': 'C',
+    'chl': 'CHL', 'chloramphenicol': 'CHL',
     'rif': 'RIF', 'rifampicin': 'RIF', 'rifampin': 'RIF',
-    'icr': 'CLI_IND', 'inducible clindamycin': 'CLI_IND',
+    'amp': 'AMP', 'ampicillin': 'AMP',
+    'sam': 'SAM', 'ampicillin/sulbactam': 'SAM', 'amp/sul': 'SAM',
+    'cxm': 'CXM', 'cefuroxime': 'CXM',
+    'oxsf': 'oxsf', // Test sàng lọc Oxacillin screen
+    'oxa': 'OXA', 'oxacillin': 'OXA',
+    'icr': 'icr', 'inducible clindamycin': 'icr', // D-test Clindamycin cảm ứng
     'qda': 'QDA', 'quinupristin/dalfopristin': 'QDA',
     'tcc': 'TCC', 'ticarcillin/clavulanic acid': 'TCC',
     'pip': 'PIP', 'piperacillin': 'PIP',
     'met': 'MET', 'metronidazole': 'MET',
+    'fox': 'FOX', 'cefoxitin': 'FOX',
     'cfp': 'CFP', 'cefoperazone': 'CFP',
+    'dor': 'DOR', 'doripenem': 'DOR',
+    'imr': 'IMR', 'imipenem/relebactam': 'IMR', 'imipenem-relebactam': 'IMR',
+    'col': 'COL', 'colistin': 'COL',
     'cza': 'CZA', 'ceftazidime/avibactam': 'CZA',
     'czt': 'CZT', 'ceftolozane/tazobactam': 'CZT',
+    'azm': 'AZM', 'azithromycin': 'AZM',
+    'tcy': 'TCY',
     'flu': 'FLU', 'fluconazole': 'FLU',
     'cas': 'CAS', 'caspofungin': 'CAS',
     'mif': 'MIF', 'micafungin': 'MIF',
     'amb': 'AMB', 'amphotericin b': 'AMB',
     'mev': 'MEV', 'meropenem/vaborbactam': 'MEV',
-    'vor': 'VOR', 'voriconazole': 'VOR'
+    'fos': 'FOS', 'fosfomycin': 'FOS',
+    'vor': 'VOR', 'voriconazole': 'VOR',
+
+    // Các kháng sinh bổ sung khác
+    'clr': 'CLR', 'clarithromycin': 'CLR',
+    'cpt': 'CPT', 'ceftaroline': 'CPT',
+    'dox': 'DOX', 'doxycycline': 'DOX',
+    'pol': 'POL', 'polymyxin b': 'POL',
+    'tec': 'TEC', 'teicoplanin': 'TEC',
+    'amx': 'AMX', 'amoxicillin': 'AMX'
   },
 
   // Bảng 63 Kháng sinh & Chỉ định chuẩn hóa phục vụ kháng sinh đồ (Section VIII & CLSI)
@@ -444,7 +504,8 @@ const DataNormalization = {
 
   normalizeAntibiotic(rawAbx) {
     if (!rawAbx) return null;
-    const clean = String(rawAbx).trim().toLowerCase()
+    const rawClean = String(rawAbx).trim();
+    const clean = rawClean.toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/đ/g, 'd')
       .replace(/[^a-z0-9]/g, '');
@@ -459,10 +520,18 @@ const DataNormalization = {
       return this.antibioticDictionary[clean];
     }
 
-    // Nếu không nằm trong từ điển, chỉ coi là kháng sinh nếu không chứa số và độ dài phù hợp (2-5 ký tự viết tắt)
-    const upper = clean.toUpperCase();
-    if (/^[A-Z]{2,5}$/.test(upper)) {
-      return upper;
+    // Tra cứu trực tiếp trong danh mục 63 kháng sinh chuẩn
+    const catItem = this.antibioticCatalog.find(a => 
+      a.code.toLowerCase() === clean || 
+      a.code.toLowerCase().replace(/[^a-z0-9]/g, '') === clean
+    );
+    if (catItem) {
+      return catItem.code;
+    }
+
+    // Nếu không nằm trong từ điển, cho phép mã kháng sinh (chữ và số từ 1 đến 8 ký tự, ví dụ: C, peng04, CTX02, SAM)
+    if (/^[a-zA-Z0-9]{1,8}$/.test(rawClean)) {
+      return rawClean;
     }
     return null;
   },
@@ -529,6 +598,39 @@ const DataNormalization = {
         const dd = String(d).padStart(2, '0');
         return { dateStr: `${y}-${mm}-${dd}`, isValid: true };
       }
+    }
+
+    // Định dạng DD/MM/YY (ví dụ: 01/01/26)
+    const shortDmyMatch = str.match(/\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2})\b/);
+    if (shortDmyMatch) {
+      const d = Number(shortDmyMatch[1]);
+      const m = Number(shortDmyMatch[2]);
+      const shortYear = Number(shortDmyMatch[3]);
+      const y = shortYear <= 50 ? 2000 + shortYear : 1900 + shortYear;
+      if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        const mm = String(m).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
+        return { dateStr: `${y}-${mm}-${dd}`, isValid: true };
+      }
+    }
+
+    // Hỗ trợ chuỗi Date do SheetJS hoặc JavaScript sinh ra (ví dụ: "Thu Jan 01 2026 09:24:00 GMT+0700")
+    if (str.length > 5 && !/^\d+$/.test(str)) {
+      const parsedDate = new Date(str);
+      if (!isNaN(parsedDate.getTime())) {
+        const y = parsedDate.getFullYear();
+        if (y >= 1900 && y <= 2100) {
+          const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
+          const dd = String(parsedDate.getDate()).padStart(2, '0');
+          return { dateStr: `${y}-${mm}-${dd}`, isValid: true };
+        }
+      }
+    }
+
+    // Nếu chỉ là năm 4 chữ số (ví dụ '2026')
+    if (/^\s*(19\d\d|20\d\d)\s*$/.test(str)) {
+      const yearOnly = str.match(/\b(19\d\d|20\d\d)\b/)[1];
+      return { dateStr: `${yearOnly}-01-01`, isValid: true };
     }
 
     return { dateStr: str, isValid: false };
