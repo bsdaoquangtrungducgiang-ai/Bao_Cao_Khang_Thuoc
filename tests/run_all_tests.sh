@@ -35,9 +35,17 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/antibiogram_multi_filter_test.js
     P7_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ]; then
+    echo "8. Chạy Bộ Test Thích Ứng Tiêu Chí Antibiogram & Auto-Resolve Xung Đột..."
+    "$JSC_BIN" tests/antibiogram_adaptive_filter_test.js
+    P8_STATUS=$?
+
+    echo "9. Chạy Bộ Test Tách Đủ 63 Kháng Sinh Riêng Biệt (Không Gộp peng, CTX, CRO)..."
+    "$JSC_BIN" tests/antibiogram_63_antibiotics_test.js
+    P9_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ]; then
         echo "================================================================"
-        echo "  ✔ TOÀN BỘ 251 BÀI TEST ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
+        echo "  ✔ TOÀN BỘ CÁC BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"
         exit 0
     else

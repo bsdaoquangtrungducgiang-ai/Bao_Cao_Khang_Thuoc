@@ -81,7 +81,7 @@ assert(rec0.sex === "Nữ", "Chuan hoa gioi tinh 'Nu': Nu", "Thuc te: " + rec0.s
 assert(rec0.age === 65 || typeof rec0.age === 'number', "Tinh tuoi tu dong tu ngay sinh '15/07/1961': " + rec0.age);
 
 // Kiểm tra bản ghi có kết quả '+' và '-' (oxsf và icr)
-var oxsfRec = validation.validRecords.find(function(r) { return r.antibiotic_code === 'OXA' && r.raw_result === '+'; });
+var oxsfRec = validation.validRecords.find(function(r) { return (r.antibiotic_code === 'oxsf' || r.antibiotic_code === 'OXA') && r.raw_result === '+'; });
 assert(oxsfRec !== undefined, "Tim thay ban ghi sang loc oxsf (+)");
 assert(oxsfRec.normalized_result === 'R', "Ket qua sang loc (+) chuan hoa chinh xac thanh R (Khang)");
 

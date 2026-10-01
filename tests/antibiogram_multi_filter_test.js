@@ -182,6 +182,94 @@ assert(abgDefaultAll.length > 0, 'Antibiogram mặc định (Tất cả vi khu�
 var totalAllDefault = abgDefaultAll.reduce(function(acc, r) { return acc + r.total; }, 0);
 assert(totalAllDefault === allAst.length, 'Mặc định bao trùm chính xác 100% mẫu xét nghiệm toàn viện (' + allAst.length + ' bản ghi)');
 
+// -------------------------------------------------------------
+// TEST SUITE 7: KIỂM TRA LỌC DỮ LIỆU THỰC TẾ (Acinetobacter baumannii + Khoa Hồi sức tích cực - Chống độc + Năm 2026)
+// -------------------------------------------------------------
+print('\n--- TEST SUITE 7: LỌC DỮ LIỆU THỰC TẾ BỆNH VIỆN (Acinetobacter + Hồi sức tích cực + 2026) ---');
+
+var realisticHospAst = [
+  // Bản ghi 1: Ngày DD/MM/YYYY kèm giờ phút, tên vi khuẩn 1 chữ n (Acinetobacter baumanii), khoa phòng có dấu gạch ngang en-dash
+  {
+    patient_code: '22012058',
+    patient_name: 'NGUYỄN QUANG HUY',
+    sex: 'Nam',
+    department: 'Khoa Hồi sức tích cực \u2013 Chống độc',
+    specimen_type: 'Đờm',
+    organism_name: 'Acinetobacter baumanii',
+    organism_code: 'aba',
+    tested_date: '09:24 01/01/2026',
+    antibiotic_code: 'MEM',
+    normalized_result: 'R',
+    interpretation: 'R'
+  },
+  // Bản ghi 2: Cùng bệnh nhân, kháng sinh thứ 2 (AMK)
+  {
+    patient_code: '22012058',
+    patient_name: 'NGUYỄN QUANG HUY',
+    sex: 'Nam',
+    department: 'Khoa Hồi sức tích cực - Chống độc',
+    specimen_type: 'Đờm',
+    organism_name: 'Acinetobacter baumannii',
+    organism_code: 'aba',
+    tested_date: '2026-01-01',
+    antibiotic_code: 'AMK',
+    normalized_result: 'S',
+    interpretation: 'S'
+  },
+  // Bản ghi 3: Bệnh nhân khác khoa phòng khác để kiểm tra tính cô lập của bộ lọc
+  {
+    patient_code: '22012099',
+    patient_name: 'TRẦN THỊ MAI',
+    sex: 'Nữ',
+    department: 'Khoa Cấp cứu',
+    specimen_type: 'Nước tiểu',
+    organism_name: 'Acinetobacter baumannii',
+    organism_code: 'aba',
+    tested_date: '2026-02-15',
+    antibiotic_code: 'MEM',
+    normalized_result: 'S',
+    interpretation: 'S'
+  }
+];
+
+// 7.1 Lọc đúng Acinetobacter baumannii ở Khoa Hồi sức tích cực - Chống độc năm 2026
+var abgHospTest = AnalyticsService.generateAntibiogram(
+  realisticHospAst,
+  ['Acinetobacter baumannii'],
+  'ALL',
+  ['Khoa Hồi sức tích cực - Chống độc'],
+  'ALL',
+  '2026'
+);
+
+assert(abgHospTest.length === 2, 'Sinh đúng 2 kháng sinh cho Acinetobacter baumannii tại ICU (MEM và AMK)');
+var memRow = abgHospTest.find(function(r) { return r.code === 'MEM'; });
+var amkRow = abgHospTest.find(function(r) { return r.code === 'AMK'; });
+assert(memRow && memRow.rRate === 100, 'Kháng sinh MEM hiển thị tỷ lệ kháng 100%');
+assert(amkRow && amkRow.sRate === 100, 'Kháng sinh AMK hiển thị tỷ lệ nhạy 100%');
+
+// 7.2 Lọc với từ viết tắt alias "Acinetobacter baumanii" (1 chữ n)
+var abgAliasTest = AnalyticsService.generateAntibiogram(
+  realisticHospAst,
+  ['Acinetobacter baumanii'],
+  'ALL',
+  ['Khoa Hồi sức tích cực - Chống độc'],
+  'ALL',
+  '2026'
+);
+assert(abgAliasTest.length === 2, 'Bộ lọc tự động bắt cặp alias chính tả 1 chữ n và 2 chữ n');
+
+// 7.3 Lọc bỏ chữ "Khoa" ("Hồi sức tích cực - Chống độc")
+var abgPrefixTest = AnalyticsService.generateAntibiogram(
+  realisticHospAst,
+  ['Acinetobacter baumannii'],
+  'ALL',
+  ['Hồi sức tích cực - Chống độc'],
+  'ALL',
+  '2026'
+);
+assert(abgPrefixTest.length === 2, 'Bộ lọc khoa phòng tự động nhận diện cả khi có hoặc không có tiền tố "Khoa"');
+
 print('\n================================================================');
 print('  KẾT QUẢ KIỂM THỬ: TẤT CẢ CÁC TEST ĐA TIÊU CHÍ ĐỀU ĐẠT 100%!');
 print('================================================================\n');
