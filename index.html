@@ -730,11 +730,22 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <i class="fa-solid fa-database"></i>
                 </div>
                 <h3 style="font-size: 18px; margin-bottom: 8px;">Sẵn sàng lưu vào Hệ thống Xét nghiệm</h3>
-                <p style="font-size: 13.5px; color: var(--text-muted); max-width: 520px; margin: 0 auto 24px;">
-                  Dữ liệu hợp lệ sẽ được chuẩn hóa S/I/R, lưu trữ vào PostgreSQL và cập nhật ngay lập tức lên Dashboard dịch tễ vi sinh.
+                <p style="font-size: 13.5px; color: var(--text-muted); max-width: 520px; margin: 0 auto 16px;">
+                  Dữ liệu hợp lệ sẽ được chuẩn hóa S/I/R, lưu trữ vào Database và cập nhật ngay lập tức lên Dashboard dịch tễ vi sinh.
                 </p>
+
+                <!-- Banner xem trước tên file Excel & thư mục Google Drive -->
+                <div class="drive-sync-preview-banner" style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 12px 16px; margin: 0 auto 24px; max-width: 540px; text-align: left; display: flex; align-items: center; gap: 12px;">
+                  <i class="fa-brands fa-google-drive" style="font-size: 28px; color: #16a34a; flex-shrink: 0;"></i>
+                  <div style="font-size: 12.5px; color: #15803d; line-height: 1.5;">
+                    <strong>Tự động lưu trữ Excel &amp; Đồng bộ Google Drive:</strong><br>
+                    Dữ liệu sẽ được tự động lưu thành file: <code id="preview-next-stt-filename" style="background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #166534;">STT01_02102026.xlsx</code><br>
+                    và đồng bộ vào thư mục <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" style="color: #15803d; font-weight: 700; text-decoration: underline;">5. Webapp Actigrivity</a> trên Google Drive.
+                  </div>
+                </div>
+
                 <button class="btn-setup-action" id="btn-execute-import" style="padding: 12px 28px; font-size: 14px; background: var(--primary);">
-                  <i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận & Nạp vào Database
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận &amp; Nạp vào Database
                 </button>
               </div>
 
@@ -758,6 +769,48 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <div class="metric-box">
                     <span>Dòng bị từ chối</span>
                     <strong id="sum-rejected-count" style="color: var(--color-r);">0</strong>
+                  </div>
+                </div>
+
+                <!-- Thẻ Tự Động Lưu Trữ Excel & Đồng Bộ Google Drive -->
+                <div class="drive-archive-card" id="drive-archive-box" style="margin: 20px auto 24px; max-width: 620px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px 20px; text-align: left;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <i class="fa-brands fa-google-drive" style="font-size: 26px; color: #16a34a;"></i>
+                      <div>
+                        <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #166534;">
+                          Lưu Trữ File Excel &amp; Đồng Bộ Google Drive
+                        </h4>
+                        <span style="font-size: 12px; color: #15803d;">
+                          Vị trí: <strong>5. Webapp Actigrivity</strong> (Google Drive)
+                        </span>
+                      </div>
+                    </div>
+                    <span class="badge-status badge-success" id="drive-sync-badge">
+                      <i class="fa-solid fa-circle-check"></i> Đã Lưu &amp; Tải Xuống
+                    </span>
+                  </div>
+
+                  <div style="background: #ffffff; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                      <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 2px;">Tên file Excel theo STT tăng dần &amp; Ngày tháng:</div>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-file-excel" style="color: #059669; font-size: 16px;"></i>
+                        <strong id="drive-saved-filename" style="font-size: 14.5px; color: #0f172a; font-family: monospace;">STT01_02102026.xlsx</strong>
+                      </div>
+                    </div>
+                    <button type="button" class="btn-setup-action" id="btn-redownload-archive" style="background: #059669; padding: 7px 14px; font-size: 12.5px;">
+                      <i class="fa-solid fa-file-arrow-down"></i> Tải lại file này
+                    </button>
+                  </div>
+
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                    <a id="btn-open-google-drive" href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 9px 18px; border-radius: 6px; color: #ffffff; font-weight: 600;">
+                      <i class="fa-brands fa-google-drive"></i> Mở Thư Mục "5. Webapp Actigrivity" Trên Google Drive <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
+                    </a>
+                    <span style="font-size: 11.5px; color: #15803d; font-style: italic;">
+                      * File Excel chứa đầy đủ các cột dữ liệu đã chuẩn hóa
+                    </span>
                   </div>
                 </div>
 
@@ -1636,6 +1689,9 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <option value="csv">📊 File CSV (.csv)</option>
                   <option value="pdf">📄 Kết quả PDF (.pdf)</option>
                 </select>
+                <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px;" title="Mở thư mục 5. Webapp Actigrivity trên Google Drive">
+                  <i class="fa-brands fa-google-drive"></i> Google Drive
+                </a>
                 <button class="btn-setup-action" id="btn-open-upload-modal">
                   <i class="fa-solid fa-cloud-arrow-up"></i> Nạp File Mới
                 </button>
@@ -1932,6 +1988,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/utils/dataNormalization.js"></script>
   <script src="js/utils/dataValidation.js"></script>
   <script src="js/data/hospitalCsvData.js"></script>
+  <script src="js/services/googleDriveService.js"></script>
   <script src="js/services/importService.js"></script>
   <script src="js/services/demoDataService.js"></script>
   <script src="js/services/analyticsService.js"></script>

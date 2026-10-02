@@ -131,6 +131,21 @@ const ImportWizard = {
         window.Toast.success(`Đã tự động xử lý và chuẩn hóa! Hiện có ${(this.validationResult.validCount + this.validationResult.warningCount).toLocaleString()} bản ghi sẵn sàng nạp.`);
       });
     }
+
+    // 9. Nút tải lại file Excel lưu trữ Google Drive ở Bước 5
+    const btnRedownload = document.getElementById('btn-redownload-archive');
+    if (btnRedownload) {
+      btnRedownload.addEventListener('click', () => {
+        if (window.GoogleDriveService) {
+          const success = window.GoogleDriveService.redownloadLastArchive();
+          if (success) {
+            window.Toast?.success('Đã tải lại file Excel lưu trữ!');
+          } else {
+            window.Toast?.info('Chưa có file lưu trữ nào trong phiên hiện tại.');
+          }
+        }
+      });
+    }
   },
 
   async handleFileSelected(file) {
@@ -193,6 +208,12 @@ const ImportWizard = {
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận & Nạp vào Database';
+      }
+
+      // Cập nhật tên file STTxx_DDMMYYYY dự kiến lưu trên Google Drive
+      const previewSttEl = document.getElementById('preview-next-stt-filename');
+      if (previewSttEl && window.GoogleDriveService) {
+        previewSttEl.textContent = window.GoogleDriveService.peekNextFileName();
       }
     }
   },
@@ -435,6 +456,36 @@ const ImportWizard = {
       if (sumRejected) sumRejected.textContent = (this.validationResult?.errorCount || 0).toLocaleString();
 
       window.Toast?.success(`Import hoàn tất! Đã lưu thành công ${importedCount.toLocaleString()} kết quả AST.`);
+
+      // 4. Tự động lưu thành file Excel STTxx_DDMMYYYY và đồng bộ vào thư mục Google Drive: 5. Webapp Actigrivity
+      if (window.GoogleDriveService) {
+        try {
+          const driveRes = await window.GoogleDriveService.archiveImportDataset(validToImport, {
+            originalFileName: currentFileName,
+            fileType: this.parsedData?.fileType || 'xlsx',
+            totalRows: validToImport.length,
+            errorCount: this.validationResult?.errorCount || 0,
+            warningCount: this.validationResult?.warningCount || 0
+          });
+
+          if (driveRes && driveRes.success) {
+            const savedNameEl = document.getElementById('drive-saved-filename');
+            if (savedNameEl) savedNameEl.textContent = driveRes.fileName;
+
+            const syncBadgeEl = document.getElementById('drive-sync-badge');
+            if (syncBadgeEl) {
+              syncBadgeEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${driveRes.driveStatus}`;
+            }
+
+            const driveBox = document.getElementById('drive-archive-box');
+            if (driveBox) driveBox.classList.remove('hidden');
+
+            window.Toast?.success(`Đã lưu file ${driveRes.fileName} và đồng bộ thư mục Google Drive (5. Webapp Actigrivity)!`);
+          }
+        } catch (driveErr) {
+          console.warn('[ImportWizard] Auto-archive Google Drive warning:', driveErr);
+        }
+      }
 
       // Refresh Dashboard data & select file for analysis
       if (window.App) {

@@ -43,7 +43,11 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/antibiogram_63_antibiotics_test.js
     P9_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ]; then
+    echo "10. Chạy Bộ Test Tự Động Lưu Excel (STTxx_DDMMYYYY) & Đồng Bộ Google Drive (5. Webapp Actigrivity)..."
+    "$JSC_BIN" tests/google_drive_archive_test.js
+    P10_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ] && [ $P10_STATUS -eq 0 ]; then
         echo "================================================================"
         echo "  ✔ TOÀN BỘ CÁC BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"

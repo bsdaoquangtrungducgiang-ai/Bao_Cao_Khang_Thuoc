@@ -18,6 +18,16 @@ const CONFIG = {
     STORAGE_BUCKET: 'import-files'
   },
   
+  // Đồng bộ Google Drive & Tự động lưu file Excel Import (Yêu cầu Mục Dữ liệu & Nhập liệu)
+  GOOGLE_DRIVE: {
+    FOLDER_ID: '1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP',
+    FOLDER_NAME: '5. Webapp Actigrivity',
+    FOLDER_URL: 'https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP',
+    FILE_PREFIX: 'STT',
+    AUTO_DOWNLOAD_EXCEL: true,
+    AUTO_SYNC_DRIVE: true
+  },
+  
   // Tiêu chuẩn kháng sinh đồ mặc định
   DEFAULT_GUIDELINE: 'CLSI',
   DEFAULT_GUIDELINE_VERSION: 'M100 2025',
