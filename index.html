@@ -812,16 +812,20 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                     <div style="font-size: 12.5px; color: #78350f; line-height: 1.6;">
                       Để tệp xuất hiện ngay trong thư mục <strong>5. Webapp Actigrivity</strong> trên Google Drive:
                       <ol style="margin: 6px 0 8px 18px; padding: 0;">
-                        <li><strong>Cách 1 (Nhanh nhất - 3 giây):</strong> Bấm nút <em>"Mở Thư Mục Trên Google Drive"</em> bên dưới, rồi <strong>kéo thả tệp vừa tải về vào</strong>.</li>
-                        <li><strong>Cách 2 (Đồng bộ Tự Động 100% vĩnh viễn):</strong> Bấm <strong>"⚙️ Cấu hình Webhook Tự Động"</strong> để kết nối Google Apps Script 1 lần, mọi lần import sau sẽ tự động đẩy lên Drive!</li>
+                        <li><strong>Cách 1 (1 Click không cần code):</strong> Bấm <strong>"📂 Chọn Thư Mục Drive Trên Máy"</strong> (chọn thư mục <em>5. Webapp Actigrivity</em>). Webapp sẽ tự động lưu thẳng vào đây và Google Drive tự động đẩy lên đám mây vĩnh viễn!</li>
+                        <li><strong>Cách 2 (Nhanh nhất - 3 giây):</strong> Bấm nút <em>"Mở Thư Mục Trên Google Drive"</em> bên dưới, rồi <strong>kéo thả tệp vừa tải về vào</strong>.</li>
+                        <li><strong>Cách 3 (Cấu hình Webhook Tự Động):</strong> Cho máy không cài Google Drive for Desktop.</li>
                       </ol>
                     </div>
                     <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                      <button type="button" class="btn-setup-action" id="btn-pick-drive-step5" style="background: #2563eb; padding: 7px 14px; font-size: 12.5px;">
+                        <i class="fa-solid fa-folder-plus"></i> 📂 Chọn Thư Mục Drive Trên Máy (1 Click)
+                      </button>
                       <button type="button" class="btn-setup-action" id="btn-sync-drive-now" style="background: #d97706; padding: 7px 14px; font-size: 12.5px;">
                         <i class="fa-solid fa-arrows-rotate"></i> Đồng bộ lên Google Drive ngay
                       </button>
                       <button type="button" class="btn-setup-action" id="btn-config-drive-webhook" style="background: #0284c7; padding: 7px 14px; font-size: 12.5px;">
-                        <i class="fa-solid fa-gear"></i> ⚙️ Cấu hình Webhook Tự Động
+                        <i class="fa-solid fa-gear"></i> ⚙️ Cấu hình Nâng cao
                       </button>
                     </div>
                   </div>
@@ -2031,8 +2035,33 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
           </div>
         </div>
 
-        <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
-          Hướng dẫn kích hoạt kết nối tự động (Google Apps Script - Miễn phí &amp; Vĩnh viễn):
+        <!-- LỰA CHỌN 1: ĐƠN GIẢN NHẤT (1 CLICK KHÔNG CẦN CODE) -->
+        <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="flex: 1; min-width: 260px;">
+              <h4 style="margin: 0 0 4px 0; color: #1e40af; font-size: 13.5px; font-weight: 700;">
+                <i class="fa-solid fa-folder-open"></i> Cách 1 (Khuyên Dùng - 1 Click): Chọn thư mục Google Drive trên máy tính
+              </h4>
+              <p style="margin: 0; font-size: 12px; color: #1e3a8a; line-height: 1.5;">
+                Nếu máy tính đã cài <strong>Google Drive for Desktop</strong> (hoặc có thư mục Drive):<br>
+                Bấm nút bên cạnh, chọn thư mục <strong>5. Webapp Actigrivity</strong> trên máy. Mọi file import sẽ tự động lưu thẳng vào đây và Google Drive tự động đồng bộ lên đám mây vĩnh viễn!
+              </p>
+              <div id="local-drive-folder-status" style="margin-top: 6px; font-size: 12px; font-weight: 600; color: #059669;"></div>
+            </div>
+            <button type="button" id="btn-pick-local-drive-folder" class="btn-setup-action" style="background: #2563eb; padding: 9px 18px; font-size: 13px; white-space: nowrap;">
+              <i class="fa-solid fa-folder-plus"></i> 📂 Chọn Thư Mục Drive
+            </button>
+          </div>
+        </div>
+
+        <!-- LỰA CHỌN 2: ĐỔI THƯ MỤC DOWNLOADS CỦA TRÌNH DUYỆT (10 GIÂY) -->
+        <div style="background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: #86198f;">
+          <strong><i class="fa-solid fa-download"></i> Cách 2 (Siêu nhanh - 10 giây): Đổi vị trí Tải xuống (Downloads) của trình duyệt vào Google Drive</strong><br>
+          Vào <em>Cài đặt trình duyệt (Chrome/Cốc Cốc/Edge) &rarr; Tệp đã tải xuống &rarr; Đổi vị trí</em> thành thư mục <strong>Google Drive &gt; 5. Webapp Actigrivity</strong> trên máy tính. Mọi file tạo ra sẽ rơi thẳng vào Google Drive và tự đồng bộ lên đám mây!
+        </div>
+
+        <h4 style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+          <i class="fa-solid fa-cloud"></i> Cách 3: Kết nối Webhook Google Apps Script (Dành cho máy tính không cài Google Drive):
         </h4>
 
         <div style="font-size: 13px; line-height: 1.6; color: #334155; margin-bottom: 14px;">

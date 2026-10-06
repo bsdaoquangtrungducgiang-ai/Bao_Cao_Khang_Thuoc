@@ -23,6 +23,77 @@ const GoogleDriveService = {
   // Cache dữ liệu file vừa tạo trong phiên làm việc
   lastArchivedFile: null,
 
+  // Handle thư mục Google Drive trên máy (qua File System Access API)
+  localDirHandle: null,
+
+  /**
+   * Kiểm tra xem trình duyệt có hỗ trợ File System Access API không
+   */
+  supportsFileSystemAccess() {
+    return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+  },
+
+  /**
+   * Lấy tên thư mục đã chọn trên máy
+   */
+  getLocalFolderName() {
+    if (typeof localStorage === 'undefined') return '';
+    return localStorage.getItem('DRIVE_LOCAL_FOLDER_NAME') || '';
+  },
+
+  /**
+   * Kiểm tra đã chọn thư mục trên máy chưa
+   */
+  hasLocalFolder() {
+    return Boolean(this.localDirHandle || this.getLocalFolderName());
+  },
+
+  /**
+   * Mở hộp thoại chọn thư mục Google Drive trên máy (1 Lần Duy Nhất)
+   */
+  async selectLocalDriveFolder() {
+    if (!this.supportsFileSystemAccess()) {
+      return {
+        success: false,
+        message: 'Trình duyệt này chưa hỗ trợ chọn thư mục trực tiếp. Bạn có thể sử dụng Chrome, Cốc Cốc hoặc Edge.'
+      };
+    }
+    try {
+      const dirHandle = await window.showDirectoryPicker({
+        id: 'amr_google_drive_folder',
+        mode: 'readwrite',
+        startIn: 'documents'
+      });
+      this.localDirHandle = dirHandle;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('DRIVE_LOCAL_FOLDER_NAME', dirHandle.name);
+      }
+      return { success: true, folderName: dirHandle.name };
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        return { success: false, cancelled: true, message: 'Đã hủy chọn thư mục.' };
+      }
+      return { success: false, message: 'Lỗi: ' + err.message };
+    }
+  },
+
+  /**
+   * Lưu file trực tiếp vào thư mục Google Drive trên máy
+   */
+  async saveToLocalDirectory(fileBlob, fileName) {
+    if (!this.localDirHandle || !fileBlob) return false;
+    try {
+      const fileHandle = await this.localDirHandle.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(fileBlob);
+      await writable.close();
+      return true;
+    } catch (err) {
+      console.warn('[GoogleDriveService] Save to local directory warning:', err);
+      return false;
+    }
+  },
+
   /**
    * Lấy số thứ tự hiện tại của file
    */
@@ -482,9 +553,21 @@ function doGet(e) {
       }
     }
 
-    // 4. Đồng bộ lên Google Drive
+    // 4. Đồng bộ vào thư mục Google Drive trên máy tính (nếu đã chọn qua 1-Click)
+    let savedToLocalDrive = false;
+    if (this.localDirHandle && fileBlob) {
+      savedToLocalDrive = await this.saveToLocalDirectory(fileBlob, fileName);
+    }
+
+    // 5. Đồng bộ lên Google Drive (Nếu đã lưu vào thư mục Drive trên máy -> Drive Desktop tự động sync lên cloud; hoặc qua Webhook)
     let driveUploadResult = { success: false, reason: 'Chờ kết nối' };
-    if (fileBlob) {
+    if (savedToLocalDrive) {
+      driveUploadResult = {
+        success: true,
+        method: 'local_drive_sync',
+        link: this.config.FOLDER_URL
+      };
+    } else if (fileBlob) {
       driveUploadResult = await this.uploadToGoogleDriveAPI(fileBlob, fileName);
     }
 
@@ -592,7 +675,18 @@ function doGet(e) {
       return { success: false, reason: 'Không thể tạo dữ liệu file để tải lên' };
     }
 
-    const uploadRes = await this.uploadToGoogleDriveAPI(blob, this.lastArchivedFile.fileName);
+    let uploadRes = { success: false };
+    if (this.localDirHandle) {
+      const saved = await this.saveToLocalDirectory(blob, this.lastArchivedFile.fileName);
+      if (saved) {
+        uploadRes = { success: true, method: 'local_drive_sync', link: this.config.FOLDER_URL };
+      }
+    }
+
+    if (!uploadRes.success) {
+      uploadRes = await this.uploadToGoogleDriveAPI(blob, this.lastArchivedFile.fileName);
+    }
+
     if (uploadRes.success) {
       this.lastArchivedFile.driveStatus = 'synced';
       this.lastArchivedFile.driveFileLink = uploadRes.link || this.config.FOLDER_URL;
@@ -651,6 +745,16 @@ function doGet(e) {
     const inputUrl = document.getElementById('input-drive-webhook-url');
     if (inputUrl) {
       inputUrl.value = this.getWebhookUrl();
+    }
+
+    const localStatus = document.getElementById('local-drive-folder-status');
+    if (localStatus) {
+      const folder = this.getLocalFolderName();
+      if (folder) {
+        localStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đang liên kết: <strong>${folder}</strong> (Tự động đồng bộ)`;
+      } else {
+        localStatus.innerHTML = `<i class="fa-solid fa-circle-info"></i> Chưa chọn thư mục Google Drive trên máy tính`;
+      }
     }
 
     const testStatus = document.getElementById('drive-webhook-test-status');
@@ -799,8 +903,8 @@ function doGet(e) {
     const btnSyncNow = document.getElementById('btn-sync-drive-now');
     if (btnSyncNow) {
       btnSyncNow.addEventListener('click', async () => {
-        if (!this.hasWebhook()) {
-          window.Toast?.info('Chưa có Webhook kết nối Google Drive! Vui lòng làm theo hướng dẫn trong bảng cấu hình.');
+        if (!this.hasWebhook() && !this.hasLocalFolder()) {
+          window.Toast?.info('Chưa liên kết thư mục hoặc Webhook Google Drive! Vui lòng chọn thư mục hoặc cài Webhook.');
           this.openSetupModal();
           return;
         }
@@ -822,6 +926,29 @@ function doGet(e) {
         }
       });
     }
+
+    // 8. Nút chọn thư mục Google Drive trên máy tính (1 Lần Duy Nhất - Không cần code)
+    const handlePickFolder = async () => {
+      const res = await this.selectLocalDriveFolder();
+      if (res.success) {
+        window.Toast?.success(`Đã liên kết thư mục "${res.folderName}"! Dữ liệu sẽ tự động lưu vào đây.`);
+        const localStatus = document.getElementById('local-drive-folder-status');
+        if (localStatus) {
+          localStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đang liên kết: <strong>${res.folderName}</strong> (Tự động đồng bộ)`;
+        }
+        if (this.lastArchivedFile) {
+          await this.syncCurrentFileToDrive();
+        }
+      } else if (!res.cancelled) {
+        window.Toast?.error(res.message);
+      }
+    };
+
+    const btnPickModal = document.getElementById('btn-pick-local-drive-folder');
+    if (btnPickModal) btnPickModal.addEventListener('click', handlePickFolder);
+
+    const btnPickStep5 = document.getElementById('btn-pick-drive-step5');
+    if (btnPickStep5) btnPickStep5.addEventListener('click', handlePickFolder);
   }
 };
 

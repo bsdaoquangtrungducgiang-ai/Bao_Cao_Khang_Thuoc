@@ -508,18 +508,22 @@ const ImportWizard = {
                     <i class="fa-solid fa-cloud-arrow-up"></i> Tệp Excel đã được lưu tự động về máy tính (thư mục Downloads).
                   </div>
                   <div style="font-size: 12.5px; color: #78350f; line-height: 1.6;">
-                    Để đưa tệp <strong>${driveRes.fileName}</strong> vào thư mục <strong>5. Webapp Actigrivity</strong>:
+                    Để đưa tệp <strong>${driveRes.fileName}</strong> vào thư mục <strong>5. Webapp Actigrivity</strong> trên Google Drive:
                     <ol style="margin: 6px 0 8px 18px; padding: 0;">
-                      <li><strong>Cách 1 (Nhanh nhất - 3 giây):</strong> Bấm nút màu xanh <em>"Mở Thư Mục Trên Google Drive"</em> bên dưới, rồi <strong>kéo thả tệp vừa tải về vào</strong>.</li>
-                      <li><strong>Cách 2 (Đồng bộ Tự Động 100% vĩnh viễn):</strong> Bấm <strong>"⚙️ Cấu hình Webhook Tự Động"</strong> để kết nối Google Apps Script 1 lần duy nhất, các lần sau dữ liệu sẽ tự động đẩy thẳng lên Drive!</li>
+                      <li><strong>Cách 1 (1 Click không cần code):</strong> Bấm nút <strong>"📂 Chọn Thư Mục Drive Trên Máy"</strong> (chọn thư mục <em>5. Webapp Actigrivity</em>). File sẽ tự động lưu thẳng vào đây và Google Drive tự động đẩy lên đám mây vĩnh viễn!</li>
+                      <li><strong>Cách 2 (Nhanh nhất - 3 giây):</strong> Bấm nút màu xanh <em>"Mở Thư Mục Trên Google Drive"</em> bên dưới, rồi <strong>kéo thả tệp vừa tải về vào</strong>.</li>
+                      <li><strong>Cách 3 (Cấu hình Webhook Tự Động):</strong> Cho máy không cài Google Drive for Desktop.</li>
                     </ol>
                   </div>
                   <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-setup-action" id="btn-pick-drive-step5" style="background: #2563eb; padding: 7px 14px; font-size: 12.5px;">
+                      <i class="fa-solid fa-folder-plus"></i> 📂 Chọn Thư Mục Drive Trên Máy (1 Click)
+                    </button>
                     <button type="button" class="btn-setup-action" id="btn-sync-drive-now" style="background: #d97706; padding: 7px 14px; font-size: 12.5px;">
                       <i class="fa-solid fa-arrows-rotate"></i> Đồng bộ lên Google Drive ngay
                     </button>
                     <button type="button" class="btn-setup-action" id="btn-config-drive-webhook" style="background: #0284c7; padding: 7px 14px; font-size: 12.5px;">
-                      <i class="fa-solid fa-gear"></i> ⚙️ Cấu hình Webhook Tự Động
+                      <i class="fa-solid fa-gear"></i> ⚙️ Cấu hình Nâng cao
                     </button>
                   </div>
                 `;
