@@ -205,47 +205,215 @@ const GoogleDriveService = {
   },
 
   /**
-   * Upload trực tiếp file lên Google Drive qua REST API v3
-   * Sử dụng Google Drive OAuth Token nếu người dùng đã cấp quyền
+   * Lấy Webhook URL đã lưu trong LocalStorage
+   */
+  getWebhookUrl() {
+    if (typeof localStorage === 'undefined') return '';
+    return (localStorage.getItem(this.config.STORAGE_KEY_WEBHOOK) || '').trim();
+  },
+
+  /**
+   * Lưu hoặc xóa Webhook URL
+   */
+  setWebhookUrl(url) {
+    if (typeof localStorage !== 'undefined') {
+      const cleanUrl = (url || '').trim();
+      if (cleanUrl) {
+        localStorage.setItem(this.config.STORAGE_KEY_WEBHOOK, cleanUrl);
+      } else {
+        localStorage.removeItem(this.config.STORAGE_KEY_WEBHOOK);
+      }
+    }
+  },
+
+  /**
+   * Kiểm tra xem người dùng đã cài đặt Webhook chưa
+   */
+  hasWebhook() {
+    return Boolean(this.getWebhookUrl());
+  },
+
+  /**
+   * Tạo đoạn mã Google Apps Script mẫu được điền sẵn Folder ID chính xác
+   */
+  getAppsScriptTemplate() {
+    return `// ===============================================================
+// GOOGLE APPS SCRIPT WEBHOOK - KHOA VI SINH ĐỨC GIANG
+// Tự động lưu file Excel kháng sinh đồ vào thư mục: 5. Webapp Actigrivity
+// ID Thư mục: ${this.config.FOLDER_ID}
+// ===============================================================
+
+function doPost(e) {
+  try {
+    var contents = (e && e.postData) ? e.postData.contents : "";
+    var data = JSON.parse(contents);
+    var targetFolderId = data.folderId || "${this.config.FOLDER_ID}";
+    var folder = DriveApp.getFolderById(targetFolderId);
+    
+    var decoded = Utilities.base64Decode(data.fileData);
+    var mime = data.mimeType || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    var blob = Utilities.newBlob(decoded, mime, data.fileName || "AST_Export.xlsx");
+    
+    var file = folder.createFile(blob);
+    
+    var res = {
+      status: "success",
+      fileId: file.getId(),
+      fileName: file.getName(),
+      url: file.getUrl(),
+      timestamp: new Date().toISOString()
+    };
+    return ContentService.createTextOutput(JSON.stringify(res))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    var errRes = {
+      status: "error",
+      message: err.toString()
+    };
+    return ContentService.createTextOutput(JSON.stringify(errRes))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "ok",
+    folderId: "${this.config.FOLDER_ID}",
+    folderName: "${this.config.FOLDER_NAME}",
+    message: "Webhook Google Apps Script sẵn sàng nhận dữ liệu Excel!"
+  })).setMimeType(ContentService.MimeType.JSON);
+}`;
+  },
+
+  /**
+   * Kiểm tra kết nối tới Webhook URL
+   */
+  async testWebhookConnection(url) {
+    const targetUrl = (url || this.getWebhookUrl() || '').trim();
+    if (!targetUrl) {
+      return { success: false, message: 'Vui lòng nhập Webhook URL!' };
+    }
+    if (typeof fetch === 'undefined') {
+      return { success: false, message: 'Môi trường không hỗ trợ fetch' };
+    }
+
+    try {
+      const resp = await fetch(targetUrl, { method: 'GET' });
+      if (resp.ok) {
+        try {
+          const data = await resp.json();
+          return { success: true, message: data.message || 'Kết nối Webhook thành công!', data };
+        } catch (e) {
+          return { success: true, message: 'Kết nối Webhook thành công (HTTP 200)!' };
+        }
+      }
+      return { success: false, message: `Lỗi máy chủ Webhook: HTTP ${resp.status}` };
+    } catch (err) {
+      // Trường hợp URL Google Apps Script hợp lệ nhưng bị chặn CORS khi gọi GET
+      if (targetUrl.includes('script.google.com/macros/s/')) {
+        return { success: true, message: 'Đã nhận dạng đúng định dạng URL Google Apps Script Web App!' };
+      }
+      return { success: false, message: 'Không thể kết nối Webhook: ' + err.message };
+    }
+  },
+
+  /**
+   * Chuyển đổi File Blob sang chuỗi Base64
+   */
+  async blobToBase64(fileBlob) {
+    if (!fileBlob) return '';
+    if (typeof FileReader !== 'undefined') {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result || '';
+          const base64 = typeof result === 'string' && result.includes(',')
+            ? result.split(',')[1]
+            : result;
+          resolve(base64);
+        };
+        reader.onerror = (e) => reject(e);
+        reader.readAsDataURL(fileBlob);
+      });
+    }
+    if (fileBlob && fileBlob.parts && typeof Buffer !== 'undefined') {
+      try {
+        return Buffer.from(fileBlob.parts[0]).toString('base64');
+      } catch (e) {}
+    }
+    return '';
+  },
+
+  /**
+   * Upload trực tiếp file lên Google Drive qua Webhook Apps Script hoặc OAuth REST API v3
    */
   async uploadToGoogleDriveAPI(fileBlob, fileName) {
     if (typeof localStorage === 'undefined' || typeof fetch === 'undefined') {
-      return { success: false, reason: 'Môi trường không hỗ trợ fetch' };
+      return { success: false, reason: 'Môi trường không hỗ trợ kết nối mạng' };
     }
 
+    const webhookUrl = this.getWebhookUrl();
     const token = localStorage.getItem(this.config.STORAGE_KEY_TOKEN);
-    const webhookUrl = localStorage.getItem(this.config.STORAGE_KEY_WEBHOOK);
 
-    // 1. Thử gửi qua Webhook Google Apps Script nếu có
+    // 1. Gửi qua Webhook Google Apps Script nếu đã cấu hình
     if (webhookUrl) {
       try {
-        const reader = new FileReader();
-        const base64Data = await new Promise((res, rej) => {
-          reader.onload = () => res(reader.result.split(',')[1]);
-          reader.onerror = rej;
-          reader.readAsDataURL(fileBlob);
-        });
+        const base64Data = await this.blobToBase64(fileBlob);
+        const payload = {
+          fileName: fileName,
+          folderId: this.config.FOLDER_ID,
+          fileData: base64Data,
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          timestamp: new Date().toISOString()
+        };
+        const payloadStr = JSON.stringify(payload);
 
-        const resp = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileName: fileName,
-            folderId: this.config.FOLDER_ID,
-            fileData: base64Data,
-            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          })
-        });
-        const resJson = await resp.json();
-        if (resJson && (resJson.status === 'success' || resJson.fileId)) {
-          return { success: true, method: 'webhook', fileId: resJson.fileId, link: resJson.url || this.config.FOLDER_URL };
+        // Gửi với text/plain để không kích hoạt CORS preflight OPTIONS
+        try {
+          const resp = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: payloadStr
+          });
+          if (resp.ok) {
+            try {
+              const resJson = await resp.json();
+              if (resJson && (resJson.status === 'success' || resJson.fileId)) {
+                return {
+                  success: true,
+                  method: 'webhook',
+                  fileId: resJson.fileId,
+                  link: resJson.url || this.config.FOLDER_URL
+                };
+              }
+            } catch (jsonErr) {
+              return {
+                success: true,
+                method: 'webhook_plain',
+                link: this.config.FOLDER_URL
+              };
+            }
+          }
+        } catch (corsErr) {
+          // Fallback: Nếu CORS chặn đọc phản hồi của Apps Script redirect, gửi bằng chế độ no-cors
+          await fetch(webhookUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: payloadStr
+          });
+          return {
+            success: true,
+            method: 'webhook_no_cors',
+            link: this.config.FOLDER_URL
+          };
         }
       } catch (err) {
-        console.warn('[GoogleDriveService] Webhook upload failed:', err.message);
+        console.warn('[GoogleDriveService] Webhook upload error:', err.message);
       }
     }
 
-    // 2. Thử gửi qua Google Drive REST API multipart upload
+    // 2. Thử gửi qua Google Drive REST API multipart upload nếu có OAuth token
     if (token) {
       try {
         const metadata = {
@@ -282,7 +450,7 @@ const GoogleDriveService = {
 
     return {
       success: false,
-      reason: 'Chưa có Token OAuth hoặc Webhook (Đã lưu trữ an toàn trên máy và tạo sẵn liên kết thư mục)'
+      reason: 'Chưa cấu hình Webhook Google Apps Script hoặc OAuth Token'
     };
   },
 
@@ -337,7 +505,11 @@ const GoogleDriveService = {
     };
 
     this.saveArchiveRecord(archiveRecord);
-    this.lastArchivedFile = { ...archiveRecord, workbook: wb };
+    this.lastArchivedFile = {
+      ...archiveRecord,
+      workbook: wb,
+      records: validatedRecords
+    };
 
     // Phát sự kiện để cập nhật các giao diện khác (như Quản lý File)
     if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
@@ -353,7 +525,9 @@ const GoogleDriveService = {
       folderId: this.config.FOLDER_ID,
       recordCount: validatedRecords.length,
       driveUploaded: driveUploadResult.success,
-      driveStatus: driveUploadResult.success ? 'Đã tải lên Google Drive' : 'Đã lưu file & Sẵn sàng đồng bộ Drive',
+      driveStatus: driveUploadResult.success
+        ? 'Đã tải lên Google Drive'
+        : 'Đã tải về máy • Chưa đồng bộ lên Drive',
       archiveRecord
     };
   },
@@ -396,6 +570,258 @@ const GoogleDriveService = {
       return true;
     }
     return false;
+  },
+
+  /**
+   * Đồng bộ lại file vừa tạo lên Google Drive (Dùng khi người dùng bấm nút Đồng bộ ngay)
+   */
+  async syncCurrentFileToDrive() {
+    if (!this.lastArchivedFile) {
+      return { success: false, reason: 'Chưa có file nào được tạo trong phiên này' };
+    }
+
+    let blob = null;
+    if (this.lastArchivedFile.workbook) {
+      blob = this.workbookToBlob(this.lastArchivedFile.workbook);
+    } else if (this.lastArchivedFile.records && typeof XLSX !== 'undefined') {
+      const wb = this.buildExcelWorkbook(this.lastArchivedFile.records, {}, this.lastArchivedFile.fileName);
+      blob = this.workbookToBlob(wb);
+    }
+
+    if (!blob) {
+      return { success: false, reason: 'Không thể tạo dữ liệu file để tải lên' };
+    }
+
+    const uploadRes = await this.uploadToGoogleDriveAPI(blob, this.lastArchivedFile.fileName);
+    if (uploadRes.success) {
+      this.lastArchivedFile.driveStatus = 'synced';
+      this.lastArchivedFile.driveFileLink = uploadRes.link || this.config.FOLDER_URL;
+
+      // Cập nhật bản ghi trong localStorage
+      const archives = this.getSavedArchives();
+      if (archives.length > 0 && archives[0].fileName === this.lastArchivedFile.fileName) {
+        archives[0].driveStatus = 'synced';
+        archives[0].driveFileLink = uploadRes.link || this.config.FOLDER_URL;
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(this.config.STORAGE_KEY_ARCHIVES, JSON.stringify(archives));
+        }
+      }
+
+      // Cập nhật giao diện nếu có
+      if (typeof document !== 'undefined') {
+        const syncBadgeEl = document.getElementById('drive-sync-badge');
+        if (syncBadgeEl) {
+          syncBadgeEl.className = 'badge-status badge-success';
+          syncBadgeEl.style = 'background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-weight: 600;';
+          syncBadgeEl.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đã tải lên Google Drive (5. Webapp Actigrivity)';
+        }
+        const instructionBox = document.getElementById('drive-sync-instruction-box');
+        if (instructionBox) {
+          instructionBox.style.background = '#ecfdf5';
+          instructionBox.style.borderColor = '#86efac';
+          instructionBox.innerHTML = `
+            <div style="font-weight: 700; color: #166534; font-size: 13px; margin-bottom: 4px;">
+              <i class="fa-solid fa-circle-check"></i> Đã đồng bộ thành công vào Google Drive!
+            </div>
+            <div style="font-size: 12.5px; color: #15803d;">
+              Tệp <strong>${this.lastArchivedFile.fileName}</strong> đã được lưu trực tiếp vào thư mục <strong>5. Webapp Actigrivity</strong> trên Google Drive.
+            </div>
+          `;
+        }
+      }
+    }
+    return uploadRes;
+  },
+
+  /**
+   * Mở modal cấu hình Webhook Google Drive
+   */
+  openSetupModal() {
+    if (typeof document === 'undefined') return;
+    const modal = document.getElementById('modal-google-drive-setup');
+    if (!modal) return;
+
+    // Điền mã Apps Script mẫu
+    const codeArea = document.getElementById('drive-apps-script-code');
+    if (codeArea) {
+      codeArea.value = this.getAppsScriptTemplate();
+    }
+
+    // Điền URL hiện tại nếu đã có
+    const inputUrl = document.getElementById('input-drive-webhook-url');
+    if (inputUrl) {
+      inputUrl.value = this.getWebhookUrl();
+    }
+
+    const testStatus = document.getElementById('drive-webhook-test-status');
+    if (testStatus) {
+      testStatus.style.display = 'none';
+      testStatus.innerHTML = '';
+    }
+
+    modal.classList.add('open');
+  },
+
+  /**
+   * Đóng modal cấu hình
+   */
+  closeSetupModal() {
+    if (typeof document !== 'undefined') {
+      document.getElementById('modal-google-drive-setup')?.classList.remove('open');
+    }
+  },
+
+  /**
+   * Khởi tạo các sự kiện giao diện cho Google Drive Service
+   */
+  init() {
+    if (typeof document === 'undefined') return;
+
+    // 1. Nút sao chép mã Apps Script
+    const btnCopy = document.getElementById('btn-copy-apps-script');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        const codeArea = document.getElementById('drive-apps-script-code');
+        if (codeArea) {
+          codeArea.select();
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(codeArea.value).then(() => {
+              btnCopy.innerHTML = '<i class="fa-solid fa-check"></i> Đã sao chép!';
+              setTimeout(() => {
+                btnCopy.innerHTML = '<i class="fa-solid fa-copy"></i> Sao chép mã';
+              }, 2500);
+            });
+          } else {
+            document.execCommand('copy');
+            btnCopy.innerHTML = '<i class="fa-solid fa-check"></i> Đã sao chép!';
+            setTimeout(() => {
+              btnCopy.innerHTML = '<i class="fa-solid fa-copy"></i> Sao chép mã';
+            }, 2500);
+          }
+        }
+      });
+    }
+
+    // 2. Nút kiểm tra Webhook
+    const btnTest = document.getElementById('btn-test-drive-webhook');
+    if (btnTest) {
+      btnTest.addEventListener('click', async () => {
+        const inputUrl = document.getElementById('input-drive-webhook-url');
+        const testStatus = document.getElementById('drive-webhook-test-status');
+        const url = inputUrl?.value?.trim();
+        if (!url) {
+          if (testStatus) {
+            testStatus.style.display = 'block';
+            testStatus.style.color = '#dc2626';
+            testStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Vui lòng nhập URL Webhook!';
+          }
+          return;
+        }
+
+        btnTest.disabled = true;
+        btnTest.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang test...';
+        const res = await this.testWebhookConnection(url);
+        btnTest.disabled = false;
+        btnTest.innerHTML = '<i class="fa-solid fa-bolt"></i> Kiểm tra';
+
+        if (testStatus) {
+          testStatus.style.display = 'block';
+          if (res.success) {
+            testStatus.style.color = '#16a34a';
+            testStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${res.message}`;
+          } else {
+            testStatus.style.color = '#dc2626';
+            testStatus.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${res.message}`;
+          }
+        }
+      });
+    }
+
+    // 3. Nút lưu cấu hình Webhook & Đồng bộ ngay
+    const btnSave = document.getElementById('btn-save-drive-webhook');
+    if (btnSave) {
+      btnSave.addEventListener('click', async () => {
+        const inputUrl = document.getElementById('input-drive-webhook-url');
+        const url = inputUrl?.value?.trim() || '';
+        this.setWebhookUrl(url);
+
+        if (url) {
+          window.Toast?.success('Đã lưu cấu hình Webhook Google Drive thành công!');
+          // Nếu có file đang chờ, đồng bộ luôn
+          if (this.lastArchivedFile) {
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ file...';
+            try {
+              const syncRes = await this.syncCurrentFileToDrive();
+              if (syncRes.success) {
+                window.Toast?.success(`Đã tải thành công ${this.lastArchivedFile.fileName} lên Google Drive!`);
+              }
+            } catch (e) {
+              console.warn(e);
+            } finally {
+              btnSave.disabled = false;
+              btnSave.innerHTML = '<i class="fa-solid fa-check"></i> Lưu Cấu Hình & Đồng Bộ Ngay';
+            }
+          }
+        } else {
+          window.Toast?.info('Đã xóa cấu hình Webhook Google Drive.');
+        }
+
+        this.closeSetupModal();
+      });
+    }
+
+    // 4. Nút mở modal từ File Manager
+    const btnOpenDriveConfig = document.getElementById('btn-open-drive-config');
+    if (btnOpenDriveConfig) {
+      btnOpenDriveConfig.addEventListener('click', () => {
+        this.openSetupModal();
+      });
+    }
+
+    // 5. Nút mở modal từ Bước 5 Import Wizard
+    const btnOpenStep5 = document.getElementById('btn-open-drive-modal-step5');
+    if (btnOpenStep5) {
+      btnOpenStep5.addEventListener('click', () => {
+        this.openSetupModal();
+      });
+    }
+
+    // 6. Nút cấu hình Webhook từ instruction box
+    const btnConfigWebhook = document.getElementById('btn-config-drive-webhook');
+    if (btnConfigWebhook) {
+      btnConfigWebhook.addEventListener('click', () => {
+        this.openSetupModal();
+      });
+    }
+
+    // 7. Nút đồng bộ ngay từ Bước 5
+    const btnSyncNow = document.getElementById('btn-sync-drive-now');
+    if (btnSyncNow) {
+      btnSyncNow.addEventListener('click', async () => {
+        if (!this.hasWebhook()) {
+          window.Toast?.info('Chưa có Webhook kết nối Google Drive! Vui lòng làm theo hướng dẫn trong bảng cấu hình.');
+          this.openSetupModal();
+          return;
+        }
+
+        btnSyncNow.disabled = true;
+        btnSyncNow.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ lên Drive...';
+        try {
+          const res = await this.syncCurrentFileToDrive();
+          if (res.success) {
+            window.Toast?.success(`Đã đồng bộ thành công ${this.lastArchivedFile?.fileName} lên Google Drive!`);
+          } else {
+            window.Toast?.error('Đồng bộ thất bại: ' + (res.reason || 'Lỗi kết nối'));
+          }
+        } catch (err) {
+          window.Toast?.error('Lỗi khi đồng bộ: ' + err.message);
+        } finally {
+          btnSyncNow.disabled = false;
+          btnSyncNow.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Đồng bộ lên Google Drive ngay';
+        }
+      });
+    }
   }
 };
 

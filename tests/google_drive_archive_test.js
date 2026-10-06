@@ -306,10 +306,28 @@ if (typeof drainMicrotasks === 'function') {
 
 assert(commitCompleted, 'ImportWizard.executeCommit hoàn tất');
 var savedFilenameDom = document.getElementById('drive-saved-filename');
-assert(savedFilenameDom.textContent === 'STT02_02102026.xlsx', 'DOM hiển thị chính xác file tiếp theo: ' + savedFilenameDom.textContent);
+var expectedName = 'STT02_' + GoogleDriveService.formatDateDDMMYYYY() + '.xlsx';
+assert(savedFilenameDom.textContent === expectedName, 'DOM hiển thị chính xác file tiếp theo: ' + savedFilenameDom.textContent);
 
 var reDownloaded = GoogleDriveService.redownloadLastArchive();
 assert(reDownloaded === true, 'Hỗ trợ tải lại file Excel STT từ bộ nhớ cache');
+
+// TEST 6: Cấu hình Webhook & Đồng bộ tự động Google Drive
+print('\n--- TEST 6: CẤU HÌNH WEBHOOK & TÍNH NĂNG ĐỒNG BỘ ĐÁM MÂY ---');
+var scriptTemplate = GoogleDriveService.getAppsScriptTemplate();
+assert(scriptTemplate.indexOf('1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP') !== -1, 'Mã Google Apps Script chứa đúng Folder ID đích');
+assert(scriptTemplate.indexOf('5. Webapp Actigrivity') !== -1, 'Mã Apps Script chứa đúng tên thư mục 5. Webapp Actigrivity');
+
+assert(GoogleDriveService.hasWebhook() === false, 'Mặc định chưa cấu hình Webhook URL');
+GoogleDriveService.setWebhookUrl('https://script.google.com/macros/s/AKfycbxTestDummy/exec');
+assert(GoogleDriveService.hasWebhook() === true, 'Đã lưu thành công Webhook URL');
+assert(GoogleDriveService.getWebhookUrl() === 'https://script.google.com/macros/s/AKfycbxTestDummy/exec', 'Lấy đúng Webhook URL đã lưu');
+
+var badgeEl = document.getElementById('drive-sync-badge');
+assert(badgeEl !== null, 'Phần tử badge đồng bộ Drive tồn tại trên DOM');
+
+GoogleDriveService.setWebhookUrl('');
+assert(GoogleDriveService.hasWebhook() === false, 'Xóa Webhook URL thành công khi bỏ trống');
 
 print('\n================================================================');
 print('  ✔ TOÀN BỘ CÁC BÀI TEST TỰ ĐỘNG LƯU EXCEL & DRIVE ĐỀU ĐẠT 100%!');

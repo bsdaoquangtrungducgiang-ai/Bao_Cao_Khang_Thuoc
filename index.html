@@ -786,8 +786,8 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                         </span>
                       </div>
                     </div>
-                    <span class="badge-status badge-success" id="drive-sync-badge">
-                      <i class="fa-solid fa-circle-check"></i> Đã Lưu &amp; Tải Xuống
+                    <span class="badge-status badge-warning" id="drive-sync-badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-weight: 600;">
+                      <i class="fa-solid fa-triangle-exclamation"></i> Đã Tải Về Máy • Chưa Đồng Bộ Lên Drive
                     </span>
                   </div>
 
@@ -804,13 +804,35 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                     </button>
                   </div>
 
+                  <!-- Khung hướng dẫn đồng bộ lên Google Drive (Kéo thả 3s hoặc Webhook tự động) -->
+                  <div id="drive-sync-instruction-box" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
+                    <div style="font-weight: 700; color: #92400e; font-size: 13px; margin-bottom: 6px;">
+                      <i class="fa-solid fa-cloud-arrow-up"></i> Tệp Excel đã được tải về máy tính (thư mục Downloads).
+                    </div>
+                    <div style="font-size: 12.5px; color: #78350f; line-height: 1.6;">
+                      Để tệp xuất hiện ngay trong thư mục <strong>5. Webapp Actigrivity</strong> trên Google Drive:
+                      <ol style="margin: 6px 0 8px 18px; padding: 0;">
+                        <li><strong>Cách 1 (Nhanh nhất - 3 giây):</strong> Bấm nút <em>"Mở Thư Mục Trên Google Drive"</em> bên dưới, rồi <strong>kéo thả tệp vừa tải về vào</strong>.</li>
+                        <li><strong>Cách 2 (Đồng bộ Tự Động 100% vĩnh viễn):</strong> Bấm <strong>"⚙️ Cấu hình Webhook Tự Động"</strong> để kết nối Google Apps Script 1 lần, mọi lần import sau sẽ tự động đẩy lên Drive!</li>
+                      </ol>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                      <button type="button" class="btn-setup-action" id="btn-sync-drive-now" style="background: #d97706; padding: 7px 14px; font-size: 12.5px;">
+                        <i class="fa-solid fa-arrows-rotate"></i> Đồng bộ lên Google Drive ngay
+                      </button>
+                      <button type="button" class="btn-setup-action" id="btn-config-drive-webhook" style="background: #0284c7; padding: 7px 14px; font-size: 12.5px;">
+                        <i class="fa-solid fa-gear"></i> ⚙️ Cấu hình Webhook Tự Động
+                      </button>
+                    </div>
+                  </div>
+
                   <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
                     <a id="btn-open-google-drive" href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 9px 18px; border-radius: 6px; color: #ffffff; font-weight: 600;">
                       <i class="fa-brands fa-google-drive"></i> Mở Thư Mục "5. Webapp Actigrivity" Trên Google Drive <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
                     </a>
-                    <span style="font-size: 11.5px; color: #15803d; font-style: italic;">
-                      * File Excel chứa đầy đủ các cột dữ liệu đã chuẩn hóa
-                    </span>
+                    <button type="button" id="btn-open-drive-modal-step5" class="btn-setup-action" style="background: #0284c7; padding: 9px 16px; font-size: 13px;">
+                      <i class="fa-solid fa-gear"></i> Cấu hình Webhook Tự Động
+                    </button>
                   </div>
                 </div>
 
@@ -1692,6 +1714,9 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px;" title="Mở thư mục 5. Webapp Actigrivity trên Google Drive">
                   <i class="fa-brands fa-google-drive"></i> Google Drive
                 </a>
+                <button class="btn-setup-action" id="btn-open-drive-config" style="background: #0284c7; padding: 7px 12px; font-size: 13px;" title="Cấu hình Webhook tự động đồng bộ Google Drive">
+                  <i class="fa-solid fa-gear"></i> Webhook Drive
+                </button>
                 <button class="btn-setup-action" id="btn-open-upload-modal">
                   <i class="fa-solid fa-cloud-arrow-up"></i> Nạp File Mới
                 </button>
@@ -1978,6 +2003,94 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
       </div>
       <div class="modal-footer">
         <button class="btn-setup-action modal-close">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: GOOGLE DRIVE WEBHOOK SETUP ==================== -->
+  <div class="modal-backdrop" id="modal-google-drive-setup">
+    <div class="modal-box" style="max-width: 720px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 10px; color: #166534;">
+          <i class="fa-brands fa-google-drive" style="color: #16a34a; font-size: 22px;"></i>
+          Cấu Hình Tự Động Lưu Trữ Vào Google Drive
+        </h3>
+        <button class="modal-close" onclick="document.getElementById('modal-google-drive-setup').classList.remove('open')">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 20px;">
+        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #166534;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <strong><i class="fa-solid fa-folder"></i> Thư mục Google Drive đích:</strong>
+              <span style="font-weight: 700; color: #15803d;"> 5. Webapp Actigrivity</span><br>
+              <span style="font-size: 11.5px; color: #166534;">ID Thư Mục: <code>1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP</code></span>
+            </div>
+            <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; text-decoration: none; padding: 6px 12px; font-size: 12px;">
+              <i class="fa-brands fa-google-drive"></i> Mở Thư Mục <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i>
+            </a>
+          </div>
+        </div>
+
+        <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+          Hướng dẫn kích hoạt kết nối tự động (Google Apps Script - Miễn phí &amp; Vĩnh viễn):
+        </h4>
+
+        <div style="font-size: 13px; line-height: 1.6; color: #334155; margin-bottom: 14px;">
+          <ol style="margin-left: 20px; padding: 0;">
+            <li style="margin-bottom: 8px;">
+              Mở trang <a href="https://script.google.com/home/start" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Google Apps Script (script.google.com)</a> bằng tài khoản Google của bạn.
+            </li>
+            <li style="margin-bottom: 8px;">
+              Bấm <strong>Dự án mới (New Project)</strong>, xóa toàn bộ code cũ và <strong>dán đoạn mã sau</strong> (đã cấu hình sẵn Folder ID của thư mục 5. Webapp Actigrivity):
+              <div style="margin: 8px 0; position: relative;">
+                <textarea id="drive-apps-script-code" readonly style="width: 100%; height: 160px; font-family: monospace; font-size: 11.5px; background: #0f172a; color: #38bdf8; border-radius: 6px; padding: 10px; border: 1px solid #334155; resize: none;"></textarea>
+                <button type="button" id="btn-copy-apps-script" class="btn-setup-action" style="position: absolute; top: 8px; right: 8px; background: #2563eb; padding: 5px 12px; font-size: 11px;">
+                  <i class="fa-solid fa-copy"></i> Sao chép mã
+                </button>
+              </div>
+            </li>
+            <li style="margin-bottom: 8px;">
+              Bấm nút <strong>Triển khai (Deploy) &rarr; Tùy chọn triển khai mới (New deployment)</strong>:
+              <ul style="margin-left: 16px; margin-top: 4px; font-size: 12px; color: #475569;">
+                <li>Chọn loại: <strong>Ứng dụng web (Web app)</strong> (biểu tượng bánh răng)</li>
+                <li>Thực thi dưới dạng: <strong>Tôi (Me)</strong></li>
+                <li>Ai có quyền truy cập: <strong>Bất kỳ ai (Anyone)</strong></li>
+              </ul>
+            </li>
+            <li style="margin-bottom: 8px;">
+              Bấm <strong>Triển khai</strong>, cấp quyền truy cập vào Google Drive của bạn, sau đó <strong>sao chép URL ứng dụng web</strong> (có dạng <code>https://script.google.com/macros/s/.../exec</code>).
+            </li>
+            <li>
+              Dán URL ứng dụng web vào ô dưới đây rồi bấm <strong>Lưu Cấu Hình &amp; Đồng Bộ Ngay</strong>:
+            </li>
+          </ol>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;">
+          <label style="display: block; font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">
+            URL Webhook Google Apps Script:
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <input type="url" id="input-drive-webhook-url" placeholder="https://script.google.com/macros/s/.../exec" style="flex: 1; padding: 8px 12px; font-size: 13px; border: 1px solid #94a3b8; border-radius: 6px; outline: none;">
+            <button type="button" id="btn-test-drive-webhook" class="btn-setup-action" style="background: #475569; padding: 8px 14px; font-size: 12.5px; white-space: nowrap;">
+              <i class="fa-solid fa-bolt"></i> Kiểm tra
+            </button>
+          </div>
+          <div id="drive-webhook-test-status" style="margin-top: 8px; font-size: 12px; display: none;"></div>
+        </div>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #92400e;">
+          <i class="fa-solid fa-lightbulb"></i> <strong>Lưu ý nhanh:</strong>
+          Tệp Excel đã được tải về máy của bạn. Bạn luôn có thể mở thư mục Drive và <strong>kéo thả tệp vừa tải về vào</strong> bất cứ lúc nào!
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn-setup-action" onclick="document.getElementById('modal-google-drive-setup').classList.remove('open')" style="background: #64748b;">
+          Đóng
+        </button>
+        <button type="button" id="btn-save-drive-webhook" class="btn-setup-action" style="background: #16a34a;">
+          <i class="fa-solid fa-check"></i> Lưu Cấu Hình &amp; Đồng Bộ Ngay
+        </button>
       </div>
     </div>
   </div>
