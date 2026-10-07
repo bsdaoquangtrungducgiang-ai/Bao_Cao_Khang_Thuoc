@@ -2089,3 +2089,125 @@ body {
   font-weight: 500;
 }
 
+/* ==========================================================================
+   TIÊU ĐỀ TRƯỜNG LỌC ANTIBIOGRAM MÀU ĐỎ TƯƠI & PHÂN KHU TÁCH BIỆT BẢNG - BIỂU ĐỒ
+   ========================================================================== */
+
+/* 1. Tiêu đề các trường lọc Antibiogram chữ màu đỏ tươi trực quan */
+#view-analytics_antibiogram .filter-label,
+.abg-field-label-red {
+  color: #dc2626 !important; /* Đỏ tươi nổi bật trực quan */
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.15px;
+}
+
+#view-analytics_antibiogram .filter-label i,
+.abg-field-label-red i {
+  color: #ef4444 !important; /* Icon đỏ tươi */
+  font-size: 13px;
+}
+
+/* 2. Thanh chuyển chế độ xem tách biệt */
+.abg-view-mode-bar {
+  background: #f8fafc;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.btn-abg-mode {
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #475569;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-abg-mode:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.btn-abg-mode.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.3);
+}
+
+/* 3. Khối Card phân khu tách biệt rõ ràng */
+.abg-section-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+  transition: box-shadow 0.2s ease;
+}
+
+.abg-section-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.abg-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.abg-kpi-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #334155;
+  font-weight: 600;
+}
+
+/* Tối ưu bảng Antibiogram khi dàn trải 100% full-width */
+#view-analytics_antibiogram .table-lab {
+  width: 100%;
+}
+
+#view-analytics_antibiogram .table-lab th {
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-bottom: 2px solid #cbd5e1;
+  white-space: nowrap;
+}
+
+#view-analytics_antibiogram .table-lab td {
+  padding: 9px 12px;
+  font-size: 13px;
+  vertical-align: middle;
+}
+

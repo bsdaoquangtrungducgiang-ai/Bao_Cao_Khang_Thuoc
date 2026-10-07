@@ -19,7 +19,10 @@ const AntibiogramView = {
     availableOrganisms: [],
     availableSpecimens: [],
     availableDepartments: [],
-    availableAntibiotics: []
+    availableAntibiotics: [],
+    chartSortMode: 'default',
+    viewMode: 'both',
+    lastRows: []
   },
 
   init() {
@@ -124,6 +127,40 @@ const AntibiogramView = {
     const btnPrint = document.getElementById('btn-print-abg');
     if (btnPrint) {
       btnPrint.addEventListener('click', () => window.print());
+    }
+
+    // 7. Chuyển đổi chế độ hiển thị Bảng / Biểu đồ tách biệt
+    document.querySelectorAll('.btn-abg-mode').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-mode') || 'both';
+        this.setViewMode(mode);
+      });
+    });
+
+    // 8. Sắp xếp biểu đồ
+    const btnSortDef = document.getElementById('btn-chart-sort-default');
+    const btnSortR = document.getElementById('btn-chart-sort-r');
+    const btnSortS = document.getElementById('btn-chart-sort-s');
+    if (btnSortDef) {
+      btnSortDef.addEventListener('click', () => {
+        this.state.chartSortMode = 'default';
+        this.updateSortButtonsUI('btn-chart-sort-default');
+        this.renderChart(this.state.lastRows);
+      });
+    }
+    if (btnSortR) {
+      btnSortR.addEventListener('click', () => {
+        this.state.chartSortMode = 'r_desc';
+        this.updateSortButtonsUI('btn-chart-sort-r');
+        this.renderChart(this.state.lastRows);
+      });
+    }
+    if (btnSortS) {
+      btnSortS.addEventListener('click', () => {
+        this.state.chartSortMode = 's_desc';
+        this.updateSortButtonsUI('btn-chart-sort-s');
+        this.renderChart(this.state.lastRows);
+      });
     }
 
     // 7. Đóng dropdown khi click bên ngoài
@@ -797,8 +834,80 @@ const AntibiogramView = {
       bannerEl.innerHTML = '';
     }
 
+    this.state.lastRows = rows;
+    this.updateSummaryKPIs(rows);
     this.renderTable(rows);
     this.renderChart(rows);
+  },
+
+  setViewMode(mode) {
+    this.state.viewMode = mode;
+    document.querySelectorAll('.btn-abg-mode').forEach(btn => {
+      if (btn.getAttribute('data-mode') === mode) {
+        btn.classList.add('active');
+        btn.style.background = '#0284c7';
+        btn.style.color = '#ffffff';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = 'transparent';
+        btn.style.color = '#475569';
+      }
+    });
+
+    const secTable = document.getElementById('abg-section-table');
+    const secChart = document.getElementById('abg-section-chart');
+    if (secTable && secChart) {
+      if (mode === 'both') {
+        secTable.style.display = 'block';
+        secChart.style.display = 'block';
+      } else if (mode === 'table') {
+        secTable.style.display = 'block';
+        secChart.style.display = 'none';
+      } else if (mode === 'chart') {
+        secTable.style.display = 'none';
+        secChart.style.display = 'block';
+      }
+    }
+  },
+
+  updateSortButtonsUI(activeBtnId) {
+    ['btn-chart-sort-default', 'btn-chart-sort-r', 'btn-chart-sort-s'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      if (id === activeBtnId) {
+        btn.classList.add('active');
+        btn.style.background = '#f1f5f9';
+        btn.style.borderColor = '#cbd5e1';
+        btn.style.color = '#0369a1';
+        btn.style.fontWeight = '700';
+      } else {
+        btn.classList.remove('active');
+        btn.style.background = '#ffffff';
+        btn.style.borderColor = '#e2e8f0';
+        btn.style.color = '#475569';
+        btn.style.fontWeight = '500';
+      }
+    });
+  },
+
+  updateSummaryKPIs(rows = []) {
+    const totalAbxEl = document.getElementById('kpi-abg-total-abx');
+    const maxREl = document.getElementById('kpi-abg-max-r');
+    const maxSEl = document.getElementById('kpi-abg-max-s');
+    const badgeTextEl = document.getElementById('abg-badge-text');
+
+    if (totalAbxEl) totalAbxEl.textContent = rows.length;
+    if (badgeTextEl) badgeTextEl.textContent = `${rows.length} Kháng Sinh`;
+
+    if (rows.length > 0) {
+      const sortedByR = [...rows].sort((a, b) => b.rRate - a.rRate);
+      const sortedByS = [...rows].sort((a, b) => b.sRate - a.sRate);
+      if (maxREl) maxREl.textContent = `${sortedByR[0].code} (${sortedByR[0].rRate}%)`;
+      if (maxSEl) maxSEl.textContent = `${sortedByS[0].code} (${sortedByS[0].sRate}%)`;
+    } else {
+      if (maxREl) maxREl.textContent = '--';
+      if (maxSEl) maxSEl.textContent = '--';
+    }
   },
 
   renderTable(rows = []) {
@@ -855,10 +964,24 @@ const AntibiogramView = {
 
     if (rows.length === 0) return;
 
-    const labels = rows.map(r => r.code);
-    const sRates = rows.map(r => r.sRate);
-    const iRates = rows.map(r => r.iRate);
-    const rRates = rows.map(r => r.rRate);
+    let chartRows = [...rows];
+    if (this.state.chartSortMode === 'r_desc') {
+      chartRows.sort((a, b) => b.rRate - a.rRate);
+    } else if (this.state.chartSortMode === 's_desc') {
+      chartRows.sort((a, b) => b.sRate - a.sRate);
+    }
+
+    // Co giãn chiều cao động để bao quát tất cả thông số rõ ràng, không bị dẹp lép
+    const innerContainer = document.getElementById('chart-abg-inner');
+    if (innerContainer) {
+      const calculatedHeight = Math.max(460, chartRows.length * 28 + 60);
+      innerContainer.style.height = `${calculatedHeight}px`;
+    }
+
+    const labels = chartRows.map(r => r.name ? `${r.code} - ${r.name}` : r.code);
+    const sRates = chartRows.map(r => r.sRate);
+    const iRates = chartRows.map(r => r.iRate);
+    const rRates = chartRows.map(r => r.rRate);
 
     this.currentChart = new Chart(ctx, {
       type: 'bar',
@@ -876,10 +999,10 @@ const AntibiogramView = {
         indexAxis: 'y',
         scales: {
           x: { stacked: true, max: 100, ticks: { callback: v => v + '%' } },
-          y: { stacked: true }
+          y: { stacked: true, ticks: { font: { size: 12, weight: '600' } } }
         },
         plugins: {
-          legend: { position: 'top' },
+          legend: { position: 'top', labels: { font: { weight: '600' } } },
           tooltip: {
             callbacks: {
               label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}%`
