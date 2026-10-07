@@ -578,31 +578,6 @@
                 </div>
               </div>
 
-              <!-- TỰ ĐỘNG CẤP QUYỀN LƯU VÀO GOOGLE DRIVE (Mục 5. Webapp Actigrivity) -->
-              <div id="drive-step1-banner" style="margin-top: 14px; margin-bottom: 14px; padding: 12px 16px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <div style="width: 38px; height: 38px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; color: #16a34a; font-size: 20px; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                    <i class="fa-brands fa-google-drive"></i>
-                  </div>
-                  <div>
-                    <div style="font-size: 13.5px; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px;">
-                      Tự động cấp quyền lưu file vào Google Drive
-                      <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: #0284c7; text-decoration: underline; font-weight: 600;">
-                        (5. Webapp Actigrivity <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i>)
-                      </a>
-                    </div>
-                    <div style="font-size: 12px; color: #15803d; margin-top: 2px;">
-                      Tất cả file tải lên phân tích và xuất bản báo cáo sẽ tự động lưu trữ vĩnh viễn vào Google Drive được chỉ định.
-                    </div>
-                  </div>
-                </div>
-                <div id="drive-step1-perm-badge-wrap" style="display: flex; align-items: center; gap: 8px;">
-                  <button type="button" class="btn-setup-action" id="btn-grant-drive-perm-step1" style="background: #16a34a; color: #ffffff !important; padding: 8px 18px; font-size: 13px; font-weight: 700;">
-                    <i class="fa-solid fa-key"></i> Cấp quyền tự động lưu Google Drive
-                  </button>
-                </div>
-              </div>
-
               <!-- Paste văn bản hoặc CSV trực tiếp (Section XV) -->
               <div class="paste-box-container">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -615,7 +590,7 @@
 BN00201,Nguyễn Văn C,Ngoại,Nước tiểu,2026-09-25,E. coli,R,R,R,S
 BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 <div style="margin-top: 10px; text-align: right;">
-                  <button class="btn-setup-action" id="btn-parse-text" style="background: var(--secondary); color: #ffffff !important;">
+                  <button class="btn-setup-action" id="btn-parse-text" style="background: var(--secondary);">
                     <i class="fa-solid fa-bolt"></i> Phân tích nội dung đã dán
                   </button>
                 </div>
@@ -714,10 +689,10 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <i class="fa-solid fa-triangle-exclamation"></i> Chi tiết các dòng cần kiểm tra hoặc có lỗi:
                 </h4>
                 <div style="display: flex; gap: 8px;">
-                  <button class="btn-setup-action" id="btn-autofix-errors" style="background: #2563eb; color: #ffffff !important; padding: 6px 14px; font-size: 12.5px; font-weight: 700;">
+                  <button class="btn-setup-action" id="btn-autofix-errors" style="background: #2563eb; padding: 6px 14px; font-size: 12.5px;">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> ⚡ Tự động sửa lỗi & Chuẩn hóa
                   </button>
-                  <button class="btn-reset-filters" id="btn-export-errors" style="color: #dc2626 !important; font-weight: 700; border-color: #fca5a5;">
+                  <button class="btn-reset-filters" id="btn-export-errors" style="color: #dc2626;">
                     <i class="fa-solid fa-file-excel"></i> Xuất file Excel báo cáo lỗi
                   </button>
                 </div>
@@ -742,7 +717,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 <button class="btn-reset-filters" data-wizard-goto="3">
                   <i class="fa-solid fa-arrow-left"></i> Chỉnh sửa Mapping
                 </button>
-                <button class="btn-setup-action" data-wizard-goto="5" style="background: var(--color-s); color: #ffffff !important; font-weight: 700;">
+                <button class="btn-setup-action" data-wizard-goto="5" style="background: var(--color-s);">
                   Tiến hành Nạp Dữ liệu <i class="fa-solid fa-arrow-right"></i>
                 </button>
               </div>
@@ -755,22 +730,11 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <i class="fa-solid fa-database"></i>
                 </div>
                 <h3 style="font-size: 18px; margin-bottom: 8px;">Sẵn sàng lưu vào Hệ thống Xét nghiệm</h3>
-                <p style="font-size: 13.5px; color: var(--text-muted); max-width: 520px; margin: 0 auto 16px;">
-                  Dữ liệu hợp lệ sẽ được chuẩn hóa S/I/R, lưu trữ vào Database và cập nhật ngay lập tức lên Dashboard dịch tễ vi sinh.
+                <p style="font-size: 13.5px; color: var(--text-muted); max-width: 520px; margin: 0 auto 24px;">
+                  Dữ liệu hợp lệ sẽ được chuẩn hóa S/I/R, lưu trữ vào PostgreSQL và cập nhật ngay lập tức lên Dashboard dịch tễ vi sinh.
                 </p>
-
-                <!-- Banner xem trước tên file Excel & thư mục Google Drive -->
-                <div class="drive-sync-preview-banner" style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 12px 16px; margin: 0 auto 24px; max-width: 540px; text-align: left; display: flex; align-items: center; gap: 12px;">
-                  <i class="fa-brands fa-google-drive" style="font-size: 28px; color: #16a34a; flex-shrink: 0;"></i>
-                  <div style="font-size: 12.5px; color: #15803d; line-height: 1.5;">
-                    <strong>Tự động lưu trữ Excel &amp; Đồng bộ Google Drive:</strong><br>
-                    Dữ liệu sẽ được tự động lưu thành file: <code id="preview-next-stt-filename" style="background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #166534;">STT01_02102026.xlsx</code><br>
-                    và đồng bộ vào thư mục <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" style="color: #15803d; font-weight: 700; text-decoration: underline;">5. Webapp Actigrivity</a> trên Google Drive.
-                  </div>
-                </div>
-
-                <button class="btn-setup-action" id="btn-execute-import" style="padding: 12px 28px; font-size: 14px; background: var(--primary); color: #ffffff !important; font-weight: 700;">
-                  <i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận &amp; Nạp vào Database
+                <button class="btn-setup-action" id="btn-execute-import" style="padding: 12px 28px; font-size: 14px; background: var(--primary);">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận & Nạp vào Database
                 </button>
               </div>
 
@@ -797,79 +761,11 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   </div>
                 </div>
 
-                <!-- Thẻ Tự Động Lưu Trữ Excel & Đồng Bộ Google Drive -->
-                <div class="drive-archive-card" id="drive-archive-box" style="margin: 20px auto 24px; max-width: 620px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px 20px; text-align: left;">
-                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                      <i class="fa-brands fa-google-drive" style="font-size: 26px; color: #16a34a;"></i>
-                      <div>
-                        <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #166534;">
-                          Lưu Trữ File Excel &amp; Đồng Bộ Google Drive
-                        </h4>
-                        <span style="font-size: 12px; color: #15803d;">
-                          Vị trí: <strong>5. Webapp Actigrivity</strong> (Google Drive)
-                        </span>
-                      </div>
-                    </div>
-                    <span class="badge-status badge-warning" id="drive-sync-badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-weight: 600;">
-                      <i class="fa-solid fa-triangle-exclamation"></i> Đã Tải Về Máy • Chưa Đồng Bộ Lên Drive
-                    </span>
-                  </div>
-
-                  <div style="background: #ffffff; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                      <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 2px;">Tên file Excel theo STT tăng dần &amp; Ngày tháng:</div>
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-file-excel" style="color: #059669; font-size: 16px;"></i>
-                        <strong id="drive-saved-filename" style="font-size: 14.5px; color: #0f172a; font-family: monospace;">STT01_02102026.xlsx</strong>
-                      </div>
-                    </div>
-                    <button type="button" class="btn-setup-action" id="btn-redownload-archive" style="background: #059669; color: #ffffff !important; padding: 7px 14px; font-size: 12.5px; font-weight: 700;">
-                      <i class="fa-solid fa-file-arrow-down"></i> Tải lại file này
-                    </button>
-                  </div>
-
-                  <!-- Khung hướng dẫn đồng bộ lên Google Drive (Kéo thả 3s hoặc Webhook tự động) -->
-                  <div id="drive-sync-instruction-box" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
-                    <div style="font-weight: 700; color: #92400e; font-size: 13px; margin-bottom: 6px;">
-                      <i class="fa-solid fa-cloud-arrow-up"></i> Tệp Excel đã được tải về máy tính (thư mục Downloads).
-                    </div>
-                    <div style="font-size: 12.5px; color: #78350f; line-height: 1.6;">
-                      Để tệp xuất hiện ngay trong thư mục <strong>5. Webapp Actigrivity</strong> trên Google Drive:
-                      <ol style="margin: 6px 0 8px 18px; padding: 0;">
-                        <li><strong>Cách 1 (1 Click không cần code):</strong> Bấm <strong>"📂 Chọn Thư Mục Drive Trên Máy"</strong> (chọn thư mục <em>5. Webapp Actigrivity</em>). Webapp sẽ tự động lưu thẳng vào đây và Google Drive tự động đẩy lên đám mây vĩnh viễn!</li>
-                        <li><strong>Cách 2 (Nhanh nhất - 3 giây):</strong> Bấm nút <em>"Mở Thư Mục Trên Google Drive"</em> bên dưới, rồi <strong>kéo thả tệp vừa tải về vào</strong>.</li>
-                        <li><strong>Cách 3 (Cấu hình Webhook Tự Động):</strong> Cho máy không cài Google Drive for Desktop.</li>
-                      </ol>
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-                      <button type="button" class="btn-setup-action" id="btn-pick-drive-step5" style="background: #2563eb; color: #ffffff !important; padding: 7px 14px; font-size: 12.5px; font-weight: 700;">
-                        <i class="fa-solid fa-folder-plus"></i> 📂 Chọn Thư Mục Drive Trên Máy (1 Click)
-                      </button>
-                      <button type="button" class="btn-setup-action" id="btn-sync-drive-now" style="background: #d97706; color: #ffffff !important; padding: 7px 14px; font-size: 12.5px; font-weight: 700;">
-                        <i class="fa-solid fa-arrows-rotate"></i> Đồng bộ lên Google Drive ngay
-                      </button>
-                      <button type="button" class="btn-setup-action" id="btn-config-drive-webhook" style="background: #0284c7; color: #ffffff !important; padding: 7px 14px; font-size: 12.5px; font-weight: 700;">
-                        <i class="fa-solid fa-gear"></i> ⚙️ Cấu hình Nâng cao
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-                    <a id="btn-open-google-drive" href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 9px 18px; border-radius: 6px; color: #ffffff !important; font-weight: 700;">
-                      <i class="fa-brands fa-google-drive"></i> Mở Thư Mục "5. Webapp Actigrivity" Trên Google Drive <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
-                    </a>
-                    <button type="button" id="btn-open-drive-modal-step5" class="btn-setup-action" style="background: #0284c7; color: #ffffff !important; padding: 9px 16px; font-size: 13px; font-weight: 700;">
-                      <i class="fa-solid fa-gear"></i> Cấu hình Webhook Tự Động
-                    </button>
-                  </div>
-                </div>
-
                 <div style="display: flex; gap: 12px; justify-content: center;">
                   <button class="btn-reset-filters" onclick="window.ImportWizard.goToStep(1)">
                     <i class="fa-solid fa-file-arrow-up"></i> Import file khác
                   </button>
-                  <button class="btn-setup-action" onclick="window.Navigation.navigateTo('dashboard')" style="color: #ffffff !important; font-weight: 700;">
+                  <button class="btn-setup-action" onclick="window.Navigation.navigateTo('dashboard')">
                     <i class="fa-solid fa-chart-line"></i> Chuyển tới Dashboard xem phân tích
                   </button>
                 </div>
@@ -1123,13 +1019,13 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
 
               <!-- Action buttons -->
               <div style="display: flex; gap: 8px; align-items: center; padding-top: 18px;">
-                <button class="btn-reset-filters" id="btn-reset-abg-filters" title="Đặt lại về mặc định" style="padding: 7px 12px; font-size: 13px; color: #1e293b !important; font-weight: 600;">
+                <button class="btn-reset-filters" id="btn-reset-abg-filters" title="Đặt lại về mặc định" style="padding: 7px 12px; font-size: 13px;">
                   <i class="fa-solid fa-rotate-left"></i> Đặt lại
                 </button>
-                <button class="btn-setup-action" id="btn-export-abg-excel" style="background: #059669; color: #ffffff !important; padding: 7px 14px; font-size: 13px; font-weight: 700;">
+                <button class="btn-setup-action" id="btn-export-abg-excel" style="background: #059669; padding: 7px 14px; font-size: 13px;">
                   <i class="fa-solid fa-file-excel"></i> Xuất Excel
                 </button>
-                <button class="btn-reset-filters" id="btn-print-abg" style="padding: 7px 12px; font-size: 13px; color: #1e293b !important; font-weight: 600;">
+                <button class="btn-reset-filters" id="btn-print-abg" style="padding: 7px 12px; font-size: 13px;">
                   <i class="fa-solid fa-print"></i> In Báo Cáo
                 </button>
               </div>
@@ -1189,7 +1085,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <option value="positive">Chỉ vi khuẩn Gram dương (S. aureus, E. faecalis, S. pneumoniae)</option>
                 </select>
               </div>
-              <button class="btn-setup-action" id="btn-export-heatmap" style="background: #059669; color: #ffffff !important; font-weight: 700;">
+              <button class="btn-setup-action" id="btn-export-heatmap" style="background: #059669;">
                 <i class="fa-solid fa-file-excel"></i> Xuất Excel Heatmap
               </button>
             </div>
@@ -1551,15 +1447,15 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                     <option value="Dịch vết thương">Dịch vết thương</option>
                   </select>
                 </div>
-                <button class="btn-setup-action" id="btn-generate-report" style="margin-top: 14px; color: #ffffff !important; font-weight: 700;">
+                <button class="btn-setup-action" id="btn-generate-report" style="margin-top: 14px;">
                   <i class="fa-solid fa-arrows-rotate"></i> Tạo Báo Cáo
                 </button>
               </div>
               <div style="display: flex; gap: 10px; margin-top: 14px;">
-                <button class="btn-setup-action" id="btn-print-full-report" style="background: #0284c7; color: #ffffff !important; font-weight: 700;">
+                <button class="btn-setup-action" id="btn-print-full-report" style="background: #0284c7;">
                   <i class="fa-solid fa-print"></i> In Báo Cáo (PDF)
                 </button>
-                <button class="btn-setup-action" id="btn-export-full-excel" style="background: #059669; color: #ffffff !important; font-weight: 700;">
+                <button class="btn-setup-action" id="btn-export-full-excel" style="background: #059669;">
                   <i class="fa-solid fa-file-excel"></i> Xuất Excel Trọn Gói
                 </button>
               </div>
@@ -1740,13 +1636,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <option value="csv">📊 File CSV (.csv)</option>
                   <option value="pdf">📄 Kết quả PDF (.pdf)</option>
                 </select>
-                <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; color: #ffffff !important; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px;" title="Mở thư mục 5. Webapp Actigrivity trên Google Drive">
-                  <i class="fa-brands fa-google-drive"></i> Google Drive
-                </a>
-                <button class="btn-setup-action" id="btn-open-drive-config" style="background: #0284c7; color: #ffffff !important; font-weight: 700; padding: 7px 12px; font-size: 13px;" title="Cấu hình Webhook tự động đồng bộ Google Drive">
-                  <i class="fa-solid fa-gear"></i> Webhook Drive
-                </button>
-                <button class="btn-setup-action" id="btn-open-upload-modal" style="color: #ffffff !important; font-weight: 700;">
+                <button class="btn-setup-action" id="btn-open-upload-modal">
                   <i class="fa-solid fa-cloud-arrow-up"></i> Nạp File Mới
                 </button>
               </div>
@@ -2036,126 +1926,12 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
     </div>
   </div>
 
-  <!-- ==================== MODAL: GOOGLE DRIVE WEBHOOK SETUP ==================== -->
-  <div class="modal-backdrop" id="modal-google-drive-setup">
-    <div class="modal-box" style="max-width: 720px; max-height: 90vh; overflow-y: auto;">
-      <div class="modal-header">
-        <h3 style="display: flex; align-items: center; gap: 10px; color: #166534;">
-          <i class="fa-brands fa-google-drive" style="color: #16a34a; font-size: 22px;"></i>
-          Cấu Hình Tự Động Lưu Trữ Vào Google Drive
-        </h3>
-        <button class="modal-close" onclick="document.getElementById('modal-google-drive-setup').classList.remove('open')">&times;</button>
-      </div>
-      <div class="modal-body" style="padding: 16px 20px;">
-        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #166534;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div>
-              <strong><i class="fa-solid fa-folder"></i> Thư mục Google Drive đích:</strong>
-              <span style="font-weight: 700; color: #15803d;"> 5. Webapp Actigrivity</span><br>
-              <span style="font-size: 11.5px; color: #166534;">ID Thư Mục: <code>1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP</code></span>
-            </div>
-            <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" class="btn-setup-action" style="background: #16a34a; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 6px 12px; font-size: 12px;">
-              <i class="fa-brands fa-google-drive"></i> Mở Thư Mục <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- LỰA CHỌN 1: ĐƠN GIẢN NHẤT (1 CLICK KHÔNG CẦN CODE) -->
-        <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-            <div style="flex: 1; min-width: 260px;">
-              <h4 style="margin: 0 0 4px 0; color: #1e40af; font-size: 13.5px; font-weight: 700;">
-                <i class="fa-solid fa-folder-open"></i> Cách 1 (Khuyên Dùng - 1 Click): Chọn thư mục Google Drive trên máy tính
-              </h4>
-              <p style="margin: 0; font-size: 12px; color: #1e3a8a; line-height: 1.5;">
-                Nếu máy tính đã cài <strong>Google Drive for Desktop</strong> (hoặc có thư mục Drive):<br>
-                Bấm nút bên cạnh, chọn thư mục <strong>5. Webapp Actigrivity</strong> trên máy. Mọi file import sẽ tự động lưu thẳng vào đây và Google Drive tự động đồng bộ lên đám mây vĩnh viễn!
-              </p>
-              <div id="local-drive-folder-status" style="margin-top: 6px; font-size: 12px; font-weight: 600; color: #059669;"></div>
-            </div>
-            <button type="button" id="btn-pick-local-drive-folder" class="btn-setup-action" style="background: #2563eb; color: #ffffff !important; font-weight: 700; padding: 9px 18px; font-size: 13px; white-space: nowrap;">
-              <i class="fa-solid fa-folder-plus"></i> 📂 Chọn Thư Mục Drive
-            </button>
-          </div>
-        </div>
-
-        <!-- LỰA CHỌN 2: ĐỔI THƯ MỤC DOWNLOADS CỦA TRÌNH DUYỆT (10 GIÂY) -->
-        <div style="background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: #86198f;">
-          <strong><i class="fa-solid fa-download"></i> Cách 2 (Siêu nhanh - 10 giây): Đổi vị trí Tải xuống (Downloads) của trình duyệt vào Google Drive</strong><br>
-          Vào <em>Cài đặt trình duyệt (Chrome/Cốc Cốc/Edge) &rarr; Tệp đã tải xuống &rarr; Đổi vị trí</em> thành thư mục <strong>Google Drive &gt; 5. Webapp Actigrivity</strong> trên máy tính. Mọi file tạo ra sẽ rơi thẳng vào Google Drive và tự đồng bộ lên đám mây!
-        </div>
-
-        <h4 style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
-          <i class="fa-solid fa-cloud"></i> Cách 3: Kết nối Webhook Google Apps Script (Dành cho máy tính không cài Google Drive):
-        </h4>
-
-        <div style="font-size: 13px; line-height: 1.6; color: #334155; margin-bottom: 14px;">
-          <ol style="margin-left: 20px; padding: 0;">
-            <li style="margin-bottom: 8px;">
-              Mở trang <a href="https://script.google.com/home/start" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Google Apps Script (script.google.com)</a> bằng tài khoản Google của bạn.
-            </li>
-            <li style="margin-bottom: 8px;">
-              Bấm <strong>Dự án mới (New Project)</strong>, xóa toàn bộ code cũ và <strong>dán đoạn mã sau</strong> (đã cấu hình sẵn Folder ID của thư mục 5. Webapp Actigrivity):
-              <div style="margin: 8px 0; position: relative;">
-                <textarea id="drive-apps-script-code" readonly style="width: 100%; height: 160px; font-family: monospace; font-size: 11.5px; background: #0f172a; color: #38bdf8; border-radius: 6px; padding: 10px; border: 1px solid #334155; resize: none;"></textarea>
-                <button type="button" id="btn-copy-apps-script" class="btn-setup-action" style="position: absolute; top: 8px; right: 8px; background: #2563eb; color: #ffffff !important; font-weight: 700; padding: 5px 12px; font-size: 11px;">
-                  <i class="fa-solid fa-copy"></i> Sao chép mã
-                </button>
-              </div>
-            </li>
-            <li style="margin-bottom: 8px;">
-              Bấm nút <strong>Triển khai (Deploy) &rarr; Tùy chọn triển khai mới (New deployment)</strong>:
-              <ul style="margin-left: 16px; margin-top: 4px; font-size: 12px; color: #475569;">
-                <li>Chọn loại: <strong>Ứng dụng web (Web app)</strong> (biểu tượng bánh răng)</li>
-                <li>Thực thi dưới dạng: <strong>Tôi (Me)</strong></li>
-                <li>Ai có quyền truy cập: <strong>Bất kỳ ai (Anyone)</strong></li>
-              </ul>
-            </li>
-            <li style="margin-bottom: 8px;">
-              Bấm <strong>Triển khai</strong>, cấp quyền truy cập vào Google Drive của bạn, sau đó <strong>sao chép URL ứng dụng web</strong> (có dạng <code>https://script.google.com/macros/s/.../exec</code>).
-            </li>
-            <li>
-              Dán URL ứng dụng web vào ô dưới đây rồi bấm <strong>Lưu Cấu Hình &amp; Đồng Bộ Ngay</strong>:
-            </li>
-          </ol>
-        </div>
-
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;">
-          <label style="display: block; font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">
-            URL Webhook Google Apps Script:
-          </label>
-          <div style="display: flex; gap: 8px;">
-            <input type="url" id="input-drive-webhook-url" placeholder="https://script.google.com/macros/s/.../exec" style="flex: 1; padding: 8px 12px; font-size: 13px; border: 1px solid #94a3b8; border-radius: 6px; outline: none;">
-            <button type="button" id="btn-test-drive-webhook" class="btn-setup-action" style="background: #475569; color: #ffffff !important; font-weight: 700; padding: 8px 14px; font-size: 12.5px; white-space: nowrap;">
-              <i class="fa-solid fa-bolt"></i> Kiểm tra
-            </button>
-          </div>
-          <div id="drive-webhook-test-status" style="margin-top: 8px; font-size: 12px; display: none;"></div>
-        </div>
-
-        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #92400e;">
-          <i class="fa-solid fa-lightbulb"></i> <strong>Lưu ý nhanh:</strong>
-          Tệp Excel đã được tải về máy của bạn. Bạn luôn có thể mở thư mục Drive và <strong>kéo thả tệp vừa tải về vào</strong> bất cứ lúc nào!
-        </div>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-        <button type="button" class="btn-setup-action" onclick="document.getElementById('modal-google-drive-setup').classList.remove('open')" style="background: #64748b; color: #ffffff !important; font-weight: 700;">
-          Đóng
-        </button>
-        <button type="button" id="btn-save-drive-webhook" class="btn-setup-action" style="background: #16a34a; color: #ffffff !important; font-weight: 700;">
-          <i class="fa-solid fa-check"></i> Lưu Cấu Hình &amp; Đồng Bộ Ngay
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- Core JavaScript Modules -->
   <script src="js/config.js"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/utils/dataNormalization.js"></script>
   <script src="js/utils/dataValidation.js"></script>
   <script src="js/data/hospitalCsvData.js"></script>
-  <script src="js/services/googleDriveService.js"></script>
   <script src="js/services/importService.js"></script>
   <script src="js/services/demoDataService.js"></script>
   <script src="js/services/analyticsService.js"></script>

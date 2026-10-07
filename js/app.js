@@ -41,7 +41,6 @@ const App = {
     window.ReportView?.init();
     window.SystemCatalogsView?.init();
     window.FileManagerView?.init();
-    window.GoogleDriveService?.init();
 
     // 2. Khởi tạo đồng hồ thời gian thực và tiêu chuẩn CLSI/EUCAST
     this.initClock();

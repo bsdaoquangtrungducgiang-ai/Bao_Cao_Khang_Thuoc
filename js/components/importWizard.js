@@ -131,26 +131,6 @@ const ImportWizard = {
         window.Toast.success(`Đã tự động xử lý và chuẩn hóa! Hiện có ${(this.validationResult.validCount + this.validationResult.warningCount).toLocaleString()} bản ghi sẵn sàng nạp.`);
       });
     }
-
-    // 9. Nút tải lại file Excel lưu trữ Google Drive ở Bước 5
-    const btnRedownload = document.getElementById('btn-redownload-archive');
-    if (btnRedownload) {
-      btnRedownload.addEventListener('click', () => {
-        if (window.GoogleDriveService) {
-          const success = window.GoogleDriveService.redownloadLastArchive();
-          if (success) {
-            window.Toast?.success('Đã tải lại file Excel lưu trữ!');
-          } else {
-            window.Toast?.info('Chưa có file lưu trữ nào trong phiên hiện tại.');
-          }
-        }
-      });
-    }
-
-    // 10. Cập nhật trạng thái cấp quyền Google Drive ở Bước 1
-    if (typeof window !== 'undefined' && window.GoogleDriveService) {
-      window.GoogleDriveService.updatePermissionUI();
-    }
   },
 
   async handleFileSelected(file) {
@@ -161,16 +141,6 @@ const ImportWizard = {
 
     try {
       window.Toast.info(`Đang đọc file: ${file.name}...`);
-
-      // Tự động cấp quyền và lưu file tải lên phân tích vào Google Drive (5. Webapp Actigrivity)
-      if (typeof window !== 'undefined' && window.GoogleDriveService) {
-        window.GoogleDriveService.autoSaveUploadedFile(file).then(res => {
-          if (res && res.success) {
-            window.Toast?.success(`Đã tự động lưu file tải lên "${file.name}" vào Google Drive!`);
-          }
-        }).catch(e => console.warn('[ImportWizard] autoSaveUploadedFile error:', e));
-      }
-
       const result = await window.ImportService.parseFile(file);
       this.onDataParsed(result);
       window.Toast.success(`Đọc file thành công: ${result.totalRows} dòng, ${result.totalCols} cột`);
@@ -214,11 +184,7 @@ const ImportWizard = {
     if (activeContent) activeContent.classList.add('active');
 
     // Kích hoạt logic khi vào từng bước cụ thể
-    if (step === 1) {
-      if (typeof window !== 'undefined' && window.GoogleDriveService) {
-        window.GoogleDriveService.updatePermissionUI();
-      }
-    } else if (step === 4) {
+    if (step === 4) {
       this.runValidationStep();
     } else if (step === 5) {
       document.getElementById('import-complete-summary')?.classList.add('hidden');
@@ -227,12 +193,6 @@ const ImportWizard = {
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Xác nhận & Nạp vào Database';
-      }
-
-      // Cập nhật tên file STTxx_DDMMYYYY dự kiến lưu trên Google Drive
-      const previewSttEl = document.getElementById('preview-next-stt-filename');
-      if (previewSttEl && window.GoogleDriveService) {
-        previewSttEl.textContent = window.GoogleDriveService.peekNextFileName();
       }
     }
   },
@@ -475,92 +435,6 @@ const ImportWizard = {
       if (sumRejected) sumRejected.textContent = (this.validationResult?.errorCount || 0).toLocaleString();
 
       window.Toast?.success(`Import hoàn tất! Đã lưu thành công ${importedCount.toLocaleString()} kết quả AST.`);
-
-      // 4. Tự động lưu thành file Excel STTxx_DDMMYYYY và đồng bộ vào thư mục Google Drive: 5. Webapp Actigrivity
-      if (window.GoogleDriveService) {
-        try {
-          const driveRes = await window.GoogleDriveService.archiveImportDataset(validToImport, {
-            originalFileName: currentFileName,
-            fileType: this.parsedData?.fileType || 'xlsx',
-            totalRows: validToImport.length,
-            errorCount: this.validationResult?.errorCount || 0,
-            warningCount: this.validationResult?.warningCount || 0
-          });
-
-          if (driveRes && driveRes.success) {
-            const savedNameEl = document.getElementById('drive-saved-filename');
-            if (savedNameEl) savedNameEl.textContent = driveRes.fileName;
-
-            const syncBadgeEl = document.getElementById('drive-sync-badge');
-            const instructionBox = document.getElementById('drive-sync-instruction-box');
-
-            if (driveRes.driveUploaded) {
-              if (syncBadgeEl) {
-                syncBadgeEl.className = 'badge-status badge-success';
-                syncBadgeEl.style = 'background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-weight: 600;';
-                syncBadgeEl.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Đã tải lên Google Drive (5. Webapp Actigrivity)';
-              }
-              if (instructionBox) {
-                instructionBox.style.background = '#ecfdf5';
-                instructionBox.style.borderColor = '#86efac';
-                instructionBox.innerHTML = `
-                  <div style="font-weight: 700; color: #166534; font-size: 13px; margin-bottom: 4px;">
-                    <i class="fa-solid fa-circle-check"></i> Đã đồng bộ trực tiếp vào Google Drive!
-                  </div>
-                  <div style="font-size: 12.5px; color: #15803d;">
-                    Tệp <strong>${driveRes.fileName}</strong> đã được lưu thành công vào thư mục <strong>5. Webapp Actigrivity</strong> trên Google Drive.
-                  </div>
-                `;
-              }
-              window.Toast?.success(`Đã lưu file ${driveRes.fileName} và tải lên Google Drive (5. Webapp Actigrivity)!`);
-            } else {
-              if (syncBadgeEl) {
-                syncBadgeEl.className = 'badge-status badge-warning';
-                syncBadgeEl.style = 'background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-weight: 600;';
-                syncBadgeEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Đã tải về máy • Chưa đồng bộ lên Drive';
-              }
-              if (instructionBox) {
-                instructionBox.style.background = '#fffbeb';
-                instructionBox.style.borderColor = '#fde68a';
-                instructionBox.innerHTML = `
-                  <div style="font-weight: 700; color: #92400e; font-size: 13px; margin-bottom: 6px;">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Tệp Excel đã được lưu tự động về máy tính (thư mục Downloads).
-                  </div>
-                  <div style="font-size: 12.5px; color: #78350f; line-height: 1.6;">
-                    Để đưa tệp <strong>${driveRes.fileName}</strong> vào thư mục <strong>5. Webapp Actigrivity</strong> trên Google Drive:
-                    <ol style="margin: 6px 0 8px 18px; padding: 0;">
-                      <li><strong>Cách 1 (1 Click không cần code):</strong> Bấm nút <strong>"📂 Chọn Thư Mục Drive Trên Máy"</strong> (chọn thư mục <em>5. Webapp Actigrivity</em>). File sẽ tự động lưu thẳng vào đây và Google Drive tự động đẩy lên đám mây vĩnh viễn!</li>
-                      <li><strong>Cách 2 (Nhanh nhất - 3 giây):</strong> Bấm nút màu xanh <em>"Mở Thư Mục Trên Google Drive"</em> bên dưới, rồi <strong>kéo thả tệp vừa tải về vào</strong>.</li>
-                      <li><strong>Cách 3 (Cấu hình Webhook Tự Động):</strong> Cho máy không cài Google Drive for Desktop.</li>
-                    </ol>
-                  </div>
-                  <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-                    <button type="button" class="btn-setup-action" id="btn-pick-drive-step5" style="background: #2563eb; padding: 7px 14px; font-size: 12.5px;">
-                      <i class="fa-solid fa-folder-plus"></i> 📂 Chọn Thư Mục Drive Trên Máy (1 Click)
-                    </button>
-                    <button type="button" class="btn-setup-action" id="btn-sync-drive-now" style="background: #d97706; padding: 7px 14px; font-size: 12.5px;">
-                      <i class="fa-solid fa-arrows-rotate"></i> Đồng bộ lên Google Drive ngay
-                    </button>
-                    <button type="button" class="btn-setup-action" id="btn-config-drive-webhook" style="background: #0284c7; padding: 7px 14px; font-size: 12.5px;">
-                      <i class="fa-solid fa-gear"></i> ⚙️ Cấu hình Nâng cao
-                    </button>
-                  </div>
-                `;
-              }
-              window.Toast?.info(`File ${driveRes.fileName} đã lưu về máy. Hãy kéo thả vào Drive hoặc cấu hình Webhook để tự động tải lên!`);
-            }
-
-            const driveBox = document.getElementById('drive-archive-box');
-            if (driveBox) driveBox.classList.remove('hidden');
-
-            if (window.GoogleDriveService?.init) {
-              window.GoogleDriveService.init();
-            }
-          }
-        } catch (driveErr) {
-          console.warn('[ImportWizard] Auto-archive Google Drive warning:', driveErr);
-        }
-      }
 
       // Refresh Dashboard data & select file for analysis
       if (window.App) {

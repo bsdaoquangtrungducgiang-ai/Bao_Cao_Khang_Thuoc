@@ -234,14 +234,9 @@ const FileManagerView = {
         </td>
         <td style="font-size: 12px; color: var(--text-muted);">${dateStr}</td>
         <td style="text-align: center;">
-          <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-            <span class="badge-status badge-success">
-              <i class="fa-solid fa-database"></i> Database
-            </span>
-            <a href="https://drive.google.com/drive/folders/1AsfIs2iQHXZZ4oGpiehkDk_vPeyBMClP" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #16a34a; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; font-weight: 600;" title="Mở thư mục 5. Webapp Actigrivity trên Google Drive">
-              <i class="fa-brands fa-google-drive"></i> 5. Actigrivity
-            </a>
-          </div>
+          <span class="badge-status badge-success">
+            <i class="fa-solid fa-database"></i> Supabase Sync
+          </span>
         </td>
         <td>
           <div class="file-actions-btn-group">
