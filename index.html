@@ -1471,7 +1471,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 </div>
                 <div style="text-align: right; font-size: 11.5px; color: var(--text-muted);">
                   <div>Ngày lập: <strong id="rep-timestamp">28/09/2026</strong></div>
-                  <div>Người lập: <strong id="rep-author">TS.BS. Nguyễn Văn An</strong></div>
+                  <div>Người lập: <strong id="rep-author">BS.CK2. Đào Quang Trung</strong></div>
                   <div>Tiêu chuẩn: <strong>CLSI M100</strong></div>
                 </div>
               </div>
@@ -1559,7 +1559,7 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 <div style="text-align: center; width: 220px;">
                   <div style="font-size: 12px; font-weight: 600;">TRƯỞNG KHOA XÉT NGHIỆM / VI SINH</div>
                   <div style="font-size: 11px; color: var(--text-muted);">(Ký và ghi rõ họ tên)</div>
-                  <div style="margin-top: 60px; font-weight: 700;">TS.BS. Nguyễn Văn An</div>
+                  <div style="margin-top: 60px; font-weight: 700;">BS.CK2. Đào Quang Trung</div>
                 </div>
                 <div style="text-align: center; width: 220px;">
                   <div style="font-size: 12px; font-weight: 600;">CHỦ TỊCH HỘI ĐỒNG THUỐC &amp; ĐIỀU TRỊ</div>
@@ -1744,19 +1744,33 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
         <!-- ================= VIEW: QUẢN LÝ NGƯỜI DÙNG (MỤC II) ================= -->
         <section class="view-panel" id="view-users">
           <div class="data-panel-card">
-            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">
-              <i class="fa-solid fa-users-gear"></i> Quản Lý Tài Khoản Nhân Viên &amp; Phân Quyền (RBAC)
-            </h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h3 style="font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Quản Lý Danh Sách Nhân Viên &amp; Phân Quyền (RBAC)
+                </h3>
+                <span style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px; display: block;">
+                  Khoa Vi sinh • Bệnh viện Đa khoa Đức Giang — Tổng số: <strong>12 nhân viên</strong>
+                </span>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="search-users" placeholder="Tìm tên, chức danh, gmail..." style="padding: 7px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; width: 260px; outline: none;">
+                <span class="badge-status badge-success" id="users-count-badge" style="font-weight: 700; padding: 6px 14px; font-size: 12.5px;">
+                  <i class="fa-solid fa-users"></i> 12 Nhân Viên
+                </span>
+              </div>
+            </div>
             <div class="preview-table-container">
               <table class="table-lab">
                 <thead>
-                  <tr>
-                    <th style="width: 50px; text-align: center;">#</th>
-                    <th>Họ và Tên Nhân Viên</th>
-                    <th>Email Y Tế</th>
-                    <th>Khoa Phòng</th>
-                    <th style="text-align: center;">Vai Trò (Role)</th>
-                    <th style="text-align: center;">Trạng Thái</th>
+                  <tr style="background: #fef08a; border-bottom: 2px solid #eab308;">
+                    <th style="width: 60px; text-align: center; color: #713f12; font-weight: 800; font-size: 13px;">STT</th>
+                    <th style="color: #713f12; font-weight: 800; font-size: 13px;">Họ Và Tên</th>
+                    <th style="width: 140px; color: #713f12; font-weight: 800; font-size: 13px;">Chức Danh</th>
+                    <th style="color: #713f12; font-weight: 800; font-size: 13px;">Gmail</th>
+                    <th style="width: 150px; color: #713f12; font-weight: 800; font-size: 13px;">Khoa Phòng</th>
+                    <th style="width: 130px; text-align: center; color: #713f12; font-weight: 800; font-size: 13px;">Vai Trò (Role)</th>
+                    <th style="width: 140px; text-align: center; color: #713f12; font-weight: 800; font-size: 13px;">Trạng Thái</th>
                   </tr>
                 </thead>
                 <tbody id="table-users-body"></tbody>
@@ -1841,24 +1855,25 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
       <div class="modal-body">
         <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 20px;">
           <h4 style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">TÀI KHOẢN HIỆN TẠI</h4>
-          <p><strong>Họ tên:</strong> <span id="auth-modal-name">TS.BS. Nguyễn Văn An</span></p>
-          <p><strong>Khoa phòng:</strong> Khoa Vi sinh</p>
-          <p><strong>Vai trò (Role):</strong> <span class="role-badge role-admin">ADMIN</span></p>
+          <p><strong>Họ tên:</strong> <span id="auth-modal-name">BS.CK2. Đào Quang Trung</span></p>
+          <p><strong>Khoa phòng:</strong> Khoa Vi sinh - Bệnh viện Đa khoa Đức Giang</p>
+          <p><strong>Email:</strong> <span id="auth-modal-email" style="font-family: monospace; color: var(--primary);">bsdaoquangtrung@gmail.com</span></p>
+          <p style="margin-top: 6px;"><strong>Vai trò (Role):</strong> <span id="auth-modal-role" class="role-badge role-admin">ADMIN</span></p>
         </div>
 
-        <h4 style="font-size: 13px; color: var(--text-main); margin-bottom: 10px;">Chuyển đổi vai trò thử nghiệm (Role Switcher - Mục II & XXXVI):</h4>
+        <h4 style="font-size: 13px; color: var(--text-main); margin-bottom: 10px;">Chuyển đổi vai trò thử nghiệm (Role Switcher - Khoa Vi sinh):</h4>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-          <button class="btn-role-switch" data-role="admin" style="padding: 10px; border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: 6px; font-weight: 600; cursor: pointer;">
-            <i class="fa-solid fa-crown"></i> Admin (Toàn quyền)
+          <button class="btn-role-switch" data-role="admin" style="padding: 10px; border: 1px solid #fca5a5; background: #fee2e2; color: #991b1b; border-radius: 6px; font-weight: 600; cursor: pointer; text-align: left;">
+            <i class="fa-solid fa-crown"></i> <strong>Admin (Toàn quyền)</strong><br><small style="font-size: 11px; opacity: 0.9;">BS.CK2 Đào Quang Trung</small>
           </button>
-          <button class="btn-role-switch" data-role="manager" style="padding: 10px; border: 1px solid #fde68a; background: #fef3c7; color: #92400e; border-radius: 6px; font-weight: 600; cursor: pointer;">
-            <i class="fa-solid fa-user-tie"></i> Manager (Quản lý)
+          <button class="btn-role-switch" data-role="manager" style="padding: 10px; border: 1px solid #fde68a; background: #fef3c7; color: #92400e; border-radius: 6px; font-weight: 600; cursor: pointer; text-align: left;">
+            <i class="fa-solid fa-user-tie"></i> <strong>Manager (Quản lý)</strong><br><small style="font-size: 11px; opacity: 0.9;">BS.CKI Chu Thị Huyền</small>
           </button>
-          <button class="btn-role-switch" data-role="user" style="padding: 10px; border: 1px solid #bae6fd; background: #e0f2fe; color: #075985; border-radius: 6px; font-weight: 600; cursor: pointer;">
-            <i class="fa-solid fa-user"></i> User (Kỹ thuật viên)
+          <button class="btn-role-switch" data-role="user" style="padding: 10px; border: 1px solid #bae6fd; background: #e0f2fe; color: #075985; border-radius: 6px; font-weight: 600; cursor: pointer; text-align: left;">
+            <i class="fa-solid fa-user"></i> <strong>User (Kỹ thuật viên)</strong><br><small style="font-size: 11px; opacity: 0.9;">CN.XN Vũ Thị Thu Trang</small>
           </button>
-          <button class="btn-role-switch" data-role="viewer" style="padding: 10px; border: 1px solid #e5e7eb; background: #f3f4f6; color: #374151; border-radius: 6px; font-weight: 600; cursor: pointer;">
-            <i class="fa-solid fa-eye"></i> Viewer (Chỉ xem)
+          <button class="btn-role-switch" data-role="viewer" style="padding: 10px; border: 1px solid #e5e7eb; background: #f3f4f6; color: #374151; border-radius: 6px; font-weight: 600; cursor: pointer; text-align: left;">
+            <i class="fa-solid fa-eye"></i> <strong>Viewer (Chỉ xem)</strong><br><small style="font-size: 11px; opacity: 0.9;">Hộ lý Nguyễn Thị Lan</small>
           </button>
         </div>
 

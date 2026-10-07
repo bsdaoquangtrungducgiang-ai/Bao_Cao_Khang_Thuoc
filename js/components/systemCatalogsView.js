@@ -56,7 +56,7 @@ const SystemCatalogsView = {
         fileName: 'Du_Lieu_Vi_Sinh_Thang_09_2026.xlsx',
         fileType: 'xlsx',
         date: '2026-09-28 14:30',
-        uploader: 'TS.BS. Nguyễn Văn An',
+        uploader: 'BS.CK2. Đào Quang Trung',
         total: 1000,
         success: 970,
         warning: 20,
@@ -67,7 +67,7 @@ const SystemCatalogsView = {
         fileName: 'Khang_Sinh_Do_ICU_Tuan_38.csv',
         fileType: 'csv',
         date: '2026-09-27 09:15',
-        uploader: 'ThS. Trần Thị Mai',
+        uploader: 'BS.CKI. Chu Thị Huyền',
         total: 150,
         success: 150,
         warning: 0,
@@ -170,21 +170,79 @@ const SystemCatalogsView = {
     const tbody = document.getElementById('table-users-body');
     if (!tbody) return;
 
-    const users = Object.values(window.AuthService?.demoUsers || {});
-    tbody.innerHTML = '';
+    const users = (window.AuthService?.getUserList && window.AuthService.getUserList()) || 
+                  Object.values(window.AuthService?.demoUsers || {});
 
-    users.forEach((u, idx) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="text-align: center;">${idx + 1}</td>
-        <td><strong>${u.full_name}</strong></td>
-        <td>${u.email}</td>
-        <td>${u.department}</td>
-        <td style="text-align: center;"><span class="role-badge role-${u.role}">${u.role.toUpperCase()}</span></td>
-        <td style="text-align: center;"><span class="badge-status badge-s">Đang hoạt động</span></td>
-      `;
-      tbody.appendChild(tr);
-    });
+    const renderRows = (list) => {
+      tbody.innerHTML = '';
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">Không tìm thấy nhân viên phù hợp</td></tr>';
+        return;
+      }
+
+      list.forEach((u, idx) => {
+        const tr = document.createElement('tr');
+        
+        let roleBadgeClass = 'role-user';
+        let roleBadgeText = 'USER';
+        if (u.role === 'admin') {
+          roleBadgeClass = 'role-admin';
+          roleBadgeText = 'ADMIN';
+        } else if (u.role === 'manager') {
+          roleBadgeClass = 'role-manager';
+          roleBadgeText = 'MANAGER';
+        } else if (u.role === 'viewer') {
+          roleBadgeClass = 'role-viewer';
+          roleBadgeText = 'VIEWER';
+        }
+
+        const isRedMail = [2, 3, 4, 5, 6, 7, 8].includes(u.stt);
+        const emailColor = isRedMail ? '#dc2626' : '#0284c7';
+
+        tr.innerHTML = `
+          <td style="text-align: center; font-weight: 700; color: #0f172a;">${u.stt || (idx + 1)}</td>
+          <td><strong style="color: #0f172a; font-size: 13.5px;">${u.full_name}</strong></td>
+          <td><span class="badge-tag" style="font-weight: 700; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 3px 8px; border-radius: 4px;">${u.title || '-'}</span></td>
+          <td>
+            <a href="mailto:${u.email}" style="color: ${emailColor}; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <i class="fa-regular fa-envelope" style="color: ${emailColor}; font-size: 12px;"></i> ${u.email}
+            </a>
+          </td>
+          <td><span style="color: #475569; font-weight: 500;">${u.department || 'Khoa Vi sinh'}</span></td>
+          <td style="text-align: center;">
+            <span class="role-badge ${roleBadgeClass}" style="font-weight: 700; padding: 3px 8px; border-radius: 4px;">${roleBadgeText}</span>
+          </td>
+          <td style="text-align: center;">
+            <span class="badge-status badge-success" style="background: #dcfce7; color: #15803d !important; border: 1px solid #86efac; font-weight: 600; padding: 3px 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px;">
+              <i class="fa-solid fa-circle-check"></i> Đang hoạt động
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    };
+
+    renderRows(users);
+
+    // Tìm kiếm nhân viên thời gian thực
+    const searchInput = document.getElementById('search-users');
+    if (searchInput && !searchInput.dataset.bound) {
+      searchInput.dataset.bound = 'true';
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        if (!query) {
+          renderRows(users);
+          return;
+        }
+        const filtered = users.filter(u => 
+          (u.full_name && u.full_name.toLowerCase().includes(query)) ||
+          (u.title && u.title.toLowerCase().includes(query)) ||
+          (u.email && u.email.toLowerCase().includes(query)) ||
+          (u.role && u.role.toLowerCase().includes(query))
+        );
+        renderRows(filtered);
+      });
+    }
   },
 
   // 4. NHẬT KÝ KIỂM TOÁN AUDIT LOG (Section XXXV)

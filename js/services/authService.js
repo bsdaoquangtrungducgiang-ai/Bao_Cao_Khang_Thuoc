@@ -8,36 +8,180 @@ const AuthService = {
   currentProfile: null,
   listeners: [],
 
-  // Mặc định tài khoản thử nghiệm khi chạy offline hoặc demo
+  // Danh sách đầy đủ 12 nhân sự khoa Vi sinh - BV Đa khoa Đức Giang
+  userList: [
+    {
+      stt: 1,
+      id: 'usr-01',
+      full_name: 'Đào Quang Trung',
+      title: 'BS.CK2',
+      email: 'bsdaoquangtrung@gmail.com',
+      role: 'admin',
+      role_title: 'Admin (Toàn quyền)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 2,
+      id: 'usr-02',
+      full_name: 'Chu Thị Huyền',
+      title: 'BS.CKI',
+      email: 'huyenct1992@gmail.com',
+      role: 'manager',
+      role_title: 'Manager (Bác sĩ điều trị / Quản lý)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 3,
+      id: 'usr-03',
+      full_name: 'Vũ Thị Thu Trang',
+      title: 'CN.XN',
+      email: 'vutrangbvdg@gmail.com',
+      role: 'user',
+      role_title: 'User (Cử nhân Xét nghiệm)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 4,
+      id: 'usr-04',
+      full_name: 'Nguyễn Ngọc Linh',
+      title: 'CN.XN',
+      email: 'linh30011987@gmail.com',
+      role: 'user',
+      role_title: 'User (Cử nhân Xét nghiệm)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 5,
+      id: 'usr-05',
+      full_name: 'Đỗ Quốc Hưng',
+      title: 'CN.XN',
+      email: 'batqua3@gmail.com',
+      role: 'user',
+      role_title: 'User (Cử nhân Xét nghiệm)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 6,
+      id: 'usr-06',
+      full_name: 'Trần Thúy Liên',
+      title: 'Thạc Sỹ',
+      email: 'tranthuyliench22@gmail.com',
+      role: 'manager',
+      role_title: 'Manager (Thạc sĩ Xét nghiệm)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 7,
+      id: 'usr-07',
+      full_name: 'Trần Thị Quy',
+      title: 'Thạc Sỹ',
+      email: 'quycnsh@gmail.com',
+      role: 'manager',
+      role_title: 'Manager (Thạc sĩ Xét nghiệm)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 8,
+      id: 'usr-08',
+      full_name: 'Nguyễn Thị Kim Loan',
+      title: 'KTV – CĐ',
+      email: 'Kimloannguyen18977@gmail.com',
+      role: 'user',
+      role_title: 'User (Kỹ thuật viên Cao đẳng)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 9,
+      id: 'usr-09',
+      full_name: 'Nghiêm Thị Làn',
+      title: 'KTV – CĐ',
+      email: 'chilanhn82@gmail.com',
+      role: 'user',
+      role_title: 'User (Kỹ thuật viên Cao đẳng)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 10,
+      id: 'usr-10',
+      full_name: 'Trần Thanh Bình',
+      title: 'KTV – CĐ',
+      email: 'T.bjnho2@gmail.com',
+      role: 'user',
+      role_title: 'User (Kỹ thuật viên Cao đẳng)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 11,
+      id: 'usr-11',
+      full_name: 'Nguyễn Duy Dũng',
+      title: 'KTV – CĐ',
+      email: 'nguyendungyk87@gmail.com',
+      role: 'user',
+      role_title: 'User (Kỹ thuật viên Cao đẳng)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    },
+    {
+      stt: 12,
+      id: 'usr-12',
+      full_name: 'Nguyễn Thị Lan',
+      title: 'Hộ Lý',
+      email: 'nhim01011983@gmail.com',
+      role: 'viewer',
+      role_title: 'Viewer (Hộ lý / Chỉ xem)',
+      department: 'Khoa Vi sinh',
+      status: 'active'
+    }
+  ],
+
+  // Mặc định tài khoản thử nghiệm khi chạy offline hoặc demo (theo 4 vai trò chính)
   demoUsers: {
     admin: {
-      id: 'demo-admin-01',
-      email: 'admin.visinh@hospital.vn',
-      full_name: 'TS.BS. Nguyễn Văn An (Trưởng khoa)',
+      id: 'usr-01',
+      email: 'bsdaoquangtrung@gmail.com',
+      full_name: 'BS.CK2. Đào Quang Trung (Lãnh đạo / Trưởng khoa)',
+      title: 'BS.CK2',
       role: 'admin',
       department: 'Khoa Vi sinh'
     },
     manager: {
-      id: 'demo-mgr-02',
-      email: 'manager.visinh@hospital.vn',
-      full_name: 'ThS. Trần Thị Mai (Kỹ thuật viên trưởng)',
+      id: 'usr-02',
+      email: 'huyenct1992@gmail.com',
+      full_name: 'BS.CKI. Chu Thị Huyền (Bác sĩ điều trị)',
+      title: 'BS.CKI',
       role: 'manager',
       department: 'Khoa Vi sinh'
     },
     user: {
-      id: 'demo-usr-03',
-      email: 'ktv.visinh@hospital.vn',
-      full_name: 'CN. Lê Hoàng Long (Kỹ thuật viên)',
+      id: 'usr-03',
+      email: 'vutrangbvdg@gmail.com',
+      full_name: 'CN.XN. Vũ Thị Thu Trang (Cử nhân Xét nghiệm)',
+      title: 'CN.XN',
       role: 'user',
       department: 'Khoa Vi sinh'
     },
     viewer: {
-      id: 'demo-view-04',
-      email: 'bacsi.lamsang@hospital.vn',
-      full_name: 'BS. Phạm Minh Tuấn (Bác sĩ Lâm sàng)',
+      id: 'usr-12',
+      email: 'nhim01011983@gmail.com',
+      full_name: 'Nguyễn Thị Lan (Hộ lý)',
+      title: 'Hộ Lý',
       role: 'viewer',
-      department: 'Khoa Hồi sức tích cực (ICU)'
+      department: 'Khoa Vi sinh'
     }
+  },
+
+  getUserList() {
+    return this.userList;
   },
 
   async init() {

@@ -77,6 +77,16 @@ const AuthModal = {
       roleBadgeEl.className = `role-badge role-${role}`;
     }
 
+    const modalNameEl = document.getElementById('auth-modal-name');
+    const modalEmailEl = document.getElementById('auth-modal-email');
+    const modalRoleEl = document.getElementById('auth-modal-role');
+    if (modalNameEl) modalNameEl.textContent = profile?.full_name || 'Khách';
+    if (modalEmailEl) modalEmailEl.textContent = profile?.email || 'Chưa thiết lập';
+    if (modalRoleEl) {
+      modalRoleEl.textContent = role.toUpperCase();
+      modalRoleEl.className = `role-badge role-${role}`;
+    }
+
     // Cập nhật các nút phân quyền trên UI
     document.querySelectorAll('[data-permission]').forEach(el => {
       const required = el.getAttribute('data-permission').split(',');
