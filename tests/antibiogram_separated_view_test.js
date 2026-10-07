@@ -159,6 +159,9 @@ assert(maxSEl.textContent.indexOf('MEM') !== -1 && maxSEl.textContent.indexOf('9
 var tbody = getOrCreateEl('table-abg-body', 'TBODY');
 AntibiogramView.renderTable(sampleRows);
 assert(tbody.children.length === 3, 'Bảng Antibiogram render đủ 3 hàng dữ liệu');
+var firstTr = tbody.children[0];
+assert(firstTr.innerHTML.indexOf('Ampicillin') !== -1, 'Cột 3 chứa tên kháng sinh Ampicillin');
+assert(firstTr.innerHTML.indexOf('Kháng sinh chuẩn') !== -1, 'Cột cuối chứa ô chỉ định điều trị');
 
 print('\n================================================================');
 print('  ✔ TOÀN BỘ CÁC BÀI TEST TÁCH BIỆT BẢNG & BIỂU ĐỒ ĐỀU ĐẠT 100%!');

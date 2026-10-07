@@ -911,93 +911,154 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
         <!-- ================= VIEW: ANTIBIOGRAM BÁO CÁO (MỤC XIX & XX) ================= -->
         <section class="view-panel" id="view-analytics_antibiogram">
           <div class="data-panel-card">
-            <div class="data-toolbar" style="align-items: flex-start; padding: 14px 16px; background: #ffffff; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
-              <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; flex: 1;">
-                <!-- 1. Chọn Vi Khuẩn (1 hoặc nhiều hoặc Tất cả - Mặc định: Tất cả) -->
-                <div class="filter-item custom-multiselect" id="ms-abg-organism">
-                  <span class="filter-label abg-field-label-red" style="color: #dc2626 !important; font-weight: 700 !important;"><i class="fa-solid fa-virus" style="color: #ef4444 !important;"></i> Vi Khuẩn (mặc định: Tất cả):</span>
-                  <button type="button" class="ms-trigger-btn" id="btn-ms-organism" title="Chọn vi khuẩn">
-                    <span class="ms-label-text" id="label-ms-organism">Tất cả vi khuẩn</span>
-                    <span class="ms-badge" id="badge-ms-organism">Tất cả</span>
-                    <i class="fa-solid fa-chevron-down ms-chevron"></i>
-                  </button>
-                  <div class="ms-dropdown-menu" id="menu-ms-organism" style="display: none;">
-                    <div class="ms-search-wrap">
-                      <input type="text" class="ms-search-input" id="search-ms-organism" placeholder="Tìm vi khuẩn..." />
-                    </div>
-                    <div class="ms-actions">
-                      <button type="button" class="ms-btn-action" id="btn-ms-org-all">Chọn tất cả</button>
-                      <button type="button" class="ms-btn-action" id="btn-ms-org-clear">Bỏ chọn</button>
-                    </div>
-                    <div class="ms-options-list" id="list-ms-organism"></div>
+            <!-- Bộ lọc phân tích Antibiogram đa chiều dạng thẻ (Cards) hiện đại, không lẫn nhau -->
+            <div class="abg-filter-container">
+              <div class="abg-filter-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="abg-filter-icon-box">
+                    <i class="fa-solid fa-sliders"></i>
+                  </span>
+                  <div>
+                    <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #0f172a; letter-spacing: 0.1px;">
+                      BỘ LỌC PHÂN TÍCH ANTIBIOGRAM ĐA CHIỀU
+                    </h4>
+                    <span style="font-size: 12px; color: #64748b;">
+                      Tùy biến tiêu chí vi sinh, mẫu bệnh phẩm, khoa điều trị và phạm vi kháng sinh
+                    </span>
                   </div>
-                  <select class="filter-select" id="abg-select-organism" style="display:none;"></select>
                 </div>
-
-                <!-- 2. Loại Bệnh Phẩm (1 hoặc nhiều hoặc Tất cả - Mặc định: Tất cả) -->
-                <div class="filter-item custom-multiselect" id="ms-abg-specimen">
-                  <span class="filter-label abg-field-label-red" style="color: #dc2626 !important; font-weight: 700 !important;"><i class="fa-solid fa-vial" style="color: #ef4444 !important;"></i> Bệnh Phẩm (mặc định: Tất cả):</span>
-                  <button type="button" class="ms-trigger-btn" id="btn-ms-specimen" title="Chọn bệnh phẩm">
-                    <span class="ms-label-text" id="label-ms-specimen">Tất cả bệnh phẩm</span>
-                    <span class="ms-badge" id="badge-ms-specimen">Tất cả</span>
-                    <i class="fa-solid fa-chevron-down ms-chevron"></i>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <button class="btn-reset-filters" id="btn-reset-abg-filters" title="Đặt lại về mặc định" style="padding: 7px 14px; font-size: 12.5px;">
+                    <i class="fa-solid fa-rotate-left"></i> Đặt lại
                   </button>
-                  <div class="ms-dropdown-menu" id="menu-ms-specimen" style="display: none;">
-                    <div class="ms-search-wrap">
-                      <input type="text" class="ms-search-input" id="search-ms-specimen" placeholder="Tìm bệnh phẩm..." />
-                    </div>
-                    <div class="ms-actions">
-                      <button type="button" class="ms-btn-action" id="btn-ms-spec-all">Chọn tất cả</button>
-                      <button type="button" class="ms-btn-action" id="btn-ms-spec-clear">Bỏ chọn</button>
-                    </div>
-                    <div class="ms-options-list" id="list-ms-specimen"></div>
+                  <button class="btn-setup-action" id="btn-export-abg-excel" style="background: #059669; padding: 7px 16px; font-size: 12.5px;">
+                    <i class="fa-solid fa-file-excel"></i> Xuất Excel
+                  </button>
+                  <button class="btn-reset-filters" id="btn-print-abg" style="padding: 7px 14px; font-size: 12.5px;">
+                    <i class="fa-solid fa-print"></i> In Báo Cáo
+                  </button>
+                </div>
+              </div>
+
+              <div class="abg-filter-grid">
+                <!-- THẺ 1: Vi Khuẩn (mặc định: Tất cả) -->
+                <div class="abg-filter-tile" id="tile-filter-organism">
+                  <div class="abg-filter-tile-header">
+                    <span class="filter-label abg-field-label-red">
+                      <i class="fa-solid fa-virus"></i> Vi Khuẩn (mặc định: Tất cả):
+                    </span>
+                    <span class="abg-tile-tag">Chủng vi khuẩn</span>
                   </div>
-                  <select class="filter-select" id="abg-select-specimen" style="display:none;"></select>
-                </div>
-
-                <!-- 3. Bổ sung Khoa Phòng (Mặc định: Toàn viện) -->
-                <div class="filter-item custom-multiselect" id="ms-abg-department">
-                  <span class="filter-label abg-field-label-red" style="color: #dc2626 !important; font-weight: 700 !important;"><i class="fa-solid fa-hospital-user" style="color: #ef4444 !important;"></i> Khoa Phòng (mặc định: Toàn viện):</span>
-                  <button type="button" class="ms-trigger-btn" id="btn-ms-department" title="Chọn khoa phòng">
-                    <span class="ms-label-text" id="label-ms-department">Toàn viện (Tất cả khoa)</span>
-                    <span class="ms-badge" id="badge-ms-department">Toàn viện</span>
-                    <i class="fa-solid fa-chevron-down ms-chevron"></i>
-                  </button>
-                  <div class="ms-dropdown-menu" id="menu-ms-department" style="display: none;">
-                    <div class="ms-search-wrap">
-                      <input type="text" class="ms-search-input" id="search-ms-department" placeholder="Tìm khoa phòng..." />
+                  <div class="custom-multiselect" id="ms-abg-organism" style="width: 100%;">
+                    <button type="button" class="ms-trigger-btn" id="btn-ms-organism" title="Chọn vi khuẩn">
+                      <span class="ms-label-text" id="label-ms-organism">Tất cả vi khuẩn</span>
+                      <span class="ms-badge" id="badge-ms-organism">Tất cả</span>
+                      <i class="fa-solid fa-chevron-down ms-chevron"></i>
+                    </button>
+                    <div class="ms-dropdown-menu" id="menu-ms-organism" style="display: none; width: 100%; min-width: 290px;">
+                      <div class="ms-search-wrap">
+                        <input type="text" class="ms-search-input" id="search-ms-organism" placeholder="Tìm vi khuẩn..." />
+                      </div>
+                      <div class="ms-actions">
+                        <button type="button" class="ms-btn-action" id="btn-ms-org-all">Chọn tất cả</button>
+                        <button type="button" class="ms-btn-action" id="btn-ms-org-clear">Bỏ chọn</button>
+                      </div>
+                      <div class="ms-options-list" id="list-ms-organism"></div>
                     </div>
-                    <div class="ms-actions">
-                      <button type="button" class="ms-btn-action" id="btn-ms-dept-all">Chọn tất cả</button>
-                      <button type="button" class="ms-btn-action" id="btn-ms-dept-clear">Bỏ chọn</button>
-                    </div>
-                    <div class="ms-options-list" id="list-ms-department"></div>
+                    <select class="filter-select" id="abg-select-organism" style="display:none;"></select>
                   </div>
                 </div>
 
-                <!-- 4. Kháng Sinh (Tách đủ 63 loại kháng sinh theo danh mục chuẩn - Mặc định: Tất cả 63 loại) -->
-                <div class="filter-item custom-multiselect" id="ms-abg-antibiotic">
-                  <span class="filter-label abg-field-label-red" style="color: #dc2626 !important; font-weight: 700 !important;"><i class="fa-solid fa-capsules" style="color: #ef4444 !important;"></i> Kháng Sinh (63 loại):</span>
-                  <button type="button" class="ms-trigger-btn" id="btn-ms-antibiotic" title="Chọn kháng sinh phân tích">
-                    <span class="ms-label-text" id="label-ms-antibiotic">Tất cả 63 kháng sinh</span>
-                    <span class="ms-badge" id="badge-ms-antibiotic">Tất cả (63)</span>
-                    <i class="fa-solid fa-chevron-down ms-chevron"></i>
-                  </button>
-                  <div class="ms-dropdown-menu" id="menu-ms-antibiotic" style="display: none; min-width: 320px;">
-                    <div class="ms-search-wrap">
-                      <input type="text" class="ms-search-input" id="search-ms-antibiotic" placeholder="Tìm theo mã hoặc tên kháng sinh..." />
+                <!-- THẺ 2: Bệnh Phẩm (mặc định: Tất cả) -->
+                <div class="abg-filter-tile" id="tile-filter-specimen">
+                  <div class="abg-filter-tile-header">
+                    <span class="filter-label abg-field-label-red">
+                      <i class="fa-solid fa-vial"></i> Bệnh Phẩm (mặc định: Tất cả):
+                    </span>
+                    <span class="abg-tile-tag">Mẫu xét nghiệm</span>
+                  </div>
+                  <div class="custom-multiselect" id="ms-abg-specimen" style="width: 100%;">
+                    <button type="button" class="ms-trigger-btn" id="btn-ms-specimen" title="Chọn bệnh phẩm">
+                      <span class="ms-label-text" id="label-ms-specimen">Tất cả bệnh phẩm</span>
+                      <span class="ms-badge" id="badge-ms-specimen">Tất cả</span>
+                      <i class="fa-solid fa-chevron-down ms-chevron"></i>
+                    </button>
+                    <div class="ms-dropdown-menu" id="menu-ms-specimen" style="display: none; width: 100%; min-width: 290px;">
+                      <div class="ms-search-wrap">
+                        <input type="text" class="ms-search-input" id="search-ms-specimen" placeholder="Tìm bệnh phẩm..." />
+                      </div>
+                      <div class="ms-actions">
+                        <button type="button" class="ms-btn-action" id="btn-ms-spec-all">Chọn tất cả</button>
+                        <button type="button" class="ms-btn-action" id="btn-ms-spec-clear">Bỏ chọn</button>
+                      </div>
+                      <div class="ms-options-list" id="list-ms-specimen"></div>
                     </div>
-                    <div class="ms-actions">
-                      <button type="button" class="ms-btn-action" id="btn-ms-abx-all">Chọn tất cả</button>
-                      <button type="button" class="ms-btn-action" id="btn-ms-abx-clear">Bỏ chọn</button>
-                    </div>
-                    <div class="ms-options-list" id="list-ms-antibiotic"></div>
+                    <select class="filter-select" id="abg-select-specimen" style="display:none;"></select>
                   </div>
                 </div>
 
-                <!-- 5. Lựa chọn theo Giới Tính (Mặc định: Tất cả) -->
-                <div class="filter-item">
-                  <span class="filter-label abg-field-label-red" style="color: #dc2626 !important; font-weight: 700 !important;"><i class="fa-solid fa-venus-mars" style="color: #ef4444 !important;"></i> Giới tính:</span>
+                <!-- THẺ 3: Khoa Phòng (mặc định: Toàn viện) -->
+                <div class="abg-filter-tile" id="tile-filter-department">
+                  <div class="abg-filter-tile-header">
+                    <span class="filter-label abg-field-label-red">
+                      <i class="fa-solid fa-hospital-user"></i> Khoa Phòng (mặc định: Toàn viện):
+                    </span>
+                    <span class="abg-tile-tag">Khoa lâm sàng</span>
+                  </div>
+                  <div class="custom-multiselect" id="ms-abg-department" style="width: 100%;">
+                    <button type="button" class="ms-trigger-btn" id="btn-ms-department" title="Chọn khoa phòng">
+                      <span class="ms-label-text" id="label-ms-department">Toàn viện (Tất cả khoa)</span>
+                      <span class="ms-badge" id="badge-ms-department">Toàn viện</span>
+                      <i class="fa-solid fa-chevron-down ms-chevron"></i>
+                    </button>
+                    <div class="ms-dropdown-menu" id="menu-ms-department" style="display: none; width: 100%; min-width: 290px;">
+                      <div class="ms-search-wrap">
+                        <input type="text" class="ms-search-input" id="search-ms-department" placeholder="Tìm khoa phòng..." />
+                      </div>
+                      <div class="ms-actions">
+                        <button type="button" class="ms-btn-action" id="btn-ms-dept-all">Chọn tất cả</button>
+                        <button type="button" class="ms-btn-action" id="btn-ms-dept-clear">Bỏ chọn</button>
+                      </div>
+                      <div class="ms-options-list" id="list-ms-department"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- THẺ 4: Kháng Sinh (63 loại) -->
+                <div class="abg-filter-tile" id="tile-filter-antibiotic">
+                  <div class="abg-filter-tile-header">
+                    <span class="filter-label abg-field-label-red">
+                      <i class="fa-solid fa-capsules"></i> Kháng Sinh (63 loại):
+                    </span>
+                    <span class="abg-tile-tag" style="background:#fee2e2; color:#b91c1c;">63 Danh mục</span>
+                  </div>
+                  <div class="custom-multiselect" id="ms-abg-antibiotic" style="width: 100%;">
+                    <button type="button" class="ms-trigger-btn" id="btn-ms-antibiotic" title="Chọn kháng sinh phân tích">
+                      <span class="ms-label-text" id="label-ms-antibiotic">Tất cả 63 kháng sinh</span>
+                      <span class="ms-badge" id="badge-ms-antibiotic">Tất cả (63)</span>
+                      <i class="fa-solid fa-chevron-down ms-chevron"></i>
+                    </button>
+                    <div class="ms-dropdown-menu" id="menu-ms-antibiotic" style="display: none; min-width: 330px;">
+                      <div class="ms-search-wrap">
+                        <input type="text" class="ms-search-input" id="search-ms-antibiotic" placeholder="Tìm theo mã hoặc tên kháng sinh..." />
+                      </div>
+                      <div class="ms-actions">
+                        <button type="button" class="ms-btn-action" id="btn-ms-abx-all">Chọn tất cả</button>
+                        <button type="button" class="ms-btn-action" id="btn-ms-abx-clear">Bỏ chọn</button>
+                      </div>
+                      <div class="ms-options-list" id="list-ms-antibiotic"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- THẺ 5: Giới Tính -->
+                <div class="abg-filter-tile" id="tile-filter-gender">
+                  <div class="abg-filter-tile-header">
+                    <span class="filter-label abg-field-label-red">
+                      <i class="fa-solid fa-venus-mars"></i> Giới tính:
+                    </span>
+                    <span class="abg-tile-tag">Bệnh nhân</span>
+                  </div>
                   <select class="filter-select" id="abg-select-gender">
                     <option value="ALL" selected>Tất cả giới tính</option>
                     <option value="Nam">Nam</option>
@@ -1005,9 +1066,14 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   </select>
                 </div>
 
-                <!-- 6. Năm -->
-                <div class="filter-item">
-                  <span class="filter-label abg-field-label-red" style="color: #dc2626 !important; font-weight: 700 !important;"><i class="fa-regular fa-calendar" style="color: #ef4444 !important;"></i> Năm:</span>
+                <!-- THẺ 6: Năm -->
+                <div class="abg-filter-tile" id="tile-filter-year">
+                  <div class="abg-filter-tile-header">
+                    <span class="filter-label abg-field-label-red">
+                      <i class="fa-regular fa-calendar"></i> Năm:
+                    </span>
+                    <span class="abg-tile-tag">Thời gian</span>
+                  </div>
                   <select class="filter-select" id="abg-select-year">
                     <option value="ALL" selected>Tất cả các năm</option>
                     <option value="2026">2026</option>
@@ -1015,19 +1081,6 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                     <option value="2024">2024</option>
                   </select>
                 </div>
-              </div>
-
-              <!-- Action buttons -->
-              <div style="display: flex; gap: 8px; align-items: center; padding-top: 18px;">
-                <button class="btn-reset-filters" id="btn-reset-abg-filters" title="Đặt lại về mặc định" style="padding: 7px 12px; font-size: 13px;">
-                  <i class="fa-solid fa-rotate-left"></i> Đặt lại
-                </button>
-                <button class="btn-setup-action" id="btn-export-abg-excel" style="background: #059669; padding: 7px 14px; font-size: 13px;">
-                  <i class="fa-solid fa-file-excel"></i> Xuất Excel
-                </button>
-                <button class="btn-reset-filters" id="btn-print-abg" style="padding: 7px 12px; font-size: 13px;">
-                  <i class="fa-solid fa-print"></i> In Báo Cáo
-                </button>
               </div>
             </div>
 
@@ -1076,7 +1129,6 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   </span>
                   <div>
                     <h4 class="abg-section-title">1. BẢNG SỐ LIỆU KHÁNG SINH ĐỒ (ANTIBIOGRAM) CHI TIẾT</h4>
-                    <div class="abg-section-subtitle">Hiển thị đầy đủ toàn bộ 8 thông số định lượng và chỉ định lâm sàng của từng kháng sinh</div>
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
@@ -1091,13 +1143,14 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   <thead style="position: sticky; top: 0; z-index: 5;">
                     <tr>
                       <th style="width: 45px; text-align: center;">STT</th>
-                      <th style="width: 85px;">Mã KS</th>
-                      <th>Kháng Sinh & Chỉ Định Điều Trị</th>
-                      <th style="text-align: center; width: 115px;">%S (Nhạy)</th>
-                      <th style="text-align: center; width: 115px;">%I (TG)</th>
-                      <th style="text-align: center; width: 115px;">%R (Kháng)</th>
-                      <th style="text-align: center; width: 100px;">Tổng mẫu (N)</th>
-                      <th style="width: 140px; text-align: center;">Phân bố tỷ lệ (S/I/R)</th>
+                      <th style="width: 80px;">Mã KS</th>
+                      <th style="width: 170px;">Kháng Sinh</th>
+                      <th style="text-align: center; width: 105px;">%S (Nhạy)</th>
+                      <th style="text-align: center; width: 105px;">%I (TG)</th>
+                      <th style="text-align: center; width: 105px;">%R (Kháng)</th>
+                      <th style="text-align: center; width: 95px;">Tổng mẫu (N)</th>
+                      <th style="width: 130px; text-align: center;">Phân bố tỷ lệ (S/I/R)</th>
+                      <th>Chỉ Định Điều Trị</th>
                     </tr>
                   </thead>
                   <tbody id="table-abg-body"></tbody>

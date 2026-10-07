@@ -918,7 +918,7 @@ const AntibiogramView = {
     if (rows.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align:center; padding: 36px 16px; color: #64748b;">
+          <td colspan="9" style="text-align:center; padding: 36px 16px; color: #64748b;">
             <i class="fa-solid fa-filter-circle-xmark" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 8px; display: block;"></i>
             <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">Không có dữ liệu kháng sinh đồ cho các tiêu chí lọc đã chọn</div>
             <div style="font-size: 12px; color: #94a3b8;">Thử chọn lại tiêu chí "Tất cả vi khuẩn" hoặc "Toàn viện (Tất cả khoa)" để xem tổng quan.</div>
@@ -933,10 +933,7 @@ const AntibiogramView = {
       tr.innerHTML = `
         <td style="text-align: center; color: var(--text-muted); font-size: 12px;">${r.stt || (idx + 1)}</td>
         <td><strong style="color: #0369a1; font-family: monospace; font-size: 13px;">${r.code}</strong></td>
-        <td>
-          <div style="font-weight: 600; color: var(--text-main); font-size: 13.5px;">${r.name || r.code}</div>
-          ${r.indication ? `<div style="font-size: 11.5px; color: #475569; margin-top: 2px;"><i class="fa-solid fa-notes-medical" style="font-size: 10px; color: #0284c7;"></i> ${r.indication}</div>` : ''}
-        </td>
+        <td><strong style="color: var(--text-main); font-size: 13.5px;">${r.name || r.code}</strong></td>
         <td style="text-align: center; font-weight: 700; color: var(--color-s);">${r.sRate}% <span style="font-size: 10.5px; color: var(--text-muted);">(${r.sCount})</span></td>
         <td style="text-align: center; font-weight: 700; color: var(--color-i);">${r.iRate}% <span style="font-size: 10.5px; color: var(--text-muted);">(${r.iCount})</span></td>
         <td style="text-align: center; font-weight: 700; color: var(--color-r);">${r.rRate}% <span style="font-size: 10.5px; color: var(--text-muted);">(${r.rCount})</span></td>
@@ -947,6 +944,9 @@ const AntibiogramView = {
             <div style="width: ${r.iRate}%; background: var(--color-i);"></div>
             <div style="width: ${r.rRate}%; background: var(--color-r);"></div>
           </div>
+        </td>
+        <td style="color: #334155; font-size: 12px; line-height: 1.4;">
+          ${r.indication ? `<span style="display: inline-flex; align-items: flex-start; gap: 5px;"><i class="fa-solid fa-notes-medical" style="color: #0284c7; margin-top: 2px; font-size: 11px;"></i> <span>${r.indication}</span></span>` : '<span style="color: #94a3b8; font-style: italic;">Kháng sinh chuẩn</span>'}
         </td>
       `;
       tbody.appendChild(tr);
