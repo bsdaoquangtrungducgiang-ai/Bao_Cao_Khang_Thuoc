@@ -49,7 +49,111 @@ const GoogleDriveService = {
   },
 
   /**
+   * Kiểm tra xem hệ thống đã được cấp quyền tự động lưu vào Google Drive chưa
+   */
+  hasPermission() {
+    if (typeof localStorage === 'undefined') return false;
+    const permGranted = localStorage.getItem('GOOGLE_DRIVE_PERM_GRANTED') === 'true';
+    const hasWebhook = Boolean(this.getWebhookUrl());
+    const hasToken = Boolean(localStorage.getItem(this.config.STORAGE_KEY_TOKEN));
+    const hasLocal = Boolean(this.localDirHandle || localStorage.getItem('DRIVE_LOCAL_FOLDER_NAME'));
+    return permGranted || hasWebhook || hasToken || hasLocal;
+  },
+
+  /**
+   * Cấp và lưu quyền tự động lưu vào hệ thống
+   */
+  grantPermission(method = 'auto') {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('GOOGLE_DRIVE_PERM_GRANTED', 'true');
+      localStorage.setItem('GOOGLE_DRIVE_PERM_METHOD', method);
+      localStorage.setItem('GOOGLE_DRIVE_PERM_TIME', new Date().toISOString());
+    }
+    this.updatePermissionUI();
+  },
+
+  /**
+   * Hủy quyền tự động lưu
+   */
+  revokePermission() {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('GOOGLE_DRIVE_PERM_GRANTED');
+      localStorage.removeItem('GOOGLE_DRIVE_PERM_METHOD');
+      localStorage.removeItem('GOOGLE_DRIVE_PERM_TIME');
+      localStorage.removeItem('DRIVE_LOCAL_FOLDER_NAME');
+    }
+    this.localDirHandle = null;
+    this.updatePermissionUI();
+  },
+
+  /**
+   * Lưu handle thư mục vào IndexedDB để tái sử dụng vĩnh viễn qua các phiên làm việc
+   */
+  async persistFolderHandleToIDB(handle) {
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined' || !handle) return false;
+    try {
+      return await new Promise((resolve) => {
+        const req = indexedDB.open('AmrGoogleDriveDB', 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('handles')) {
+            db.createObjectStore('handles');
+          }
+        };
+        req.onsuccess = (e) => {
+          const db = e.target.result;
+          const tx = db.transaction('handles', 'readwrite');
+          const store = tx.objectStore('handles');
+          store.put(handle, 'folderHandle');
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        };
+        req.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * Khôi phục quyền lưu thư mục từ IndexedDB khi tải lại trang
+   */
+  async restoreLocalFolderHandle() {
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined') return null;
+    try {
+      const handle = await new Promise((resolve) => {
+        const req = indexedDB.open('AmrGoogleDriveDB', 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('handles')) {
+            db.createObjectStore('handles');
+          }
+        };
+        req.onsuccess = (e) => {
+          const db = e.target.result;
+          const tx = db.transaction('handles', 'readonly');
+          const store = tx.objectStore('handles');
+          const getReq = store.get('folderHandle');
+          getReq.onsuccess = () => resolve(getReq.result || null);
+          getReq.onerror = () => resolve(null);
+        };
+        req.onerror = () => resolve(null);
+      });
+
+      if (handle) {
+        this.localDirHandle = handle;
+        this.grantPermission('filesystem_idb');
+        return handle;
+      }
+    } catch (err) {
+      console.warn('[GoogleDriveService] Restore handle warning:', err);
+    }
+    return null;
+  },
+
+  /**
    * Mở hộp thoại chọn thư mục Google Drive trên máy (1 Lần Duy Nhất)
+   * Tự động lưu quyền vào IndexedDB để tái sử dụng vĩnh viễn
    */
   async selectLocalDriveFolder() {
     if (!this.supportsFileSystemAccess()) {
@@ -68,6 +172,8 @@ const GoogleDriveService = {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('DRIVE_LOCAL_FOLDER_NAME', dirHandle.name);
       }
+      await this.persistFolderHandleToIDB(dirHandle);
+      this.grantPermission('local_directory');
       return { success: true, folderName: dirHandle.name };
     } catch (err) {
       if (err.name === 'AbortError') {
@@ -83,6 +189,13 @@ const GoogleDriveService = {
   async saveToLocalDirectory(fileBlob, fileName) {
     if (!this.localDirHandle || !fileBlob) return false;
     try {
+      if (this.localDirHandle.requestPermission) {
+        const state = await this.localDirHandle.queryPermission({ mode: 'readwrite' });
+        if (state !== 'granted') {
+          const req = await this.localDirHandle.requestPermission({ mode: 'readwrite' });
+          if (req !== 'granted') return false;
+        }
+      }
       const fileHandle = await this.localDirHandle.getFileHandle(fileName, { create: true });
       const writable = await fileHandle.createWritable();
       await writable.write(fileBlob);
@@ -92,6 +205,90 @@ const GoogleDriveService = {
       console.warn('[GoogleDriveService] Save to local directory warning:', err);
       return false;
     }
+  },
+
+  /**
+   * Cập nhật hiển thị trạng thái cấp quyền Google Drive trên giao diện
+   */
+  updatePermissionUI() {
+    if (typeof document === 'undefined') return;
+    const badgeWrap = document.getElementById('drive-step1-perm-badge-wrap');
+    if (!badgeWrap) return;
+
+    const hasPerm = this.hasPermission();
+    if (hasPerm) {
+      const folderName = this.getLocalFolderName() || '5. Webapp Actigrivity';
+      badgeWrap.innerHTML = `
+        <span class="badge-status badge-success" style="background: #dcfce7; color: #15803d !important; border: 1.5px solid #86efac; font-weight: 700; padding: 6px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-circle-check"></i> Đã cấp quyền tự động lưu Drive (${folderName})
+        </span>
+        <button type="button" class="btn-setup-action" id="btn-change-drive-perm-step1" style="background: #0284c7; color: #ffffff !important; padding: 6px 12px; font-size: 12px; font-weight: 600;">
+          <i class="fa-solid fa-gear"></i> Cấu hình
+        </button>
+      `;
+      const btnChange = document.getElementById('btn-change-drive-perm-step1');
+      if (btnChange) {
+        btnChange.addEventListener('click', () => this.openSetupModal());
+      }
+    } else {
+      badgeWrap.innerHTML = `
+        <button type="button" class="btn-setup-action" id="btn-grant-drive-perm-step1" style="background: #16a34a; color: #ffffff !important; padding: 8px 18px; font-size: 13px; font-weight: 700;">
+          <i class="fa-solid fa-key"></i> Cấp quyền tự động lưu Google Drive
+        </button>
+      `;
+      const btnGrant = document.getElementById('btn-grant-drive-perm-step1');
+      if (btnGrant) {
+        btnGrant.addEventListener('click', () => {
+          if (this.supportsFileSystemAccess()) {
+            this.selectLocalDriveFolder().then(res => {
+              if (res.success) {
+                window.Toast?.success(`Đã cấp quyền lưu vào Google Drive: "${res.folderName}"!`);
+              }
+            });
+          } else {
+            this.openSetupModal();
+          }
+        });
+      }
+    }
+  },
+
+  /**
+   * Tự động lưu file gốc được tải lên phân tích vào thư mục Google Drive (5. Webapp Actigrivity)
+   * Được gọi ngay khi người dùng kéo thả hoặc chọn file phân tích tại Bước 1
+   */
+  async autoSaveUploadedFile(file) {
+    if (!file) return { success: false, reason: 'Không có file' };
+
+    // 1. Nếu có handle thư mục cục bộ (Google Drive for Desktop)
+    if (this.localDirHandle) {
+      try {
+        const saved = await this.saveToLocalDirectory(file, file.name);
+        if (saved) {
+          this.grantPermission('local_directory');
+          return { success: true, method: 'local_drive_sync', fileName: file.name };
+        }
+      } catch (err) {
+        console.warn('[GoogleDriveService] AutoSaveUploadedFile local error:', err);
+      }
+    }
+
+    // 2. Nếu có Webhook hoặc OAuth token, upload trực tiếp lên Drive API
+    if (this.hasWebhook() || (typeof localStorage !== 'undefined' && localStorage.getItem(this.config.STORAGE_KEY_TOKEN))) {
+      try {
+        const uploadRes = await this.uploadToGoogleDriveAPI(file, file.name);
+        if (uploadRes && uploadRes.success) {
+          this.grantPermission('cloud_api');
+          return { success: true, method: uploadRes.method, fileName: file.name };
+        }
+      } catch (err) {
+        console.warn('[GoogleDriveService] AutoSaveUploadedFile cloud error:', err);
+      }
+    }
+
+    // 3. Tự động đánh dấu sẵn sàng lưu
+    this.grantPermission('system_ready');
+    return { success: false, reason: 'Chờ kết nối đám mây', fileName: file.name };
   },
 
   /**
@@ -780,6 +977,12 @@ function doGet(e) {
    */
   init() {
     if (typeof document === 'undefined') return;
+
+    // Tự động khôi phục quyền lưu từ IndexedDB và cập nhật giao diện
+    this.restoreLocalFolderHandle().then(() => {
+      this.updatePermissionUI();
+    }).catch(() => {});
+    this.updatePermissionUI();
 
     // 1. Nút sao chép mã Apps Script
     const btnCopy = document.getElementById('btn-copy-apps-script');

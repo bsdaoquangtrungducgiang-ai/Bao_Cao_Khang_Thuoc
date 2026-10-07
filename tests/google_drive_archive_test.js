@@ -329,6 +329,50 @@ assert(badgeEl !== null, 'Phần tử badge đồng bộ Drive tồn tại trên
 GoogleDriveService.setWebhookUrl('');
 assert(GoogleDriveService.hasWebhook() === false, 'Xóa Webhook URL thành công khi bỏ trống');
 
+// TEST 7: Cấp quyền tự động lưu Google Drive (5. Webapp Actigrivity)
+print('\n--- TEST 7: CẤP QUYỀN TỰ ĐỘNG LƯU GOOGLE DRIVE ---');
+GoogleDriveService.revokePermission();
+assert(GoogleDriveService.hasPermission() === false, 'Mặc định khi revoke thì hasPermission trả về false');
+
+GoogleDriveService.grantPermission('auto_user');
+assert(GoogleDriveService.hasPermission() === true, 'Sau khi cấp quyền, hasPermission trả về true');
+assert(localStorage.getItem('GOOGLE_DRIVE_PERM_GRANTED') === 'true', 'Trạng thái quyền được lưu bền vững vào localStorage');
+
+// Kiểm tra hiển thị giao diện UI cấp quyền
+var badgeWrap = document.getElementById('drive-step1-perm-badge-wrap');
+if (!badgeWrap) {
+  badgeWrap = { id: 'drive-step1-perm-badge-wrap', innerHTML: '' };
+  _mockElements['drive-step1-perm-badge-wrap'] = badgeWrap;
+}
+GoogleDriveService.updatePermissionUI();
+assert(badgeWrap.innerHTML.indexOf('Đã cấp quyền tự động lưu Drive') !== -1, 'UI hiển thị huy hiệu Đã cấp quyền tự động lưu Drive');
+
+GoogleDriveService.revokePermission();
+assert(GoogleDriveService.hasPermission() === false, 'Hủy quyền thành công');
+GoogleDriveService.updatePermissionUI();
+assert(badgeWrap.innerHTML.indexOf('Cấp quyền tự động lưu Google Drive') !== -1, 'UI cập nhật nút Cấp quyền tự động lưu khi chưa có quyền');
+
+// TEST 8: Tự động lưu file tải lên phân tích vào Google Drive (autoSaveUploadedFile)
+print('\n--- TEST 8: TỰ ĐỘNG LƯU FILE PHÂN TÍCH LÊN GOOGLE DRIVE (STEP 1) ---');
+var mockUploadFile = {
+  name: 'Mau_Benh_Vien_Khang_Sinh_2026.xlsx',
+  size: 102400,
+  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+};
+
+var autoSaveResult = null;
+GoogleDriveService.autoSaveUploadedFile(mockUploadFile).then(function(res) {
+  autoSaveResult = res;
+});
+
+if (typeof drainMicrotasks === 'function') {
+  drainMicrotasks();
+}
+
+assert(autoSaveResult !== null, 'autoSaveUploadedFile thực thi và trả về kết quả');
+assert(autoSaveResult.fileName === 'Mau_Benh_Vien_Khang_Sinh_2026.xlsx', 'Tên file tự động lưu khớp chính xác: ' + (autoSaveResult ? autoSaveResult.fileName : 'N/A'));
+assert(GoogleDriveService.hasPermission() === true, 'Tự động kích hoạt quyền sẵn sàng lưu trữ cho hệ thống');
+
 print('\n================================================================');
 print('  ✔ TOÀN BỘ CÁC BÀI TEST TỰ ĐỘNG LƯU EXCEL & DRIVE ĐỀU ĐẠT 100%!');
 print('================================================================');

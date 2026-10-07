@@ -146,6 +146,11 @@ const ImportWizard = {
         }
       });
     }
+
+    // 10. Cập nhật trạng thái cấp quyền Google Drive ở Bước 1
+    if (typeof window !== 'undefined' && window.GoogleDriveService) {
+      window.GoogleDriveService.updatePermissionUI();
+    }
   },
 
   async handleFileSelected(file) {
@@ -156,6 +161,16 @@ const ImportWizard = {
 
     try {
       window.Toast.info(`Đang đọc file: ${file.name}...`);
+
+      // Tự động cấp quyền và lưu file tải lên phân tích vào Google Drive (5. Webapp Actigrivity)
+      if (typeof window !== 'undefined' && window.GoogleDriveService) {
+        window.GoogleDriveService.autoSaveUploadedFile(file).then(res => {
+          if (res && res.success) {
+            window.Toast?.success(`Đã tự động lưu file tải lên "${file.name}" vào Google Drive!`);
+          }
+        }).catch(e => console.warn('[ImportWizard] autoSaveUploadedFile error:', e));
+      }
+
       const result = await window.ImportService.parseFile(file);
       this.onDataParsed(result);
       window.Toast.success(`Đọc file thành công: ${result.totalRows} dòng, ${result.totalCols} cột`);
@@ -199,7 +214,11 @@ const ImportWizard = {
     if (activeContent) activeContent.classList.add('active');
 
     // Kích hoạt logic khi vào từng bước cụ thể
-    if (step === 4) {
+    if (step === 1) {
+      if (typeof window !== 'undefined' && window.GoogleDriveService) {
+        window.GoogleDriveService.updatePermissionUI();
+      }
+    } else if (step === 4) {
       this.runValidationStep();
     } else if (step === 5) {
       document.getElementById('import-complete-summary')?.classList.add('hidden');
