@@ -364,6 +364,13 @@ const ReportExportService = {
         drugs: ['Cefotaxime', 'Cefepime', 'Ciprofloxacin', 'Pip/Tazobactam', 'Carbapenem*'],
         ecoRates: [63, 50, 71, 20, 11],
         kpnRates: [64, 63, 66, 61, 56],
+        comparisonRows: [
+          { drug: 'Cefotaxime (ESBL)', ecoR: 63.2, kpnR: 63.5, note: 'Mức kháng Ceph 3 tương đương (~63%)' },
+          { drug: 'Cefepime', ecoR: 49.7, kpnR: 63.1, note: 'K. pneumoniae kháng cao hơn rõ rệt' },
+          { drug: 'Ciprofloxacin', ecoR: 71.4, kpnR: 65.5, note: 'Quinolone bị kháng nặng nề cả 2 loài' },
+          { drug: 'Piperacillin/Tazobactam', ecoR: 19.5, kpnR: 60.5, note: 'E. coli còn nhạy 80.5%, K.p kháng 60.5%' },
+          { drug: 'Meropenem (CRE)', ecoR: 11.2, kpnR: 56.0, note: 'Báo động đỏ: K. pneumoniae kháng gấp 5 lần' }
+        ],
         ecoSummary: { esbl: '62.9%', cre: '11.2%', note: 'E. coli còn nhạy Carbapenem, Amikacin' },
         kpnSummary: { esbl: '67.9%', cre: '56%', note: 'K. pneumoniae đa kháng báo động' }
       },
@@ -372,6 +379,13 @@ const ReportExportService = {
         drugs: ['Ceftazidime', 'Cefepime', 'Pip/Tazobactam', 'Ciprofloxacin', 'Meropenem'],
         abaRates: [93, 90, 93, 90, 92],
         paeRates: [51, 46, 51, 50, 55],
+        comparisonRows: [
+          { drug: 'Ceftazidime', abaR: 93.1, paeR: 50.9, note: 'CAZ/AVI nhạy 75.7% với P. aeruginosa' },
+          { drug: 'Cefepime', abaR: 89.7, paeR: 46.1, note: 'A. baumannii kháng gần như toàn bộ' },
+          { drug: 'Piperacillin/Tazobactam', abaR: 93.1, paeR: 50.9, note: 'Cef/Tazo nhạy 55.3% với P. aeruginosa' },
+          { drug: 'Ciprofloxacin', abaR: 89.7, paeR: 50.0, note: 'Quinolone mất hiệu lực chủ yếu' },
+          { drug: 'Meropenem (Carbapenem)', abaR: 92.0, paeR: 54.8, note: 'Chỉ Colistin còn nhạy 85.4% với CRAB' }
+        ],
         abaSummary: { crab: '92% (80/87 chủng)', effective: 'Colistin (kháng 14.6%)' },
         paeSummary: { crpa: '56.9% (66/116 chủng)', effective: 'Ceftazidime/Avibactam (nhạy 75.7%)' }
       },
@@ -822,11 +836,20 @@ const ReportExportService = {
       findRate(kpn, 'Meropenem')
     ];
 
+    const comparisonRows = [
+      { drug: 'Cefotaxime (ESBL)', ecoR: ecoRates[0], kpnR: kpnRates[0], note: `Ceph 3: Eco ${ecoRates[0]}%, Kpn ${kpnRates[0]}%` },
+      { drug: 'Cefepime', ecoR: ecoRates[1], kpnR: kpnRates[1], note: kpnRates[1] > ecoRates[1] ? 'K. pneumoniae kháng cao hơn rõ rệt' : 'Mức kháng tương đương' },
+      { drug: 'Ciprofloxacin', ecoR: ecoRates[2], kpnR: kpnRates[2], note: 'Quinolone bị kháng nặng nề cả 2 loài' },
+      { drug: 'Piperacillin/Tazobactam', ecoR: ecoRates[3], kpnR: kpnRates[3], note: ecoRates[3] < kpnRates[3] ? `E. coli nhạy tốt hơn K. pneumoniae` : `Mức độ kháng tương đương` },
+      { drug: 'Meropenem (CRE)', ecoR: ecoRates[4], kpnR: kpnRates[4], note: kpnRates[4] > ecoRates[4] ? 'Báo động CRE: K. pneumoniae kháng cao' : 'Kháng Carbapenem ở mức kiểm soát' }
+    ];
+
     return {
       title: 'ENTEROBACTERALES: ESBL VÀ CRE',
       drugs,
       ecoRates,
       kpnRates,
+      comparisonRows,
       ecoSummary: {
         esbl: `${ecoRates[0]}%`,
         cre: `${ecoRates[4]}%`,
@@ -863,11 +886,20 @@ const ReportExportService = {
       findRate(pae, 'Meropenem')
     ];
 
+    const comparisonRows = [
+      { drug: 'Ceftazidime', abaR: abaRates[0], paeR: paeRates[0], note: paeRates[0] < abaRates[0] ? 'P. aeruginosa còn nhạy tốt hơn' : 'Đề kháng mức cao' },
+      { drug: 'Cefepime', abaR: abaRates[1], paeR: paeRates[1], note: 'A. baumannii kháng gần như toàn bộ' },
+      { drug: 'Piperacillin/Tazobactam', abaR: abaRates[2], paeR: paeRates[2], note: `Aba: ${abaRates[2]}%, Pae: ${paeRates[2]}%` },
+      { drug: 'Ciprofloxacin', abaR: abaRates[3], paeR: paeRates[3], note: 'Quinolone mất hiệu lực chủ yếu' },
+      { drug: 'Meropenem (Carbapenem)', abaR: abaRates[4], paeR: paeRates[4], note: `Báo động CRAB: ${abaRates[4]}%, CRPA: ${paeRates[4]}%` }
+    ];
+
     return {
       title: 'GRAM ÂM KHÔNG LÊN MEN: CRAB VÀ CRPA',
       drugs,
       abaRates,
       paeRates,
+      comparisonRows,
       abaSummary: {
         crab: `${abaRates[4]}% (${aba.isolateCount} chủng)`,
         effective: 'Colistin'
@@ -907,6 +939,26 @@ const ReportExportService = {
     const totalPatients = new Set(astRecords.map(a => a.patient_code || a.patient_id).filter(Boolean)).size || totalIsolates;
     const uniqueDepts = new Set(isolates.map(i => i.department).filter(d => d && d !== 'Chưa xác định')).size || 1;
     const uniqueSpecies = new Set(isolates.map(i => i.organismName).filter(o => o && o !== 'Chưa định danh')).size || 1;
+
+    // Tỷ lệ % Kháng (%R) toàn bộ của tập tin
+    const totalAstCount = astRecords.length;
+    const resistantAstCount = astRecords.filter(a => String(a.interpretation || '').toUpperCase() === 'R').length;
+    const overallRRate = totalAstCount > 0 ? Number(((resistantAstCount / totalAstCount) * 100).toFixed(1)) : 0;
+
+    // Tỷ lệ Đa kháng (MDR) của tập tin: các chủng kháng >= 3 nhóm kháng sinh / kháng sinh
+    let mdrCount = 0;
+    isolates.forEach(iso => {
+      const resistantDrugs = new Set();
+      iso.astList.forEach(a => {
+        if (String(a.interpretation || '').toUpperCase() === 'R' && a.antibiotic_code) {
+          resistantDrugs.add((a.antibiotic_code || '').toUpperCase());
+        }
+      });
+      if (resistantDrugs.size >= 3) {
+        mdrCount++;
+      }
+    });
+    const overallMdrRate = totalIsolates > 0 ? Number(((mdrCount / totalIsolates) * 100).toFixed(1)) : 0;
 
     // Khoảng thời gian
     const dates = astRecords.map(a => a.tested_date || a.collection_date).filter(Boolean).sort();
@@ -1129,7 +1181,9 @@ const ReportExportService = {
         totalPatients,
         totalDepartments: uniqueDepts,
         totalSpecies: uniqueSpecies,
-        dateRange: dateRangeStr
+        dateRange: dateRangeStr,
+        rRate: overallRRate,
+        mdrRate: overallMdrRate
       },
       gramGroups,
       monthlyDistribution,

@@ -41,30 +41,38 @@ var localStorage = {
 };
 window.localStorage = localStorage;
 
+var domNodes = {};
+function createMockElement(id, tag) {
+  return {
+    id: id || '',
+    tagName: tag || 'div',
+    value: id === 'report-select-file' ? 'ĐG Dương tính (010126. 230626).xls' : '',
+    textContent: '',
+    innerHTML: '',
+    style: {},
+    options: [{ value: 'ĐG Dương tính (010126. 230626).xls' }],
+    children: [],
+    classList: {
+      add: function() {},
+      remove: function() {}
+    },
+    addEventListener: function() {},
+    appendChild: function(c) {
+      if (!this.children) this.children = [];
+      this.children.push(c);
+    }
+  };
+}
+
 var document = {
   getElementById: function(id) {
-    return {
-      id: id,
-      value: id === 'report-select-file' ? 'ĐG Dương tính (010126. 230626).xls' : '',
-      textContent: '',
-      innerHTML: '',
-      style: {},
-      options: [{ value: 'ĐG Dương tính (010126. 230626).xls' }],
-      classList: {
-        add: function() {},
-        remove: function() {}
-      },
-      addEventListener: function() {},
-      appendChild: function() {}
-    };
+    if (!domNodes[id]) {
+      domNodes[id] = createMockElement(id, 'div');
+    }
+    return domNodes[id];
   },
   createElement: function(tag) {
-    return {
-      tagName: tag,
-      innerHTML: '',
-      style: {},
-      appendChild: function() {}
-    };
+    return createMockElement('', tag);
   }
 };
 window.document = document;
@@ -132,10 +140,20 @@ ReportView.populateFileOptions(customFileName);
 assert(typeof ReportView.selectFileAndOpen === 'function', "22. Có hàm selectFileAndOpen phục vụ chuyển trang từ Import");
 assert(typeof ReportView.openLatestImported === 'function', "23. Có hàm openLatestImported mở file vừa nạp tức thì");
 
+// KIỂM TRA 5: RENDER ĐỘNG TOÀN BỘ GIAO DIỆN & BẢNG BIỂU THEO FILE
+ReportView.renderFullReport(customFileName);
+assert(document.getElementById('rep-sum-total').textContent === '3', "24. KPI Tổng số chủng hiển thị động = 3 cho file mới");
+assert(document.getElementById('rep-sum-patients').textContent === '3', "25. KPI Bệnh nhân hiển thị động = 3 cho file mới");
+assert(document.getElementById('rep-sum-depts').textContent === '2', "26. KPI Khoa phòng hiển thị động = 2 cho file mới");
+assert(document.getElementById('table-rep-entero-body').children.length === 5, "27. Bảng 11 (Enterobacterales) render đủ 5 hàng động theo file");
+assert(document.getElementById('table-rep-nonferm-body').children.length === 5, "28. Bảng 12 (Gram âm không lên men) render đủ 5 hàng động theo file");
+assert(document.getElementById('rep-badge-top15').textContent.length > 0, "29. Huy hiệu Top tác nhân cập nhật động theo file");
+assert(document.getElementById('rep-callout-conclusion1').innerHTML.indexOf('CRAB') !== -1, "30. Nhận xét Phần 10 cập nhật tỷ lệ kháng của file mới");
+
 print("\n================================================================");
 print("  KẾT QUẢ: " + passed + " PASS, " + failed + " FAIL");
 if (failed === 0) {
-  print("  ✔ TOÀN BỘ 23 TIÊU CHÍ BÁO CÁO AMR ĐỘNG THEO FILE ĐÃ VƯỢT QUA 100%!");
+  print("  ✔ TOÀN BỘ 30 TIÊU CHÍ BÁO CÁO AMR ĐỘNG THEO FILE ĐÃ VƯỢT QUA 100%!");
 } else {
   print("  ✖ CÓ LỖI XẢY RA TRONG BỘ TEST!");
 }

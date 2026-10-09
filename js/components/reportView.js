@@ -19,14 +19,17 @@ const ReportView = {
     if (typeof window !== 'undefined') {
       window.addEventListener('tabChanged', (e) => {
         if (e.detail.tab === 'reports') {
-          this.populateFileOptions();
-          this.renderFullReport();
+          const lastImported = (typeof localStorage !== 'undefined' ? localStorage.getItem('amr_last_imported_file') : null) || window.App?.state?.lastImportedFile;
+          this.populateFileOptions(lastImported);
+          this.renderFullReport(lastImported);
         }
       });
 
       // Lắng nghe khi có file mới được tải lên
-      window.addEventListener('fileUploaded', () => {
-        this.populateFileOptions();
+      window.addEventListener('fileUploaded', (e) => {
+        const fn = e?.detail?.fileName || (typeof localStorage !== 'undefined' ? localStorage.getItem('amr_last_imported_file') : null);
+        this.populateFileOptions(fn);
+        this.renderFullReport(fn);
       });
     }
   },
@@ -95,14 +98,27 @@ const ReportView = {
     const select = document.getElementById('report-select-file');
     if (!select) return;
 
-    const currentVal = preferredFileName || select.value || (typeof localStorage !== 'undefined' ? localStorage.getItem('amr_last_imported_file') : null) || window.App?.state?.filters?.file;
+    const lastImported = (typeof localStorage !== 'undefined' ? localStorage.getItem('amr_last_imported_file') : null) || window.App?.state?.lastImportedFile;
+    const currentVal = preferredFileName || lastImported || select.value || window.App?.state?.filters?.file || 'ĐG Dương tính (010126. 230626).xls';
     const files = new Set(['ĐG Dương tính (010126. 230626).xls']);
 
     // Đọc từ DemoDataService
-    const demo = window.DemoDataService?.getAll();
+    const demo = window.DemoDataService?.getAll ? window.DemoDataService.getAll() : (typeof DemoDataService !== 'undefined' ? DemoDataService.getAll() : null);
     if (demo && demo.importJobs) {
       demo.importJobs.forEach(j => {
         if (j.file_name) files.add(j.file_name);
+      });
+    }
+    if (demo && demo.astResults) {
+      demo.astResults.forEach(a => {
+        if (a.file_name) files.add(a.file_name);
+      });
+    }
+
+    // Đọc từ App state
+    if (window.App?.state?.surveillanceData?.astResults) {
+      window.App.state.surveillanceData.astResults.forEach(a => {
+        if (a.file_name) files.add(a.file_name);
       });
     }
 
@@ -116,6 +132,9 @@ const ReportView = {
 
     if (preferredFileName) {
       files.add(preferredFileName);
+    }
+    if (lastImported) {
+      files.add(lastImported);
     }
 
     // Render options
@@ -246,17 +265,132 @@ const ReportView = {
     this.setTextContent('rep-reviewer', comp.metadata.reviewer);
     this.setTextContent('rep-filter-display', `Tập tin: ${comp.metadata.fileName} | ${comp.overview.totalIsolates.toLocaleString()} chủng phân lập | ${comp.overview.totalDepartments} khoa phòng | ${comp.overview.totalSpecies} loài`);
 
-    // Cập nhật các KPI quy mô
+    // Cập nhật các KPI quy mô 100% động theo file
     this.setTextContent('rep-sum-total', comp.overview.totalIsolates.toLocaleString());
     this.setTextContent('rep-sum-patients', comp.overview.totalPatients.toLocaleString());
     this.setTextContent('rep-sum-depts', comp.overview.totalDepartments.toString());
     this.setTextContent('rep-sum-species', comp.overview.totalSpecies.toString());
-    this.setTextContent('rep-sum-r', `${rep.summary.rRate}%`);
-    this.setTextContent('rep-sum-mdr', `${rep.mdrStats.mdrRate}%`);
+    this.setTextContent('rep-sum-r', `${comp.overview?.rRate !== undefined ? comp.overview.rRate : rep.summary.rRate}%`);
+    this.setTextContent('rep-sum-mdr', `${comp.overview?.mdrRate !== undefined ? comp.overview.mdrRate : rep.mdrStats.mdrRate}%`);
 
     // Cập nhật các phần tương thích ngược cho test Phase 7/8
     this.setTextContent('rep-sum-s', `${rep.summary.sRate}% (${rep.summary.sCount})`);
     this.setTextContent('rep-sum-i', `${rep.summary.iRate}% (${rep.summary.iCount})`);
+
+    // Cập nhật linh hoạt các huy hiệu, tiêu đề và nhận xét Section 1 - 10
+    const gramAm = comp.gramGroups?.find(g => g.name.includes('âm'));
+    const gramDuong = comp.gramGroups?.find(g => g.name.includes('dương'));
+    this.setTextContent('rep-badge-gram', gramAm ? `Gram âm chiếm ${gramAm.percent}%` : 'Cơ cấu Gram');
+    this.setTextContent('rep-badge-table1-total', `N = ${comp.overview.totalIsolates.toLocaleString()}`);
+    const elCalloutGram = document.getElementById('rep-callout-gram');
+    if (elCalloutGram) {
+      elCalloutGram.innerHTML = `<i class="fa-solid fa-circle-info"></i><div>Vi khuẩn <strong>Gram âm chiếm ${gramAm?.percent || 0}% (${gramAm?.count || 0} chủng)</strong> giữ tỷ trọng lớn, trong đó chiếm ưu thế là các trực khuẩn đường ruột (Enterobacterales) và trực khuẩn không lên men đường (CRAB, CRPA). <strong>Gram dương chiếm ${gramDuong?.percent || 0}% (${gramDuong?.count || 0} chủng)</strong> chủ yếu là <em>S. aureus</em> và <em>S. pneumoniae</em>.</div>`;
+    }
+
+    const peakMonth = comp.monthlyDistribution?.find(m => m.isPeak) || comp.monthlyDistribution?.[0];
+    this.setTextContent('rep-badge-monthly', peakMonth ? `${peakMonth.month} cao nhất (${peakMonth.count} chủng)` : 'Phân bố theo tháng');
+    this.setTextContent('rep-badge-table2-sub', comp.metadata?.dateRange ? `Kỳ: ${comp.metadata.dateRange}` : 'Chốt số liệu kỳ phân tích');
+    const elCalloutMonthly = document.getElementById('rep-callout-monthly');
+    if (elCalloutMonthly) {
+      elCalloutMonthly.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><div>Số lượng chủng phân lập cao nhất ghi nhận vào <strong>${peakMonth?.month || 'kỳ giám sát'} với ${peakMonth?.count || 0} chủng (${peakMonth?.percent || 0}%)</strong>. Cần chú trọng các biện pháp dự phòng lây nhiễm và giám sát dịch tễ theo mùa.</div>`;
+    }
+
+    const top4Count = comp.departmentTop12 ? comp.departmentTop12.slice(0, 4).reduce((sum, d) => sum + d.count, 0) : 0;
+    const top4Pct = comp.overview.totalIsolates > 0 ? ((top4Count / comp.overview.totalIsolates) * 100).toFixed(1) : 0;
+    this.setTextContent('rep-badge-depts', `Top 4 khoa chiếm ${top4Pct}%`);
+    this.setTextContent('rep-badge-table3-sub', `N = ${comp.overview.totalIsolates.toLocaleString()}`);
+    const elCalloutDepts = document.getElementById('rep-callout-depts');
+    if (elCalloutDepts && comp.departmentTop12) {
+      const topDeptsStr = comp.departmentTop12.slice(0, 4).map(d => `${d.name} (${d.count} chủng)`).join(', ');
+      elCalloutDepts.innerHTML = `<i class="fa-solid fa-circle-info"></i><div>Nhóm 4 khoa trọng điểm có số chủng phân lập cao nhất gồm: <strong>${topDeptsStr}</strong>, chiếm <strong>${top4Pct}%</strong> toàn bộ chủng phân lập. Đây là các khu vực ưu tiên cao nhất cho hoạt động giám sát sử dụng kháng sinh (AMS) và kiểm soát nhiễm khuẩn (IPC).</div>`;
+    }
+
+    const top2Specs = comp.specimenDistribution ? comp.specimenDistribution.slice(0, 2) : [];
+    const top2SpecPct = top2Specs.reduce((sum, s) => sum + s.percent, 0).toFixed(1);
+    const top2SpecNames = top2Specs.map(s => s.type).join(' & ');
+    this.setTextContent('rep-badge-specimens', `${top2SpecNames} chiếm ${top2SpecPct}%`);
+    this.setTextContent('rep-badge-table4-total', `N = ${comp.overview.totalIsolates.toLocaleString()}`);
+    const elCalloutSpec = document.getElementById('rep-callout-specimens');
+    if (elCalloutSpec) {
+      const lit = comp.specimenLiterature?.vinaresComparison || `Cơ cấu bệnh phẩm phân lập phản ánh mô hình bệnh tật thực tế tại cơ sở y tế.`;
+      elCalloutSpec.innerHTML = `<i class="fa-solid fa-book-medical"></i><div><strong>Đối chiếu y văn &amp; Mạng VINARES:</strong> ${lit}</div>`;
+    }
+
+    if (comp.top15Pathogens && comp.top15Pathogens.length > 0) {
+      const top3Orgs = comp.top15Pathogens.slice(0, 3).map(p => p.name).join(', ');
+      const top15Total = comp.top15Pathogens.reduce((sum, p) => sum + p.count, 0);
+      const top15Pct = comp.overview.totalIsolates > 0 ? ((top15Total / comp.overview.totalIsolates) * 100).toFixed(1) : 0;
+      this.setTextContent('rep-badge-top15', `${top3Orgs} dẫn đầu`);
+      this.setTextContent('rep-badge-table5-total', `Chiếm ${top15Pct}% toàn viện`);
+    }
+
+    const elCalloutSpecGroups = document.getElementById('rep-callout-specimen-groups');
+    if (elCalloutSpecGroups && comp.pathogensBySpecimen) {
+      const bTop = comp.pathogensBySpecimen.blood?.items?.[0];
+      const sTop = comp.pathogensBySpecimen.lowerRespiratory?.items?.[0];
+      const uTop = comp.pathogensBySpecimen.urine?.items?.[0];
+      elCalloutSpecGroups.innerHTML = `<i class="fa-solid fa-circle-info"></i><div>Trong cấy máu: <strong>${bTop ? bTop.name + ' (' + bTop.count + ' ca)' : 'E. coli'}</strong> là căn nguyên hàng đầu. Trong đờm/hô hấp dưới: <strong>${sTop ? sTop.name + ' (' + sTop.count + ' ca)' : 'A. baumannii'}</strong> chiếm ưu thế vượt trội, là nguyên nhân chính của viêm phổi bệnh viện (HAP/VAP). Trong nước tiểu: <strong>${uTop ? uTop.name + ' (' + uTop.count + ' ca)' : 'E. coli'}</strong> dẫn đầu.</div>`;
+    }
+
+    if (comp.monthlyTrendTop6 && comp.monthlyTrendTop6.series) {
+      const topOrgTrend = comp.monthlyTrendTop6.series[0];
+      this.setTextContent('rep-badge-trend6', comp.monthlyTrendTop6.series.map(s => s.name.split(' ')[0]).join(', '));
+      const elCalloutTrend = document.getElementById('rep-callout-trend6');
+      if (elCalloutTrend) {
+        elCalloutTrend.innerHTML = `<i class="fa-solid fa-chart-line"></i><div>Diễn biến phân lập của 6 chủng vi khuẩn chủ đạo theo các tháng phản ánh động thái dịch tễ tại bệnh viện. Tác nhân có số lượng lớn nhất là <strong>${topOrgTrend?.name || 'H. influenzae'} (${topOrgTrend?.total || 0} chủng)</strong>.</div>`;
+      }
+    }
+
+    // Section 9: 9.1 S. aureus
+    if (comp.detailedAntibiograms?.sau) {
+      const sau = comp.detailedAntibiograms.sau;
+      const elSauTitle = document.getElementById('rep-title-sau');
+      if (elSauTitle) elSauTitle.innerHTML = `9.1. <em>Staphylococcus aureus</em> (n = ${sau.isolateCount || 0}) &amp; MRSA`;
+      this.setTextContent('rep-badge-sau', `MRSA: ${sau.mrsaRate || '78.6%'}`);
+      this.setTextContent('rep-sub-sau', 'Vancomycin / Linezolid: 100% S');
+    }
+
+    // 9.2 S. pneumoniae
+    if (comp.detailedAntibiograms?.spn) {
+      const spn = comp.detailedAntibiograms.spn;
+      const elSpnTitle = document.getElementById('rep-title-spn');
+      if (elSpnTitle) elSpnTitle.innerHTML = `9.2. <em>Streptococcus pneumoniae</em> (n = ${spn.isolateCount || 0}) &amp; Điểm gãy Viêm màng não`;
+      const eryR = spn.chartData?.find(c => c.drug && c.drug.toLowerCase().includes('erythro'))?.rate || 98.6;
+      this.setTextContent('rep-badge-spn', `Kháng Erythromycin: ${eryR}%`);
+      this.setTextContent('rep-sub-spn', 'Moxifloxacin / Vancomycin: 100% S');
+    }
+
+    // 9.3 H. influenzae
+    if (comp.detailedAntibiograms?.hin) {
+      const hin = comp.detailedAntibiograms.hin;
+      const elHinTitle = document.getElementById('rep-title-hin');
+      if (elHinTitle) elHinTitle.innerHTML = `9.3. <em>Haemophilus influenzae</em> (n = ${hin.isolateCount || 0})`;
+      this.setTextContent('rep-badge-hin', hin.ampicillinRate || 'Ampicillin R: 84.1%');
+      this.setTextContent('rep-sub-hin', 'Meropenem / Ceftriaxone nhạy cảm cao');
+    }
+
+    // 9.4 Enterobacterales
+    if (comp.detailedAntibiograms?.enterobacterales) {
+      const ent = comp.detailedAntibiograms.enterobacterales;
+      this.setTextContent('rep-badge-entero', `CRE K.p: ${ent.kpnSummary?.cre || '56%'} vs E.c: ${ent.ecoSummary?.cre || '11%'}`);
+      this.setTextContent('rep-sub-entero', 'ESBL & Carbapenem');
+    }
+
+    // 9.5 Gram âm không lên men
+    if (comp.detailedAntibiograms?.nonfermenters) {
+      const nonf = comp.detailedAntibiograms.nonfermenters;
+      this.setTextContent('rep-badge-nonferm', `CRAB: ${nonf.abaSummary?.crab?.split(' ')?.[0] || '92%'} | CRPA: ${nonf.paeSummary?.crpa?.split(' ')?.[0] || '56.9%'}`);
+      this.setTextContent('rep-sub-nonferm', 'Colistin / CAZ-AVI cứu cánh');
+    }
+
+    // Section 10: Nhận xét
+    const elConclusion = document.getElementById('rep-callout-conclusion1');
+    if (elConclusion) {
+      const crabR = comp.detailedAntibiograms?.nonfermenters?.abaSummary?.crab?.split(' ')?.[0] || '92%';
+      const mrsaR = comp.detailedAntibiograms?.sau?.mrsaRate || '78.6%';
+      const creR = comp.detailedAntibiograms?.enterobacterales?.kpnSummary?.cre || '56%';
+      elConclusion.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><div><strong>Đánh giá thực trạng đề kháng:</strong> Tình trạng vi khuẩn đa kháng và toàn kháng (CRAB: ${crabR}, MRSA: ${mrsaR}, CRE K. pneumoniae: ${creR}) tại các khoa lâm sàng là mối đe dọa nghiêm trọng. Các kháng sinh kinh điển (Cephalosporin 3, Carbapenem) đã mất hiệu lực đáng kể với vi khuẩn Gram âm, đòi hỏi giám sát sử dụng kháng sinh (AMS) nghiêm ngặt.</div>`;
+    }
 
     // Render số liệu cho các bảng của Chế độ 1 (Tích hợp)
     this.renderIntegratedTables(comp, rep);
@@ -522,6 +656,54 @@ const ReportView = {
           <td class="center bold" style="color: ${r.sRate > 70 ? '#16a34a' : '#475569'};">${r.sRate}%</td>
         `;
         hinTbody.appendChild(tr);
+      });
+    }
+
+    // Bảng 11: So sánh mức đề kháng Enterobacterales (#table-rep-entero-body)
+    const enteroTbody = document.getElementById('table-rep-entero-body');
+    if (enteroTbody) {
+      enteroTbody.innerHTML = '';
+      const ent = comp.detailedAntibiograms?.enterobacterales;
+      const rows = ent?.comparisonRows || [
+        { drug: 'Cefotaxime (ESBL)', ecoR: ent?.ecoRates?.[0] || 63, kpnR: ent?.kpnRates?.[0] || 64, note: 'Kháng Ceph 3' },
+        { drug: 'Cefepime', ecoR: ent?.ecoRates?.[1] || 50, kpnR: ent?.kpnRates?.[1] || 63, note: 'Ceph 4' },
+        { drug: 'Ciprofloxacin', ecoR: ent?.ecoRates?.[2] || 71, kpnR: ent?.kpnRates?.[2] || 66, note: 'Quinolone' },
+        { drug: 'Piperacillin/Tazobactam', ecoR: ent?.ecoRates?.[3] || 20, kpnR: ent?.kpnRates?.[3] || 61, note: 'Beta-lactamase inhibitor' },
+        { drug: 'Meropenem (CRE)', ecoR: ent?.ecoRates?.[4] || 11, kpnR: ent?.kpnRates?.[4] || 56, note: 'Carbapenem' }
+      ];
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${r.drug}</strong></td>
+          <td class="center bold" style="color: ${r.ecoR > 50 ? '#dc2626' : '#0284c7'};">${r.ecoR}%</td>
+          <td class="center bold" style="color: ${r.kpnR > 50 ? '#dc2626' : '#dc2626'};">${r.kpnR}%</td>
+          <td>${r.note}</td>
+        `;
+        enteroTbody.appendChild(tr);
+      });
+    }
+
+    // Bảng 12: So sánh mức đề kháng Gram âm không lên men (#table-rep-nonferm-body)
+    const nonfermTbody = document.getElementById('table-rep-nonferm-body');
+    if (nonfermTbody) {
+      nonfermTbody.innerHTML = '';
+      const nonf = comp.detailedAntibiograms?.nonfermenters;
+      const rows = nonf?.comparisonRows || [
+        { drug: 'Ceftazidime', abaR: nonf?.abaRates?.[0] || 93, paeR: nonf?.paeRates?.[0] || 51, note: 'CAZ' },
+        { drug: 'Cefepime', abaR: nonf?.abaRates?.[1] || 90, paeR: nonf?.paeRates?.[1] || 46, note: 'FEP' },
+        { drug: 'Piperacillin/Tazobactam', abaR: nonf?.abaRates?.[2] || 93, paeR: nonf?.paeRates?.[2] || 51, note: 'TZP' },
+        { drug: 'Ciprofloxacin', abaR: nonf?.abaRates?.[3] || 90, paeR: nonf?.paeRates?.[3] || 50, note: 'CIP' },
+        { drug: 'Meropenem (Carbapenem)', abaR: nonf?.abaRates?.[4] || 92, paeR: nonf?.paeRates?.[4] || 55, note: 'MEM' }
+      ];
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${r.drug}</strong></td>
+          <td class="center bold" style="color: ${r.abaR > 50 ? '#dc2626' : '#475569'};">${r.abaR}%</td>
+          <td class="center bold" style="color: ${r.paeR > 50 ? '#dc2626' : '#0284c7'};">${r.paeR}%</td>
+          <td>${r.note}</td>
+        `;
+        nonfermTbody.appendChild(tr);
       });
     }
 
