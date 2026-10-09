@@ -67,6 +67,17 @@ const ReportExportService = {
       { name: 'Khoa Nội thận - tiết niệu', count: 33, percent: 2.3, priority: false },
       { name: 'Khoa Chấn thương chỉnh hình', count: 32, percent: 2.2, priority: false }
     ],
+    departmentTop9: [
+      { name: 'Khoa Hồi sức tích cực - Chống độc', count: 316, percent: 21.6, priority: true },
+      { name: 'Khoa Nhi hô hấp', count: 300, percent: 20.5, priority: true },
+      { name: 'Khoa Hồi sức tích cực Nhi', count: 202, percent: 13.8, priority: true },
+      { name: 'Khoa Nhi', count: 158, percent: 10.8, priority: true },
+      { name: 'Khoa Sơ sinh', count: 66, percent: 4.5, priority: false },
+      { name: 'Khoa Ung bướu', count: 65, percent: 4.4, priority: false },
+      { name: 'Khoa Truyền Nhiễm', count: 57, percent: 3.9, priority: false },
+      { name: 'Khoa Ngoại tổng hợp', count: 56, percent: 3.8, priority: false },
+      { name: 'Đơn nguyên Hồi sức Ngoại', count: 53, percent: 3.6, priority: false }
+    ],
     departmentComments: {
       top4Total: 976,
       top4Ratio: '~2/3 (66.6%)',

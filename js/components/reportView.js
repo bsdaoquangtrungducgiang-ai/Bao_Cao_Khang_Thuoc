@@ -341,30 +341,30 @@ const ReportView = {
       }
     }
 
-    // Section 9: 9.1 S. aureus
+    // Section 8: 8.1 S. aureus
     if (comp.detailedAntibiograms?.sau) {
       const sau = comp.detailedAntibiograms.sau;
       const elSauTitle = document.getElementById('rep-title-sau');
-      if (elSauTitle) elSauTitle.innerHTML = `9.1. <em>Staphylococcus aureus</em> (n = ${sau.isolateCount || 0}) &amp; MRSA`;
+      if (elSauTitle) elSauTitle.innerHTML = `Biểu đồ "<em>S. aureus</em> (n=${sau.isolateCount || 230}): tỷ lệ kháng (%R)"`;
       this.setTextContent('rep-badge-sau', `MRSA: ${sau.mrsaRate || '78.6%'}`);
       this.setTextContent('rep-sub-sau', 'Vancomycin / Linezolid: 100% S');
     }
 
-    // 9.2 S. pneumoniae
+    // 8.2 S. pneumoniae
     if (comp.detailedAntibiograms?.spn) {
       const spn = comp.detailedAntibiograms.spn;
       const elSpnTitle = document.getElementById('rep-title-spn');
-      if (elSpnTitle) elSpnTitle.innerHTML = `9.2. <em>Streptococcus pneumoniae</em> (n = ${spn.isolateCount || 0}) &amp; Điểm gãy Viêm màng não`;
+      if (elSpnTitle) elSpnTitle.innerHTML = `Biểu đồ "<em>S. pneumoniae</em> (n=${spn.isolateCount || 214}): tỷ lệ kháng (%R)"`;
       const eryR = spn.chartData?.find(c => c.drug && c.drug.toLowerCase().includes('erythro'))?.rate || 98.6;
       this.setTextContent('rep-badge-spn', `Kháng Erythromycin: ${eryR}%`);
       this.setTextContent('rep-sub-spn', 'Moxifloxacin / Vancomycin: 100% S');
     }
 
-    // 9.3 H. influenzae
+    // 8.3 H. influenzae
     if (comp.detailedAntibiograms?.hin) {
       const hin = comp.detailedAntibiograms.hin;
       const elHinTitle = document.getElementById('rep-title-hin');
-      if (elHinTitle) elHinTitle.innerHTML = `9.3. <em>Haemophilus influenzae</em> (n = ${hin.isolateCount || 0})`;
+      if (elHinTitle) elHinTitle.innerHTML = `Biểu đồ "<em>H. influenzae</em> (n=${hin.isolateCount || 253}): tỷ lệ kháng (%R)"`;
       this.setTextContent('rep-badge-hin', hin.ampicillinRate || 'Ampicillin R: 84.1%');
       this.setTextContent('rep-sub-hin', 'Meropenem / Ceftriaxone nhạy cảm cao');
     }
@@ -475,11 +475,12 @@ const ReportView = {
       });
     }
 
-    // Bảng 3: Top 12 Khoa lâm sàng
+    // Bảng 3: Top 9 Khoa lâm sàng
     const deptsTbody = document.getElementById('table-rep-depts-body');
     if (deptsTbody) {
       deptsTbody.innerHTML = '';
-      comp.departmentTop12.forEach((d, idx) => {
+      const depts9 = comp.departmentTop9 || (comp.departmentTop12 ? comp.departmentTop12.slice(0, 9) : []);
+      depts9.forEach((d, idx) => {
         const tr = document.createElement('tr');
         if (d.priority) tr.style.backgroundColor = '#f0f9ff';
         tr.innerHTML = `
@@ -487,7 +488,6 @@ const ReportView = {
           <td><strong>${d.name}</strong></td>
           <td class="center bold">${d.count}</td>
           <td class="center bold" style="color: ${d.priority ? '#0284c7' : '#475569'};">${d.percent}%</td>
-          <td>${d.priority ? '<span style="color: #0369a1; font-weight: 700;">★ Nhóm ưu tiên cao (~2/3 toàn viện)</span>' : 'Khoa điều trị thông thường'}</td>
         `;
         deptsTbody.appendChild(tr);
       });
@@ -497,11 +497,10 @@ const ReportView = {
     const specTbody = document.getElementById('table-rep-specimens-body');
     if (specTbody) {
       specTbody.innerHTML = '';
-      comp.specimenDistribution.forEach((s, idx) => {
+      comp.specimenDistribution.forEach(s => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="center">${idx + 1}</td>
-          <td><strong>${s.type}</strong> ${s.highlight ? '<span style="color: #0284c7; font-size: 11px;">(Ưu tiên)</span>' : ''}</td>
+          <td><strong>${s.type}</strong></td>
           <td class="center bold">${s.count}</td>
           <td class="center bold">${s.percent}%</td>
         `;
@@ -526,7 +525,44 @@ const ReportView = {
       });
     }
 
-    // Phần 6: 5 Nhóm bệnh phẩm (#rep-specimen-boxes-container)
+    // Bảng 6: Tác nhân theo 5 loại bệnh phẩm (#table-rep-specimens-matrix-body)
+    const specMatrixTbody = document.getElementById('table-rep-specimens-matrix-body');
+    if (specMatrixTbody && comp.pathogensBySpecimen) {
+      specMatrixTbody.innerHTML = '';
+      const colBlood = comp.pathogensBySpecimen.blood?.items || [];
+      const colUrine = comp.pathogensBySpecimen.urine?.items || [];
+      const colResp = comp.pathogensBySpecimen.lowerRespiratory?.items || [];
+      const colPus = comp.pathogensBySpecimen.pusWound?.items || [];
+      const colNaso = comp.pathogensBySpecimen.nasopharyngeal?.items || [];
+
+      const maxRows = Math.max(colBlood.length, colUrine.length, colResp.length, colPus.length, colNaso.length, 1);
+      for (let i = 0; i < maxRows; i++) {
+        const tr = document.createElement('tr');
+        const renderCell = (item) => {
+          if (!item) return `<td class="center" style="color: #94a3b8; font-size: 12px; padding: 8px 10px;">-</td>`;
+          return `
+            <td style="padding: 8px 10px; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+              <div style="font-weight: 700; color: #1e293b; font-size: 13px;"><em>${item.name}</em></div>
+              <div style="font-size: 11.5px; color: #475569; margin-top: 3px;">
+                <span style="background: #f1f5f9; padding: 2px 7px; border-radius: 4px; font-weight: 700; color: #0284c7;">
+                  ${item.count} chủng
+                </span>
+              </div>
+            </td>
+          `;
+        };
+        tr.innerHTML = `
+          ${renderCell(colBlood[i])}
+          ${renderCell(colUrine[i])}
+          ${renderCell(colResp[i])}
+          ${renderCell(colPus[i])}
+          ${renderCell(colNaso[i])}
+        `;
+        specMatrixTbody.appendChild(tr);
+      }
+    }
+
+    // 5 Hộp thẻ bệnh phẩm trực quan phụ trợ (#rep-specimen-boxes-container)
     const specBoxes = document.getElementById('rep-specimen-boxes-container');
     if (specBoxes && comp.pathogensBySpecimen) {
       specBoxes.innerHTML = '';
@@ -570,7 +606,7 @@ const ReportView = {
       });
     }
 
-    // Phần 8: 7 Con số cảnh báo điểm đỏ kháng thuốc
+    // Phần 7/8: 7 Con số cảnh báo điểm đỏ kháng thuốc
     const redAlertsContainer = document.getElementById('rep-red-alerts-container');
     if (redAlertsContainer && comp.redAlerts) {
       redAlertsContainer.innerHTML = '';
@@ -591,17 +627,17 @@ const ReportView = {
       });
     }
 
-    // Bảng 7: Điểm đỏ kháng thuốc
+    // Bảng 7: Điểm đỏ kháng thuốc (4 phần)
     const alertsTbody = document.getElementById('table-rep-alerts-body');
     if (alertsTbody && comp.redAlerts) {
       alertsTbody.innerHTML = '';
       comp.redAlerts.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${r.title}</strong></td>
+          <td class="center bold" style="color: #dc2626; font-size: 14px;">${r.rateFormatted}</td>
+          <td><strong>${r.title}</strong> <span style="font-size: 11px; color: #64748b;">(${r.resistanceTarget})</span></td>
           <td><em>${r.organism}</em></td>
-          <td class="center bold" style="color: #dc2626; font-size: 13.5px;">${r.rateFormatted}</td>
-          <td class="center">${r.ratio}</td>
+          <td class="center bold" style="color: #0f172a;">${r.ratio}</td>
           <td><span style="font-size: 11.5px; color: #334155;">${r.note}</span></td>
         `;
         alertsTbody.appendChild(tr);
@@ -778,13 +814,13 @@ const ReportView = {
       }
     });
 
-    // 2. Biểu đồ Cột: Phân bố theo tháng (Có đỉnh đỏ T4)
+    // 2. Biểu đồ "Số chủng phân lập theo tháng"
     this.createOrUpdateChart('chart-rep-monthly-bar', {
       type: 'bar',
       data: {
-        labels: comp.monthlyDistribution.map(m => m.shortName),
+        labels: comp.monthlyDistribution.map(m => m.month),
         datasets: [{
-          label: 'Số chủng phân lập',
+          label: 'Số lượng chủng phân lập',
           data: comp.monthlyDistribution.map(m => m.count),
           backgroundColor: comp.monthlyDistribution.map(m => m.isPeak ? '#dc2626' : '#0284c7'),
           borderRadius: 6
@@ -794,8 +830,8 @@ const ReportView = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: { display: true, text: 'Số lượng chủng' } },
-          x: { grid: { display: false } }
+          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: { display: true, text: 'Số lượng chủng phân lập' } },
+          x: { grid: { display: false }, title: { display: true, text: 'Tháng (từ Tháng 1 đến Tháng 6)' } }
         },
         plugins: {
           legend: { display: false },
@@ -803,7 +839,7 @@ const ReportView = {
             callbacks: {
               afterLabel: (ctx) => {
                 const item = comp.monthlyDistribution[ctx.dataIndex];
-                return item.isPeak ? '★ ĐỈNH DỊCH HÔ HẤP TRẺ EM' : '';
+                return item.isPeak ? '★ ĐỈNH PHÂN LẬP HÔ HẤP' : '';
               }
             }
           }
@@ -811,15 +847,16 @@ const ReportView = {
       }
     });
 
-    // 3. Biểu đồ Cột ngang: Top 12 Khoa lâm sàng
+    // 3. Biểu đồ "Số chủng theo khoa (Top 9)"
+    const depts9 = comp.departmentTop9 || (comp.departmentTop12 ? comp.departmentTop12.slice(0, 9) : []);
     this.createOrUpdateChart('chart-rep-depts-bar', {
       type: 'bar',
       data: {
-        labels: comp.departmentTop12.map(d => d.name),
+        labels: depts9.map(d => d.name),
         datasets: [{
-          label: 'Số chủng phân lập',
-          data: comp.departmentTop12.map(d => d.count),
-          backgroundColor: comp.departmentTop12.map(d => d.priority ? '#0284c7' : '#94a3b8'),
+          label: 'Số lượng chủng phân lập',
+          data: depts9.map(d => d.count),
+          backgroundColor: depts9.map(d => d.priority ? '#0284c7' : '#94a3b8'),
           borderRadius: 4
         }]
       },
@@ -828,8 +865,8 @@ const ReportView = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: { display: true, text: 'Số chủng' } },
-          y: { grid: { display: false } }
+          x: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: { display: true, text: 'Số lượng chủng phân lập' } },
+          y: { grid: { display: false }, title: { display: true, text: 'Tên khoa lâm sàng' } }
         },
         plugins: {
           legend: { display: false }
@@ -837,15 +874,15 @@ const ReportView = {
       }
     });
 
-    // 4. Biểu đồ Cột: Cơ cấu Bệnh phẩm
+    // 4. Biểu đồ "Tỷ trọng theo loại bệnh phẩm (%)"
     this.createOrUpdateChart('chart-rep-specimens-bar', {
       type: 'bar',
       data: {
-        labels: comp.specimenDistribution.slice(0, 7).map(s => s.type),
+        labels: comp.specimenDistribution.map(s => s.type),
         datasets: [{
-          label: 'Tỷ lệ % phân lập',
-          data: comp.specimenDistribution.slice(0, 7).map(s => s.percent),
-          backgroundColor: ['#0d9488', '#d97706', '#7c3aed', '#0284c7', '#dc2626', '#64748b', '#94a3b8'],
+          label: 'Tỷ lệ phần trăm (%)',
+          data: comp.specimenDistribution.map(s => s.percent),
+          backgroundColor: ['#0d9488', '#d97706', '#7c3aed', '#0284c7', '#dc2626', '#64748b', '#94a3b8', '#0891b2'],
           borderRadius: 6
         }]
       },
@@ -853,20 +890,20 @@ const ReportView = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true, max: 60, title: { display: true, text: 'Tỷ lệ %' }, grid: { color: '#f1f5f9' } },
-          x: { grid: { display: false } }
+          y: { beginAtZero: true, max: 60, title: { display: true, text: 'Tỷ lệ phần trăm (%)' }, grid: { color: '#f1f5f9' } },
+          x: { grid: { display: false }, title: { display: true, text: 'Loại bệnh phẩm' } }
         },
         plugins: { legend: { display: false } }
       }
     });
 
-    // 5. Biểu đồ Cột ngang: Top 15 Vi sinh vật
+    // 5. Biểu đồ "Xếp hạng vi khuẩn/nấm theo số chủng (Tác nhân phân lập chính)"
     this.createOrUpdateChart('chart-rep-pathogens-bar', {
       type: 'bar',
       data: {
         labels: comp.top15Pathogens.map(p => p.name),
         datasets: [{
-          label: 'Số chủng',
+          label: 'Số lượng chủng phân lập',
           data: comp.top15Pathogens.map(p => p.count),
           backgroundColor: '#0284c7',
           borderRadius: 4
@@ -877,8 +914,8 @@ const ReportView = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-          y: { grid: { display: false } }
+          x: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: { display: true, text: 'Số lượng chủng phân lập' } },
+          y: { grid: { display: false }, title: { display: true, text: 'Tên tác nhân' } }
         },
         plugins: { legend: { display: false } }
       }
@@ -941,7 +978,7 @@ const ReportView = {
       });
     }
 
-    // 9.1 S. aureus KSĐ Chart
+    // 8.1 S. aureus KSĐ Chart
     if (comp.detailedAntibiograms?.sau?.chartData) {
       const sauData = comp.detailedAntibiograms.sau.chartData;
       this.createOrUpdateChart('chart-rep-sau-bar', {
@@ -949,7 +986,7 @@ const ReportView = {
         data: {
           labels: sauData.map(d => d.drug),
           datasets: [{
-            label: '% Kháng (R)',
+            label: 'Tỷ lệ kháng thuốc (%)',
             data: sauData.map(d => d.rate),
             backgroundColor: '#dc2626',
             borderRadius: 6
@@ -959,15 +996,15 @@ const ReportView = {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { beginAtZero: true, max: 100, title: { display: true, text: '% Kháng' } },
-            x: { grid: { display: false } }
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tỷ lệ kháng thuốc (%)' } },
+            x: { grid: { display: false }, title: { display: true, text: 'Tên các loại kháng sinh' } }
           },
           plugins: { legend: { display: false } }
         }
       });
     }
 
-    // 9.2 S. pneumoniae KSĐ Chart
+    // 8.2 S. pneumoniae KSĐ Chart
     if (comp.detailedAntibiograms?.spn?.chartData) {
       const spnData = comp.detailedAntibiograms.spn.chartData;
       this.createOrUpdateChart('chart-rep-spn-bar', {
@@ -975,7 +1012,7 @@ const ReportView = {
         data: {
           labels: spnData.map(d => d.drug),
           datasets: [{
-            label: '% Kháng (R)',
+            label: 'Tỷ lệ kháng thuốc (%)',
             data: spnData.map(d => d.rate),
             backgroundColor: '#9333ea',
             borderRadius: 6
@@ -985,15 +1022,15 @@ const ReportView = {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { beginAtZero: true, max: 100, title: { display: true, text: '% Kháng' } },
-            x: { grid: { display: false } }
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tỷ lệ kháng thuốc (%)' } },
+            x: { grid: { display: false }, title: { display: true, text: 'Tên các loại kháng sinh' } }
           },
           plugins: { legend: { display: false } }
         }
       });
     }
 
-    // 9.3 H. influenzae KSĐ Chart
+    // 8.3 H. influenzae KSĐ Chart
     if (comp.detailedAntibiograms?.hin?.chartData) {
       const hinData = comp.detailedAntibiograms.hin.chartData;
       this.createOrUpdateChart('chart-rep-hin-bar', {
@@ -1001,7 +1038,7 @@ const ReportView = {
         data: {
           labels: hinData.map(d => d.drug),
           datasets: [{
-            label: '% Kháng (R)',
+            label: 'Tỷ lệ kháng thuốc (%)',
             data: hinData.map(d => d.rate),
             backgroundColor: '#16a34a',
             borderRadius: 6
@@ -1011,15 +1048,15 @@ const ReportView = {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { beginAtZero: true, max: 100, title: { display: true, text: '% Kháng' } },
-            x: { grid: { display: false } }
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tỷ lệ kháng thuốc (%)' } },
+            x: { grid: { display: false }, title: { display: true, text: 'Tên các loại kháng sinh' } }
           },
           plugins: { legend: { display: false } }
         }
       });
     }
 
-    // 9.4 Enterobacterales Grouped Bar Chart (E. coli vs K. pneumoniae)
+    // 8.4 Enterobacterales Grouped Bar Chart (E. coli vs K. pneumoniae)
     if (comp.detailedAntibiograms?.enterobacterales) {
       const ent = comp.detailedAntibiograms.enterobacterales;
       this.createOrUpdateChart('chart-rep-entero-bar', {
@@ -1045,8 +1082,8 @@ const ReportView = {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { beginAtZero: true, max: 100, title: { display: true, text: '% Kháng (R)' } },
-            x: { grid: { display: false } }
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tỷ lệ kháng thuốc (%)' } },
+            x: { grid: { display: false }, title: { display: true, text: 'Tên các loại kháng sinh' } }
           },
           plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 12, font: { weight: 'bold' } } }
@@ -1055,7 +1092,7 @@ const ReportView = {
       });
     }
 
-    // 9.5 Gram-negative non-fermenters Grouped Bar Chart (A. baumannii vs P. aeruginosa)
+    // 8.5 Gram-negative non-fermenters Grouped Bar Chart (A. baumannii vs P. aeruginosa)
     if (comp.detailedAntibiograms?.nonfermenters) {
       const nonf = comp.detailedAntibiograms.nonfermenters;
       this.createOrUpdateChart('chart-rep-nonferm-bar', {
@@ -1081,8 +1118,8 @@ const ReportView = {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { beginAtZero: true, max: 100, title: { display: true, text: '% Kháng (R)' } },
-            x: { grid: { display: false } }
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tỷ lệ kháng thuốc (%)' } },
+            x: { grid: { display: false }, title: { display: true, text: 'Tên các loại kháng sinh' } }
           },
           plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 12, font: { weight: 'bold' } } }
