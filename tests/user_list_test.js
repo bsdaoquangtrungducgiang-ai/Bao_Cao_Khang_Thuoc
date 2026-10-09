@@ -105,20 +105,20 @@ var users = AuthService.getUserList();
 assert(Array.isArray(users), 'AuthService.getUserList() trả về mảng danh sách');
 assert(users.length === 12, 'Danh sách có chính xác 12 nhân sự (thực tế: ' + users.length + ')');
 
-// 2. Danh sách dữ liệu mẫu mong đợi từ ảnh chụp
+// 2. Danh sách dữ liệu mẫu: Duy nhất 1 Admin là Bsdaoquangtrung@gmail.com, 11 nhân viên còn lại là User
 var expectedStaff = [
   { stt: 1, name: 'Đào Quang Trung', title: 'BS.CK2', email: 'bsdaoquangtrung@gmail.com', role: 'admin' },
-  { stt: 2, name: 'Chu Thị Huyền', title: 'BS.CKI', email: 'huyenct1992@gmail.com', role: 'manager' },
+  { stt: 2, name: 'Chu Thị Huyền', title: 'BS.CKI', email: 'huyenct1992@gmail.com', role: 'user' },
   { stt: 3, name: 'Vũ Thị Thu Trang', title: 'CN.XN', email: 'vutrangbvdg@gmail.com', role: 'user' },
   { stt: 4, name: 'Nguyễn Ngọc Linh', title: 'CN.XN', email: 'linh30011987@gmail.com', role: 'user' },
   { stt: 5, name: 'Đỗ Quốc Hưng', title: 'CN.XN', email: 'batqua3@gmail.com', role: 'user' },
-  { stt: 6, name: 'Trần Thúy Liên', title: 'Thạc Sỹ', email: 'tranthuyliench22@gmail.com', role: 'manager' },
-  { stt: 7, name: 'Trần Thị Quy', title: 'Thạc Sỹ', email: 'quycnsh@gmail.com', role: 'manager' },
+  { stt: 6, name: 'Trần Thúy Liên', title: 'Thạc Sỹ', email: 'tranthuyliench22@gmail.com', role: 'user' },
+  { stt: 7, name: 'Trần Thị Quy', title: 'Thạc Sỹ', email: 'quycnsh@gmail.com', role: 'user' },
   { stt: 8, name: 'Nguyễn Thị Kim Loan', title: 'KTV – CĐ', email: 'Kimloannguyen18977@gmail.com', role: 'user' },
   { stt: 9, name: 'Nghiêm Thị Làn', title: 'KTV – CĐ', email: 'chilanhn82@gmail.com', role: 'user' },
   { stt: 10, name: 'Trần Thanh Bình', title: 'KTV – CĐ', email: 'T.bjnho2@gmail.com', role: 'user' },
   { stt: 11, name: 'Nguyễn Duy Dũng', title: 'KTV – CĐ', email: 'nguyendungyk87@gmail.com', role: 'user' },
-  { stt: 12, name: 'Nguyễn Thị Lan', title: 'Hộ Lý', email: 'nhim01011983@gmail.com', role: 'viewer' }
+  { stt: 12, name: 'Nguyễn Thị Lan', title: 'Hộ Lý', email: 'nhim01011983@gmail.com', role: 'user' }
 ];
 
 expectedStaff.forEach(function(exp, idx) {
@@ -132,7 +132,7 @@ expectedStaff.forEach(function(exp, idx) {
   assert(actual.status === 'active', 'STT ' + exp.stt + ': Trạng thái active');
 });
 
-// 3. Kiểm tra chuyển vai trò demoUsers
+// 3. Kiểm tra chuyển vai trò demoUsers (backward compatibility)
 AuthService.setDemoRole('admin');
 assert(AuthService.getRole() === 'admin', 'Chuyển sang vai trò Admin thành công');
 assert(AuthService.getProfile().email === 'bsdaoquangtrung@gmail.com', 'Admin profile là BS.CK2 Đào Quang Trung');
@@ -154,6 +154,75 @@ var tbody = getOrCreateEl('table-users-body', 'TBODY');
 SystemCatalogsView.renderUsers();
 assert(tbody.children.length === 12, 'SystemCatalogsView.renderUsers() render đúng 12 hàng nhân sự (thực tế: ' + tbody.children.length + ')');
 
+// 5. Kiểm tra ĐĂNG NHẬP THEO QUY TẮC MỚI (Login Gate & RBAC)
+print('\n--- KIỂM TRA ĐĂNG NHẬP PHÂN QUYỀN RBAC MỚI ---');
+
+// 5.1. Đăng nhập Admin với mật khẩu "Admin"
+AuthService.logout();
+assert(!AuthService.isAuthenticated(), 'Đăng xuất thành công, chưa authenticated');
+
+var adminLoginRes = AuthService.login('bsdaoquangtrung@gmail.com', 'Admin');
+assert(AuthService.isAuthenticated(), 'Admin đăng nhập thành công');
+assert(AuthService.getRole() === 'admin', 'Admin có role là admin');
+assert(AuthService.hasRole(['admin']) === true, 'Admin có quyền admin để xem trường Hệ Thống');
+
+// 5.2. Đăng nhập Admin với mật khẩu gõ "Amind" (theo mô tả yêu cầu)
+AuthService.logout();
+AuthService.login('bsdaoquangtrung@gmail.com', 'Amind');
+assert(AuthService.getRole() === 'admin', 'Admin đăng nhập với mật khẩu "Amind" thành công');
+
+// 5.3. Đăng nhập Nhân viên y tế (vutrangbvdg@gmail.com) với mật khẩu "User"
+AuthService.logout();
+var staffLoginRes = AuthService.login('vutrangbvdg@gmail.com', 'User');
+assert(AuthService.isAuthenticated(), 'Nhân viên y tế đăng nhập thành công');
+assert(AuthService.getRole() === 'user', 'Nhân viên y tế có role là user');
+assert(AuthService.hasRole(['admin']) === false, 'Nhân viên y tế KHÔNG có quyền xem trường Hệ Thống');
+
+// 5.4. Đăng nhập Khách với tài khoản "User" và mật khẩu "User"
+AuthService.logout();
+var guestLoginRes = AuthService.login('User', 'User');
+assert(AuthService.isAuthenticated(), 'Tài khoản Khách đăng nhập thành công');
+assert(AuthService.getRole() === 'user', 'Tài khoản Khách có role là user');
+assert(AuthService.hasRole(['admin']) === false, 'Khách KHÔNG có quyền xem trường Hệ Thống');
+
+// 5.5. Kiểm tra từ chối mật khẩu sai
+var wrongPwCaught = false;
+try {
+  AuthService.login('bsdaoquangtrung@gmail.com', 'WrongPass');
+} catch (e) {
+  wrongPwCaught = true;
+}
+assert(wrongPwCaught === true, 'Báo lỗi và từ chối khi nhập sai mật khẩu Admin');
+
+var wrongStaffPwCaught = false;
+try {
+  AuthService.login('vutrangbvdg@gmail.com', 'Admin');
+} catch (e) {
+  wrongStaffPwCaught = true;
+}
+assert(wrongStaffPwCaught === true, 'Báo lỗi khi nhân viên cố đăng nhập với mật khẩu Admin');
+
+// 5.6. Kiểm tra từ chối tài khoản không tồn tại
+var notFoundCaught = false;
+try {
+  AuthService.login('unknown_doctor@hospital.vn', 'User');
+} catch (e) {
+  notFoundCaught = true;
+}
+assert(notFoundCaught === true, 'Báo lỗi khi tài khoản không nằm trong danh sách 12 nhân viên hoặc User');
+
+// 5.7. Kiểm tra phân quyền trường Hệ Thống (Chỉ Admin xem và thao tác được)
+AuthService.login('vutrangbvdg@gmail.com', 'User');
+assert(AuthService.hasRole(['admin']) === false, 'Nhân viên User: bị chặn truy cập trường Hệ Thống');
+assert(AuthService.canManageUsers() === false, 'Nhân viên User: không được quản lý người dùng');
+assert(AuthService.canDeleteData() === false, 'Nhân viên User: không được xóa dữ liệu');
+
+AuthService.login('bsdaoquangtrung@gmail.com', 'Admin');
+assert(AuthService.hasRole(['admin']) === true, 'Admin duy nhất: có toàn quyền truy cập trường Hệ Thống');
+assert(AuthService.canManageUsers() === true, 'Admin duy nhất: được quyền quản lý danh sách người dùng');
+assert(AuthService.canDeleteData() === true, 'Admin duy nhất: được quyền xóa dữ liệu');
+
 print('\n================================================================');
-print('  ✔ TOÀN BỘ CÁC BÀI TEST 12 NHÂN SỰ KHOA VI SINH ĐỀU ĐẠT 100%!');
+print('  ✔ TOÀN BỘ CÁC BÀI TEST 12 NHÂN SỰ & PHÂN QUYỀN ĐĂNG NHẬP ĐẠT 100%!');
 print('================================================================\n');
+

@@ -79,6 +79,17 @@ const Navigation = {
 
   navigateTo(tabName, updateHash = true) {
     if (!this.tabLabels[tabName]) tabName = 'dashboard';
+
+    // Bảo vệ phân quyền: Chỉ tài khoản Admin mới được truy cập trường Hệ thống
+    const systemTabs = ['catalogs', 'users', 'audit_logs', 'settings'];
+    if (systemTabs.includes(tabName) && window.AuthService?.getRole() !== 'admin') {
+      window.Toast?.error('Truy cập bị từ chối: Khu vực "Hệ thống" chỉ dành riêng cho Quản trị viên (Admin)!');
+      if (this.currentTab !== 'dashboard') {
+        this.navigateTo('dashboard', true);
+      }
+      return;
+    }
+
     this.currentTab = tabName;
 
     if (updateHash) {

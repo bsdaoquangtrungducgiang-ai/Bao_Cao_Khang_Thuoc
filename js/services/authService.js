@@ -8,7 +8,7 @@ const AuthService = {
   currentProfile: null,
   listeners: [],
 
-  // Danh sách đầy đủ 12 nhân sự khoa Vi sinh - BV Đa khoa Đức Giang
+  // Danh sách đầy đủ 12 nhân sự khoa Vi sinh - BV Đa khoa Đức Giang (1 Admin duy nhất, 11 User)
   userList: [
     {
       stt: 1,
@@ -17,7 +17,7 @@ const AuthService = {
       title: 'BS.CK2',
       email: 'bsdaoquangtrung@gmail.com',
       role: 'admin',
-      role_title: 'Admin (Toàn quyền)',
+      role_title: 'Admin (Toàn quyền / Quản trị hệ thống)',
       department: 'Khoa Vi sinh',
       status: 'active'
     },
@@ -27,8 +27,8 @@ const AuthService = {
       full_name: 'Chu Thị Huyền',
       title: 'BS.CKI',
       email: 'huyenct1992@gmail.com',
-      role: 'manager',
-      role_title: 'Manager (Bác sĩ điều trị / Quản lý)',
+      role: 'user',
+      role_title: 'User (Bác sĩ điều trị)',
       department: 'Khoa Vi sinh',
       status: 'active'
     },
@@ -71,8 +71,8 @@ const AuthService = {
       full_name: 'Trần Thúy Liên',
       title: 'Thạc Sỹ',
       email: 'tranthuyliench22@gmail.com',
-      role: 'manager',
-      role_title: 'Manager (Thạc sĩ Xét nghiệm)',
+      role: 'user',
+      role_title: 'User (Thạc sĩ Xét nghiệm)',
       department: 'Khoa Vi sinh',
       status: 'active'
     },
@@ -82,8 +82,8 @@ const AuthService = {
       full_name: 'Trần Thị Quy',
       title: 'Thạc Sỹ',
       email: 'quycnsh@gmail.com',
-      role: 'manager',
-      role_title: 'Manager (Thạc sĩ Xét nghiệm)',
+      role: 'user',
+      role_title: 'User (Thạc sĩ Xét nghiệm)',
       department: 'Khoa Vi sinh',
       status: 'active'
     },
@@ -137,8 +137,8 @@ const AuthService = {
       full_name: 'Nguyễn Thị Lan',
       title: 'Hộ Lý',
       email: 'nhim01011983@gmail.com',
-      role: 'viewer',
-      role_title: 'Viewer (Hộ lý / Chỉ xem)',
+      role: 'user',
+      role_title: 'User (Hộ lý)',
       department: 'Khoa Vi sinh',
       status: 'active'
     }
@@ -184,7 +184,26 @@ const AuthService = {
     return this.userList;
   },
 
+  isAuthenticated() {
+    return !!(this.currentUser && this.currentProfile);
+  },
+
   async init() {
+    const saved = localStorage.getItem('AUTH_LOGGED_IN_USER');
+    if (saved) {
+      try {
+        const profile = JSON.parse(saved);
+        if (profile && profile.email) {
+          this.currentProfile = profile;
+          this.currentUser = { id: profile.id, email: profile.email };
+          this.notify();
+          return;
+        }
+      } catch (err) {
+        console.warn('[AuthService] Parse saved session error:', err);
+      }
+    }
+
     const sb = window.SupabaseManager?.client;
     if (sb) {
       try {
@@ -192,29 +211,18 @@ const AuthService = {
         if (session?.user) {
           this.currentUser = session.user;
           await this.loadUserProfile(session.user.id);
-        } else {
-          this.restoreDemoSession();
-        }
-
-        // Lắng nghe thay đổi auth từ Supabase
-        sb.auth.onAuthStateChange(async (event, session) => {
-          if (session?.user) {
-            this.currentUser = session.user;
-            await this.loadUserProfile(session.user.id);
-          } else {
-            this.currentUser = null;
-            this.currentProfile = null;
-            this.restoreDemoSession();
-          }
           this.notify();
-        });
+          return;
+        }
       } catch (err) {
-        console.warn('[AuthService] Supabase session error, using demo session:', err);
-        this.restoreDemoSession();
+        console.warn('[AuthService] Supabase session check error:', err);
       }
-    } else {
-      this.restoreDemoSession();
     }
+
+    // Mặc định chưa đăng nhập
+    this.currentUser = null;
+    this.currentProfile = null;
+    this.notify();
   },
 
   restoreDemoSession() {
@@ -240,7 +248,6 @@ const AuthService = {
       if (data && !error) {
         this.currentProfile = data;
       } else {
-        // Fallback profile if profile row does not exist yet
         this.currentProfile = {
           id: userId,
           email: this.currentUser?.email || 'user@lab.vn',
@@ -254,31 +261,97 @@ const AuthService = {
     }
   },
 
-  async login(email, password) {
+  login(usernameOrEmail, password) {
+    if (!usernameOrEmail || !password) {
+      throw new Error('Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu!');
+    }
+
+    const u = String(usernameOrEmail).trim().toLowerCase();
+    const p = String(password).trim().toLowerCase();
+
+    // 1. Tài khoản KHÁCH (User / User)
+    if (u === 'user' || u === 'khach' || u === 'guest') {
+      if (p === 'user') {
+        const guestProfile = {
+          stt: 0,
+          id: 'usr-guest',
+          full_name: 'Khách Trải Nghiệm (Guest)',
+          title: 'Khách',
+          email: 'User',
+          role: 'user',
+          role_title: 'User (Khách vãng lai)',
+          department: 'Khách tham quan',
+          status: 'active'
+        };
+        this.currentUser = { id: guestProfile.id, email: guestProfile.email };
+        this.currentProfile = guestProfile;
+        localStorage.setItem('AUTH_LOGGED_IN_USER', JSON.stringify(guestProfile));
+        localStorage.setItem('CURRENT_USER_ROLE', 'user');
+        this.notify();
+        return Promise.resolve({ user: this.currentUser, profile: this.currentProfile });
+      } else {
+        throw new Error('Mật khẩu tài khoản Khách không đúng! Vui lòng nhập mật khẩu là "User".');
+      }
+    }
+
+    // 2. Tài khoản ADMIN DUY NHẤT: bsdaoquangtrung@gmail.com
+    if (u === 'bsdaoquangtrung@gmail.com' || u === 'admin') {
+      if (p === 'admin' || p === 'amind') {
+        const adminProfile = this.userList.find(x => x.stt === 1) || this.demoUsers.admin;
+        this.currentUser = { id: adminProfile.id, email: adminProfile.email };
+        this.currentProfile = adminProfile;
+        localStorage.setItem('AUTH_LOGGED_IN_USER', JSON.stringify(adminProfile));
+        localStorage.setItem('CURRENT_USER_ROLE', 'admin');
+        this.notify();
+        return Promise.resolve({ user: this.currentUser, profile: this.currentProfile });
+      } else {
+        throw new Error('Mật khẩu Quản trị viên không chính xác! Mật khẩu cho tài khoản Admin là "Admin".');
+      }
+    }
+
+    // 3. Tài khoản NHÂN VIÊN Y TẾ (11 nhân viên còn lại, mật khẩu là "User")
+    const matchedStaff = this.userList.find(x => (x.email || '').trim().toLowerCase() === u);
+    if (matchedStaff) {
+      if (p === 'user') {
+        this.currentUser = { id: matchedStaff.id, email: matchedStaff.email };
+        this.currentProfile = matchedStaff;
+        localStorage.setItem('AUTH_LOGGED_IN_USER', JSON.stringify(matchedStaff));
+        localStorage.setItem('CURRENT_USER_ROLE', 'user');
+        this.notify();
+        return Promise.resolve({ user: this.currentUser, profile: this.currentProfile });
+      } else {
+        throw new Error(`Mật khẩu không chính xác! Mật khẩu cho nhân sự (${matchedStaff.full_name}) là vai trò: "User".`);
+      }
+    }
+
+    // 4. Fallback với Supabase Auth nếu có cấu hình
     const sb = window.SupabaseManager?.client;
     if (sb) {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      this.currentUser = data.user;
-      await this.loadUserProfile(data.user.id);
-      this.notify();
-      return data;
-    } else {
-      // Demo login
-      this.setDemoRole('admin');
-      return { user: this.currentUser };
+      return sb.auth.signInWithPassword({ email: usernameOrEmail, password }).then(({ data, error }) => {
+        if (error) throw error;
+        this.currentUser = data.user;
+        return this.loadUserProfile(data.user.id).then(() => {
+          localStorage.setItem('AUTH_LOGGED_IN_USER', JSON.stringify(this.currentProfile));
+          localStorage.setItem('CURRENT_USER_ROLE', this.getRole());
+          this.notify();
+          return data;
+        });
+      });
     }
+
+    throw new Error('Tên đăng nhập không tồn tại! Vui lòng nhập Gmail trong danh sách nhân viên hoặc tài khoản "User".');
   },
 
   async logout() {
     const sb = window.SupabaseManager?.client;
     if (sb) {
-      await sb.auth.signOut();
+      try { await sb.auth.signOut(); } catch (e) {}
     }
     this.currentUser = null;
     this.currentProfile = null;
+    localStorage.removeItem('AUTH_LOGGED_IN_USER');
     localStorage.removeItem('CURRENT_USER_ROLE');
-    this.restoreDemoSession();
+    this.notify();
   },
 
   // Chuyển đổi vai trò demo nhanh phục vụ kiểm thử phân quyền
