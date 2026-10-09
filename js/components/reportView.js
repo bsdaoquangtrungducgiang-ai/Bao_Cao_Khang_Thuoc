@@ -32,6 +32,14 @@ const ReportView = {
         this.renderFullReport(fn);
       });
 
+      // Lắng nghe sự kiện trước và sau khi in ấn để xuất đầy đủ các trang không bị cắt
+      window.addEventListener('beforeprint', () => {
+        this.prepareForPrint();
+      });
+      window.addEventListener('afterprint', () => {
+        this.cleanupAfterPrint();
+      });
+
       // Tự động render ngay nếu tab hiện tại là reports khi khởi động hoặc reload trang
       setTimeout(() => {
         const hash = (typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '');
@@ -107,7 +115,7 @@ const ReportView = {
     // Các nút xuất báo cáo
     const btnPrint = document.getElementById('btn-print-full-report');
     if (btnPrint) {
-      btnPrint.addEventListener('click', () => window.print());
+      btnPrint.addEventListener('click', () => this.printReport());
     }
 
     const btnExcel = document.getElementById('btn-export-full-excel');
@@ -129,6 +137,124 @@ const ReportView = {
         }
       });
     }
+  },
+
+  /**
+   * Chuẩn bị toàn diện giao diện và cấu trúc trước khi in:
+   * 1. Mở khóa triệt để chiều cao 100vh và các thuộc tính overflow
+   * 2. Tháo dỡ hoàn toàn max-height của các khối cuộn bảng để in ra hết tất cả dữ liệu
+   * 3. Buộc Chart.js cập nhật kích thước chuẩn nét theo khổ in A4
+   */
+  prepareForPrint() {
+    if (typeof document === 'undefined') return;
+
+    if (document.documentElement && document.documentElement.classList) {
+      document.documentElement.classList.add('is-printing-report');
+    }
+    if (document.body && document.body.classList) {
+      document.body.classList.add('is-printing-report');
+    }
+
+    if (typeof document.querySelectorAll === 'function') {
+      const scrollContainers = document.querySelectorAll('.rep-table-scroll');
+      scrollContainers.forEach(el => {
+        if (!el.hasAttribute('data-prev-max-height')) {
+          el.setAttribute('data-prev-max-height', el.style.maxHeight || '');
+          el.setAttribute('data-prev-overflow', el.style.overflow || '');
+          el.setAttribute('data-prev-overflow-y', el.style.overflowY || '');
+        }
+        el.style.maxHeight = 'none';
+        el.style.overflow = 'visible';
+        el.style.overflowY = 'visible';
+      });
+    }
+
+    // Yêu cầu tất cả các biểu đồ Chart.js tự làm mới kích thước chuẩn khổ in
+    if (this.charts) {
+      Object.values(this.charts).forEach(chart => {
+        try {
+          chart.resize();
+          chart.update('none');
+        } catch (e) {}
+      });
+    }
+  },
+
+  /**
+   * Dọn dẹp và khôi phục giao diện màn hình sau khi đóng hộp thoại in
+   */
+  cleanupAfterPrint() {
+    if (typeof document === 'undefined') return;
+
+    if (document.documentElement && document.documentElement.classList) {
+      document.documentElement.classList.remove('is-printing-report');
+    }
+    if (document.body && document.body.classList) {
+      document.body.classList.remove('is-printing-report');
+    }
+
+    if (typeof document.querySelectorAll === 'function') {
+      const scrollContainers = document.querySelectorAll('.rep-table-scroll');
+      scrollContainers.forEach(el => {
+        const prevMax = el.getAttribute('data-prev-max-height');
+        const prevOver = el.getAttribute('data-prev-overflow');
+        const prevOverY = el.getAttribute('data-prev-overflow-y');
+        if (prevMax !== null) el.style.maxHeight = prevMax;
+        if (prevOver !== null) el.style.overflow = prevOver;
+        if (prevOverY !== null) el.style.overflowY = prevOverY;
+        el.removeAttribute('data-prev-max-height');
+        el.removeAttribute('data-prev-overflow');
+        el.removeAttribute('data-prev-overflow-y');
+      });
+    }
+
+    if (this.charts) {
+      Object.values(this.charts).forEach(chart => {
+        try {
+          chart.resize();
+        } catch (e) {}
+      });
+    }
+  },
+
+  /**
+   * Kích hoạt in và xuất báo cáo PDF chuẩn y khoa đầy đủ toàn bộ nội dung
+   */
+  printReport() {
+    if (typeof window === 'undefined') return;
+
+    // Đảm bảo tab Báo Cáo đang hoạt động
+    if (window.Navigation?.navigateTo) {
+      window.Navigation.navigateTo('reports');
+    }
+    const reportPanel = document.getElementById('view-reports');
+    if (reportPanel?.classList) {
+      reportPanel.classList.add('active');
+    }
+
+    // Đảm bảo dữ liệu báo cáo đã được nạp
+    if (!this.currentReportData) {
+      const select = document.getElementById('report-select-file');
+      const preferred = select ? select.value : null;
+      this.renderFullReport(preferred);
+    }
+
+    // Đảm bảo chế độ Báo cáo tích hợp được hiển thị
+    const viewInt = document.getElementById('rep-view-integrated');
+    if (viewInt && (!this.currentMode || this.currentMode === 'integrated')) {
+      viewInt.style.display = 'block';
+    }
+
+    this.prepareForPrint();
+
+    // Chờ 150ms để DOM reflow hoàn chỉnh rồi gọi window.print()
+    setTimeout(() => {
+      window.print();
+      // Dự phòng khôi phục sau khi in nếu browser không kích hoạt afterprint
+      setTimeout(() => {
+        this.cleanupAfterPrint();
+      }, 500);
+    }, 150);
   },
 
   /**

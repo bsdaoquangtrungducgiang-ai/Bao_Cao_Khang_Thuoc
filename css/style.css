@@ -3368,64 +3368,412 @@ body {
   text-align: center;
 }
 
-/* @MEDIA PRINT QUY CHUẨN IN ẤN VÀ XUẤT PDF */
+/* ==========================================================================
+   QUY CHUẨN IN ẤN VÀ XUẤT TOÀN BỘ FILE BÁO CÁO PDF ĐẦY ĐỦ (@MEDIA PRINT)
+   Khắc phục triệt để lỗi chỉ in ra 1-2 trang:
+   1. Phá vỡ hoàn toàn 100vh và overflow: hidden của body, .app-container, .main-wrapper, .content-body
+   2. Tháo dỡ toàn bộ max-height của các bảng cuộn (.rep-table-scroll)
+   3. Cho phép phân trang tự nhiên (break-inside: auto) cho các section dài
+   4. Giữ nguyên vẹn từng cụm thẻ biểu đồ và bảng (break-inside: avoid)
+   ========================================================================== */
+
+/* Khi đang trong trạng thái chuẩn bị in */
+html.is-printing-report,
+body.is-printing-report,
+body.is-printing-report .app-container,
+body.is-printing-report .main-wrapper,
+body.is-printing-report .content-body {
+  height: auto !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 10mm 10mm 12mm 10mm;
+}
+
 @media print {
-  /* Ẩn các thanh công cụ không cần in */
+  /* 1. Thiết lập màu sắc và nền in trung thực */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* 2. Ẩn tất cả các thành phần UI không phục vụ in ấn */
   .sidebar,
+  .top-header,
+  header,
   .topbar,
   .rep-control-panel,
   .rep-mode-nav,
   .rep-export-buttons,
   .theme-toggle,
   .btn-setup-action,
-  header,
-  footer {
+  .sidebar-toggle-btn,
+  .page-title-box,
+  .guideline-badge,
+  .conn-status,
+  .user-chip,
+  .btn-quick-logout,
+  footer,
+  .sidebar-footer,
+  #modal-auth,
+  .toast-container,
+  #dashboard-file-banner,
+  .btn-banner-clear,
+  .btn-banner-manage {
     display: none !important;
   }
 
-  body, html {
+  /* Ẩn tất cả các view panel không active */
+  .view-panel:not(.active) {
+    display: none !important;
+  }
+
+  /* 3. Phá vỡ hoàn toàn các giới hạn viewport và thanh cuộn của khung trang */
+  html,
+  body {
     background: #ffffff !important;
-    color: #000000 !important;
-    font-size: 11pt !important;
+    color: #0f172a !important;
+    font-size: 9.5pt !important;
+    line-height: 1.35 !important;
     margin: 0 !important;
     padding: 0 !important;
-  }
-
-  .main-content,
-  .view-panel,
-  .data-panel-card {
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    position: static !important;
   }
 
+  /* Bẻ gãy các khung cha để in xuyên suốt tất cả các trang */
+  .app-container,
+  .main-wrapper,
+  .content-body {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: static !important;
+    background: transparent !important;
+  }
+
+  .view-panel.active,
+  #view-reports {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  .report-document-sheet,
+  #printable-report {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: static !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .rep-main-container {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    gap: 0 !important;
+  }
+
+  /* Đảm bảo view con nào đang hiển thị thì bung toàn bộ */
+  #rep-view-integrated {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  #rep-view-integrated[style*="display: none"],
+  #rep-view-slides[style*="display: none"],
+  #rep-view-document[style*="display: none"] {
+    display: none !important;
+  }
+
+  #rep-view-integrated:not([style*="display: none"]) {
+    display: block !important;
+  }
+
+  #rep-view-slides:not([style*="display: none"]) {
+    display: block !important;
+  }
+
+  #rep-view-document:not([style*="display: none"]) {
+    display: block !important;
+  }
+
+  /* 4. Header Bệnh viện Y khoa */
+  .rep-hospital-header {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 14px 18px !important;
+    margin-bottom: 18px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .rep-hospital-title {
+    font-size: 14pt !important;
+    color: #0369a1 !important;
+  }
+
+  .rep-doc-main-title {
+    font-size: 13.5pt !important;
+    color: #0f172a !important;
+    margin: 8px 0 4px 0 !important;
+  }
+
+  .rep-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .rep-kpi-card {
+    padding: 8px 4px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    text-align: center !important;
+    background: #ffffff !important;
+  }
+
+  .rep-kpi-value {
+    font-size: 13.5pt !important;
+    margin-top: 2px !important;
+  }
+
+  /* 5. Thẻ Section báo cáo: Tự động phân trang tự nhiên (break-inside: auto) */
+  .rep-section-block {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 18px !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .rep-section-title-bar {
+    margin-bottom: 12px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .rep-section-title {
+    font-size: 11pt !important;
+    color: #0f172a !important;
+  }
+
+  /* 6. Bố cục xen kẽ Bảng & Biểu đồ: 2 cột song song chuẩn in A4 */
+  .rep-alternating-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+    align-items: start !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 14px !important;
+  }
+
+  .rep-chart-container,
+  .rep-table-container {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .rep-chart-canvas-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    height: 260px !important;
+    min-height: 240px !important;
+    max-height: 300px !important;
+    overflow: hidden !important;
+  }
+
+  .rep-chart-canvas-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    display: block !important;
+  }
+
+  /* 7. Tháo dỡ hoàn toàn max-height của các vùng cuộn bảng để in ra hết tất cả các dòng */
+  .rep-table-scroll {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  table.rep-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8.5pt !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  table.rep-table thead {
+    display: table-header-group !important;
+  }
+
+  table.rep-table tfoot {
+    display: table-footer-group !important;
+  }
+
+  table.rep-table tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  table.rep-table th,
+  table.rep-table td {
+    padding: 4px 6px !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  table.rep-table th {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    font-weight: 700 !important;
+  }
+
+  /* 8. Lưới Cảnh Báo Điểm Đỏ (Section 7) */
+  .rep-alert-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .rep-alert-card {
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    overflow: visible !important;
+  }
+
+  /* 5 nhóm bệnh phẩm */
+  .rep-specimen-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 6px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .rep-specimen-box {
+    padding: 6px 8px !important;
+    font-size: 8pt !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .rep-callout {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Giữ trọn từng khối phụ trong Mục 8 */
+  .rep-section-block > div[style*="border-bottom: 1px dashed"] {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 18px !important;
+    padding-bottom: 14px !important;
+  }
+
+  /* 9. Khối Chữ Ký Xác Nhận Y Khoa */
+  .rep-signature-block {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-top: 20px !important;
+    padding-top: 14px !important;
+    border-top: 1px dashed #cbd5e1 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .rep-sign-col {
+    text-align: center !important;
+    min-width: 180px !important;
+  }
+
+  .rep-sign-space {
+    height: 55px !important;
+  }
+
+  .rep-sign-name {
+    font-weight: 700 !important;
+    font-size: 10pt !important;
+  }
+
+  /* 10. Chế độ Slide Deck và Văn bản 15 trang */
   .rep-slide-card {
     box-shadow: none !important;
     border: 1px solid #94a3b8 !important;
     page-break-after: always !important;
+    break-after: page !important;
     margin-bottom: 0 !important;
-    padding: 20px !important;
-  }
-
-  .rep-section-block {
-    box-shadow: none !important;
-    border: 1px solid #cbd5e1 !important;
-    page-break-inside: avoid !important;
-    margin-bottom: 20px !important;
-  }
-
-  .rep-signature-block {
-    page-break-inside: avoid !important;
+    padding: 18px !important;
+    height: auto !important;
   }
 
   .rep-doc-page {
     box-shadow: none !important;
     margin: 0 !important;
-    padding: 15mm 15mm !important;
+    padding: 10mm 12mm !important;
     page-break-after: always !important;
+    break-after: page !important;
+    height: auto !important;
   }
 }
 

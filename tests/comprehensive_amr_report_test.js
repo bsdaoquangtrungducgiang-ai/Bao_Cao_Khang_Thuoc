@@ -129,9 +129,14 @@ assert(ReportView.currentMode === 'slides', "38. Chế độ 2: Trình chiếu 1
 ReportView.setMode('document');
 assert(ReportView.currentMode === 'document', "39. Chế độ 3: Văn bản hành chính y khoa 15 trang");
 
-// 11. Xuất báo cáo Excel & Word
+// 11. Xuất báo cáo Excel & Word & In / PDF toàn diện
 assert(typeof ReportExportService.exportExcelReportBundle === 'function', "40. Xuất Excel trọn gói 13 Sheet sẵn sàng");
 assert(typeof ReportExportService.exportWordDocument === 'function', "41. Xuất văn bản Word (.doc) sẵn sàng");
+assert(typeof ReportView.printReport === 'function', "42. Hàm xuất báo cáo in/PDF đầy đủ (printReport) sẵn sàng");
+assert(typeof ReportView.prepareForPrint === 'function', "43. Hàm mở khóa khung trang trước khi in (prepareForPrint) sẵn sàng");
+ReportView.prepareForPrint();
+ReportView.cleanupAfterPrint();
+assert(typeof ReportView.cleanupAfterPrint === 'function', "44. Hàm dọn dẹp và khôi phục (cleanupAfterPrint) chạy an toàn");
 
 print("\n================================================================");
 print("  KẾT QUẢ: " + passed + " PASS, " + failed + " FAIL");
