@@ -2584,4 +2584,850 @@ body {
   color: #b91c1c;
 }
 
+/* ==========================================================================
+   CHUYÊN ĐỀ BÁO CÁO AMR TỰ ĐỘNG - XEN KẼ BẢNG & BIỂU ĐỒ (MẪU 2 FILE PDF)
+   ========================================================================== */
+
+/* Thanh điều hướng chế độ & file phân tích */
+.rep-control-panel {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  padding: 18px 24px;
+  margin-bottom: 24px;
+}
+
+.rep-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.rep-file-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 320px;
+}
+
+.rep-file-select {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #0284c7;
+  background-color: #f0f9ff;
+  color: #0369a1;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.rep-file-select:focus {
+  border-color: #0369a1;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.rep-btn-primary {
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+.rep-btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  transform: translateY(-1px);
+}
+
+.rep-export-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rep-btn-print {
+  padding: 9px 15px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.rep-btn-print:hover {
+  background: #334155;
+}
+
+.rep-btn-excel {
+  padding: 9px 15px;
+  border-radius: 8px;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.rep-btn-excel:hover {
+  background: #047857;
+}
+
+.rep-btn-word {
+  padding: 9px 15px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.rep-btn-word:hover {
+  background: #1d4ed8;
+}
+
+/* Tab chuyển đổi chế độ xem */
+.rep-mode-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  overflow-x: auto;
+}
+
+.rep-mode-pill {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.rep-mode-pill:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.rep-mode-pill.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+.rep-mode-pill .pill-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  font-weight: 700;
+}
+
+/* Thẻ báo cáo chính */
+.rep-main-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Header tài liệu y khoa */
+.rep-hospital-header {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 30px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  border-top: 4px solid #0284c7;
+}
+
+.rep-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-bottom: 2px solid #0284c7;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+}
+
+.rep-hospital-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.rep-hospital-sub {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0284c7;
+  margin-top: 4px;
+}
+
+.rep-header-meta {
+  text-align: right;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.rep-doc-title-box {
+  text-align: center;
+  margin: 12px 0 20px 0;
+}
+
+.rep-doc-main-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.rep-doc-sub-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #dc2626;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.rep-doc-meta-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Thẻ Section báo cáo */
+.rep-section-block {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  padding: 24px;
+  transition: all 0.2s;
+}
+
+.rep-section-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.rep-section-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.rep-section-title i {
+  color: #0284c7;
+  font-size: 17px;
+}
+
+.rep-section-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+/* Lưới KPI quy mô */
+.rep-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.rep-kpi-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.rep-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+.rep-kpi-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.rep-kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.rep-kpi-card.accent-red .rep-kpi-value { color: #dc2626; }
+.rep-kpi-card.accent-blue .rep-kpi-value { color: #0284c7; }
+.rep-kpi-card.accent-green .rep-kpi-value { color: #16a34a; }
+.rep-kpi-card.accent-amber .rep-kpi-value { color: #d97706; }
+
+/* BỐ CỤC XEN KẼ: BẢNG VÀ BIỂU ĐỒ */
+.rep-alternating-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+.rep-chart-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.rep-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.rep-chart-canvas-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+  width: 100%;
+}
+
+.rep-table-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rep-table-header {
+  padding: 12px 16px;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rep-table-scroll {
+  overflow-x: auto;
+  flex: 1;
+  max-height: 480px;
+}
+
+.rep-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.rep-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 1.5px solid #cbd5e1;
+  font-size: 12px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rep-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.rep-table tr:hover td {
+  background: #f8fafc;
+}
+
+.rep-table .center { text-align: center; }
+.rep-table .bold { font-weight: 700; }
+
+/* Hộp bình luận y khoa (Clinical Callout) */
+.rep-callout {
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.rep-callout i {
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.rep-callout.info {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  color: #1e40af;
+}
+
+.rep-callout.warning {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+.rep-callout.success {
+  background: #f0fdf4;
+  border-left: 4px solid #22c55e;
+  color: #166534;
+}
+
+/* 7 ĐIỂM ĐỎ CẢNH BÁO KHÁNG THUỐC */
+.rep-alert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.rep-alert-card {
+  border-radius: 10px;
+  border: 1px solid #fca5a5;
+  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.rep-alert-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.15);
+}
+
+.rep-alert-card.level-critical {
+  border-left: 6px solid #b91c1c;
+}
+
+.rep-alert-card.level-high {
+  border-left: 6px solid #ea580c;
+  border-color: #fed7aa;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+}
+
+.rep-alert-card.level-warning {
+  border-left: 6px solid #d97706;
+  border-color: #fde68a;
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.rep-alert-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.rep-alert-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #991b1b;
+}
+
+.rep-alert-rate {
+  font-size: 26px;
+  font-weight: 900;
+  color: #dc2626;
+  line-height: 1;
+}
+
+.rep-alert-org {
+  font-size: 13px;
+  font-weight: 700;
+  font-style: italic;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.rep-alert-target {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.rep-alert-ratio {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.rep-alert-note {
+  font-size: 11.5px;
+  color: #475569;
+  line-height: 1.4;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 6px;
+}
+
+/* 5 NHÓM BỆNH PHẨM */
+.rep-specimen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.rep-specimen-box {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  padding: 14px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.rep-specimen-box-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f1f5f9;
+  margin-bottom: 10px;
+}
+
+.rep-specimen-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+}
+
+.rep-specimen-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.rep-specimen-list li span.org-name {
+  font-style: italic;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.rep-specimen-list li span.org-count {
+  font-weight: 700;
+  color: #0284c7;
+}
+
+/* GIAO DIỆN SLIDE DECK (MẪU FILE 1) */
+.rep-slide-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.rep-slide-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 28px 36px;
+  position: relative;
+  page-break-after: always;
+  overflow: hidden;
+}
+
+.rep-slide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2.5px solid #0284c7;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.rep-slide-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.rep-slide-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 14px;
+}
+
+.rep-slide-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+  margin-top: 24px;
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+/* CHỮ KÝ XÁC NHẬN Y KHOA */
+.rep-signature-block {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1.5px dashed #cbd5e1;
+  page-break-inside: avoid;
+}
+
+.rep-sign-col {
+  text-align: center;
+  width: 260px;
+}
+
+.rep-sign-role {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.rep-sign-sub {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.rep-sign-space {
+  height: 70px;
+}
+
+.rep-sign-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* ĐỊNH DẠNG VĂN BẢN HÀNH CHÍNH A4 (MẪU FILE 2) */
+.rep-document-view {
+  background: #525659;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.rep-doc-page {
+  background: #ffffff;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 25mm 20mm;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 13pt;
+  line-height: 1.45;
+  color: #000000;
+  box-sizing: border-box;
+}
+
+.rep-doc-page h2 {
+  font-size: 15pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-top: 14pt;
+  margin-bottom: 8pt;
+  color: #000;
+}
+
+.rep-doc-page h3 {
+  font-size: 13.5pt;
+  font-weight: bold;
+  margin-top: 12pt;
+  margin-bottom: 6pt;
+  color: #000;
+}
+
+.rep-doc-page p {
+  margin-bottom: 6pt;
+  text-align: justify;
+}
+
+.rep-doc-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10pt 0;
+  font-size: 11pt;
+}
+
+.rep-doc-page table th,
+.rep-doc-page table td {
+  border: 1px solid #333;
+  padding: 5pt 7pt;
+  text-align: left;
+}
+
+.rep-doc-page table th {
+  background: #f2f2f2;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* @MEDIA PRINT QUY CHUẨN IN ẤN VÀ XUẤT PDF */
+@media print {
+  /* Ẩn các thanh công cụ không cần in */
+  .sidebar,
+  .topbar,
+  .rep-control-panel,
+  .rep-mode-nav,
+  .rep-export-buttons,
+  .theme-toggle,
+  .btn-setup-action,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .main-content,
+  .view-panel,
+  .data-panel-card {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    width: 100% !important;
+  }
+
+  .rep-slide-card {
+    box-shadow: none !important;
+    border: 1px solid #94a3b8 !important;
+    page-break-after: always !important;
+    margin-bottom: 0 !important;
+    padding: 20px !important;
+  }
+
+  .rep-section-block {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 20px !important;
+  }
+
+  .rep-signature-block {
+    page-break-inside: avoid !important;
+  }
+
+  .rep-doc-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 15mm 15mm !important;
+    page-break-after: always !important;
+  }
+}
+
+
 

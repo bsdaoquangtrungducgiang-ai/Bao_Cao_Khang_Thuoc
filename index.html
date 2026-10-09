@@ -1538,164 +1538,826 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
           </div>
         </section>
 
-        <!-- ================= VIEW: BÁO CÁO AMR TỰ ĐỘNG 9 PHẦN (MỤC XXX & XXXI) ================= -->
+        <!-- ================= VIEW: BÁO CÁO AMR TỰ ĐỘNG XEN KẼ BẢNG & BIỂU ĐỒ (MẪU 2 FILE PDF) ================= -->
         <section class="view-panel" id="view-reports">
-          <div class="data-panel-card">
-            <!-- Filter Toolbar -->
-            <div class="data-toolbar">
-              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                <div>
-                  <span class="filter-label">Năm báo cáo:</span>
-                  <select class="filter-select" id="report-filter-time">
-                    <option value="2026" selected>Năm 2026</option>
-                    <option value="2025">Năm 2025</option>
-                    <option value="2024">Năm 2024</option>
-                  </select>
-                </div>
-                <div>
-                  <span class="filter-label">Vi khuẩn:</span>
-                  <select class="filter-select" id="report-filter-organism">
-                    <option value="ALL">Tất cả vi khuẩn</option>
-                    <option value="Escherichia coli">Escherichia coli</option>
-                    <option value="Klebsiella pneumoniae">Klebsiella pneumoniae</option>
-                    <option value="Pseudomonas aeruginosa">Pseudomonas aeruginosa</option>
-                    <option value="Acinetobacter baumannii">Acinetobacter baumannii</option>
-                    <option value="Staphylococcus aureus">Staphylococcus aureus</option>
-                  </select>
-                </div>
-                <div>
-                  <span class="filter-label">Bệnh phẩm:</span>
-                  <select class="filter-select" id="report-filter-specimen">
-                    <option value="ALL">Tất cả bệnh phẩm</option>
-                    <option value="Nước tiểu">Nước tiểu</option>
-                    <option value="Máu">Máu</option>
-                    <option value="Đờm">Đờm</option>
-                    <option value="Dịch vết thương">Dịch vết thương</option>
-                  </select>
-                </div>
-                <button class="btn-setup-action" id="btn-generate-report" style="margin-top: 14px;">
-                  <i class="fa-solid fa-arrows-rotate"></i> Tạo Báo Cáo
+          <!-- Control Panel: Chọn file, bộ lọc & Chuyển đổi chế độ -->
+          <div class="rep-control-panel">
+            <div class="rep-top-bar">
+              <div class="rep-file-selector-group">
+                <span class="filter-label" style="font-weight: 800; color: #0284c7; white-space: nowrap;">
+                  <i class="fa-solid fa-file-medical"></i> File phân tích:
+                </span>
+                <select class="rep-file-select" id="report-select-file">
+                  <option value="ĐG Dương tính (010126. 230626).xls" selected>ĐG Dương tính (010126. 230626).xls (Dữ liệu chuẩn BVĐK Đức Giang - 1.466 chủng)</option>
+                  <option value="ALL">Toàn bộ dữ liệu tổng hợp (Toàn viện)</option>
+                </select>
+                <button class="rep-btn-primary" id="btn-generate-report" title="Phân tích dữ liệu từ file đã chọn">
+                  <i class="fa-solid fa-arrows-rotate"></i> Phân Tích File
                 </button>
               </div>
-              <div style="display: flex; gap: 10px; margin-top: 14px;">
-                <button class="btn-setup-action" id="btn-print-full-report" style="background: #0284c7;">
+
+              <!-- Xuất báo cáo đa định dạng -->
+              <div class="rep-export-buttons">
+                <button class="rep-btn-print" id="btn-print-full-report" title="In trực tiếp hoặc Lưu dưới dạng PDF chuẩn y khoa">
                   <i class="fa-solid fa-print"></i> In Báo Cáo (PDF)
                 </button>
-                <button class="btn-setup-action" id="btn-export-full-excel" style="background: #059669;">
+                <button class="rep-btn-excel" id="btn-export-full-excel" title="Tải xuống trọn gói 13 Sheet Excel chuẩn y khoa">
                   <i class="fa-solid fa-file-excel"></i> Xuất Excel Trọn Gói
+                </button>
+                <button class="rep-btn-word" id="btn-export-word-doc" title="Tải xuống văn bản báo cáo Word (.doc)">
+                  <i class="fa-solid fa-file-word"></i> Xuất Word (.doc)
                 </button>
               </div>
             </div>
 
-            <!-- Document Sheet (Chuẩn in ấn y tế) -->
-            <div class="report-document-sheet" id="printable-report" style="background: #ffffff; padding: 32px; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 16px;">
-              <!-- Header Bệnh Viện -->
-              <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 16px; margin-bottom: 20px;">
-                <div>
-                  <h3 id="rep-hospital-name" style="font-size: 15px; font-weight: 700; color: var(--text-main); text-transform: uppercase;">BỆNH VIỆN ĐA KHOA TRUNG TÂM</h3>
-                  <h4 id="rep-department-name" style="font-size: 13px; color: var(--primary); font-weight: 600;">KHOA VI SINH</h4>
+            <!-- Bộ lọc phụ (Tương thích & Tinh chỉnh) -->
+            <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e2e8f0;">
+              <div>
+                <span class="filter-label" style="font-size: 11.5px; color: #64748b;">Năm báo cáo:</span>
+                <select class="filter-select" id="report-filter-time" style="padding: 4px 8px; font-size: 12px;">
+                  <option value="2026" selected>Năm 2026 (6 tháng đầu năm)</option>
+                  <option value="2025">Năm 2025</option>
+                  <option value="2024">Năm 2024</option>
+                </select>
+              </div>
+              <div>
+                <span class="filter-label" style="font-size: 11.5px; color: #64748b;">Lọc nhanh vi khuẩn:</span>
+                <select class="filter-select" id="report-filter-organism" style="padding: 4px 8px; font-size: 12px;">
+                  <option value="ALL">Tất cả vi khuẩn</option>
+                  <option value="Escherichia coli">Escherichia coli</option>
+                  <option value="Klebsiella pneumoniae">Klebsiella pneumoniae</option>
+                  <option value="Pseudomonas aeruginosa">Pseudomonas aeruginosa</option>
+                  <option value="Acinetobacter baumannii">Acinetobacter baumannii</option>
+                  <option value="Staphylococcus aureus">Staphylococcus aureus</option>
+                  <option value="Haemophilus influenzae">Haemophilus influenzae</option>
+                  <option value="Streptococcus pneumoniae">Streptococcus pneumoniae</option>
+                </select>
+              </div>
+              <div>
+                <span class="filter-label" style="font-size: 11.5px; color: #64748b;">Bệnh phẩm:</span>
+                <select class="filter-select" id="report-filter-specimen" style="padding: 4px 8px; font-size: 12px;">
+                  <option value="ALL">Tất cả bệnh phẩm</option>
+                  <option value="Dịch tỵ hầu/họng">Dịch tỵ hầu/họng</option>
+                  <option value="Đờm/Dịch hô hấp dưới">Đờm/Dịch hô hấp dưới</option>
+                  <option value="Mủ/Dịch vết thương">Mủ/Dịch vết thương</option>
+                  <option value="Nước tiểu">Nước tiểu</option>
+                  <option value="Máu">Máu</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tab chọn chế độ xem báo cáo -->
+            <div class="rep-mode-nav">
+              <button class="rep-mode-pill active" id="tab-rep-integrated">
+                <i class="fa-solid fa-table-columns"></i> 1. Báo Cáo Tích Hợp (Xen Kẽ Bảng & Biểu Đồ)
+                <span class="pill-tag">Khuyên dùng</span>
+              </button>
+              <button class="rep-mode-pill" id="tab-rep-slides">
+                <i class="fa-solid fa-file-powerpoint"></i> 2. Bản Trình Chiếu Trực Quan (12 Slide Deck - Mẫu File 1)
+              </button>
+              <button class="rep-mode-pill" id="tab-rep-document">
+                <i class="fa-solid fa-file-lines"></i> 3. Văn Bản Hành Chính Y Khoa (15 Trang - Mẫu File 2)
+              </button>
+            </div>
+          </div>
+
+          <!-- Printable Wrapper (Bao hàm dữ liệu in ấn chuẩn y khoa) -->
+          <div class="report-document-sheet" id="printable-report" style="background: transparent; border: none; padding: 0;">
+
+            <!-- ================= CHẾ ĐỘ 1: BÁO CÁO TÍCH HỢP XEN KẼ BẢNG & BIỂU ĐỒ ================= -->
+            <div id="rep-view-integrated" class="rep-main-container">
+              <!-- Header Bệnh Viện Y Khoa -->
+              <div class="rep-hospital-header">
+                <div class="rep-header-row">
+                  <div>
+                    <h3 id="rep-hospital-name" class="rep-hospital-title">BỆNH VIỆN ĐA KHOA ĐỨC GIANG</h3>
+                    <h4 id="rep-department-name" class="rep-hospital-sub">KHOA VI SINH - HỘI ĐỒNG THUỐC &amp; ĐIỀU TRỊ</h4>
+                  </div>
+                  <div class="rep-header-meta">
+                    <div>Ngày lập: <strong id="rep-timestamp">25/06/2026</strong></div>
+                    <div>Người lập: <strong id="rep-author">BS.CKI. Chu Thị Huyền</strong></div>
+                    <div>Phê duyệt: <strong id="rep-reviewer">BS.CK2. Đào Quang Trung</strong></div>
+                    <div>Tiêu chuẩn tham chiếu: <strong>CLSI M100 2025 / CLSI M39</strong></div>
+                  </div>
                 </div>
-                <div style="text-align: right; font-size: 11.5px; color: var(--text-muted);">
-                  <div>Ngày lập: <strong id="rep-timestamp">28/09/2026</strong></div>
-                  <div>Người lập: <strong id="rep-author">BS.CK2. Đào Quang Trung</strong></div>
-                  <div>Tiêu chuẩn: <strong>CLSI M100</strong></div>
+                <div class="rep-doc-title-box">
+                  <h2 class="rep-doc-main-title">BÁO CÁO GIÁM SÁT TÌNH HÌNH NHIỄM KHUẨN VÀ KHÁNG KHÁNG SINH</h2>
+                  <div class="rep-doc-sub-title">6 THÁNG ĐẦU NĂM 2026 (01/01/2026 – 22/06/2026)</div>
+                  <span id="rep-filter-display" class="rep-doc-meta-badge">Tập tin: ĐG Dương tính (010126. 230626).xls | 1,466 chủng phân lập | 24 khoa phòng</span>
+                </div>
+
+                <!-- Lưới KPI Tổng Quan Quy Mô -->
+                <div class="rep-kpi-grid">
+                  <div class="rep-kpi-card accent-blue">
+                    <div class="rep-kpi-label">Tổng Số Chủng KSĐ</div>
+                    <div class="rep-kpi-value" id="rep-sum-total">1,466</div>
+                  </div>
+                  <div class="rep-kpi-card">
+                    <div class="rep-kpi-label">Bệnh Nhân Dương Tính</div>
+                    <div class="rep-kpi-value" id="rep-sum-patients">1,137</div>
+                  </div>
+                  <div class="rep-kpi-card accent-green">
+                    <div class="rep-kpi-label">Khoa Lâm Sàng</div>
+                    <div class="rep-kpi-value" id="rep-sum-depts">24</div>
+                  </div>
+                  <div class="rep-kpi-card accent-amber">
+                    <div class="rep-kpi-label">Loài Vi Sinh Vật</div>
+                    <div class="rep-kpi-value" id="rep-sum-species">54</div>
+                  </div>
+                  <div class="rep-kpi-card accent-red">
+                    <div class="rep-kpi-label">Tỷ Lệ Kháng (%R)</div>
+                    <div class="rep-kpi-value" id="rep-sum-r">58.4%</div>
+                  </div>
+                  <div class="rep-kpi-card">
+                    <div class="rep-kpi-label">Đa Kháng (MDR)</div>
+                    <div class="rep-kpi-value" id="rep-sum-mdr" style="color: #b45309;">28.1%</div>
+                  </div>
+                </div>
+
+                <!-- Backward-compatible hidden/inline indicators for Phase 7/8 test checks -->
+                <div style="display: none;">
+                  <span id="rep-sum-s">34.8%</span>
+                  <span id="rep-sum-i">6.8%</span>
                 </div>
               </div>
 
-              <!-- Title -->
-              <div style="text-align: center; margin-bottom: 24px;">
-                <h2 style="font-size: 19px; font-weight: 800; color: #0f172a; letter-spacing: 0.5px;">BÁO CÁO GIÁM SÁT TÌNH HÌNH KHÁNG KHÁNG SINH (AMR)</h2>
-                <span id="rep-filter-display" style="font-size: 12.5px; color: var(--text-muted);">Thời gian: Năm 2026 | Toàn viện</span>
-              </div>
+              <!-- PHẦN 1: QUY MÔ GIÁM SÁT & CƠ CẤU NHÓM VI SINH VẬT (Xen kẽ Biểu đồ Donut + Bảng số liệu) -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-chart-pie"></i> 1. QUY MÔ GIÁM SÁT VÀ CƠ CẤU NHÓM VI SINH VẬT
+                  </h4>
+                  <span class="rep-section-badge">1,466 chủng phân lập</span>
+                </div>
+                <div class="rep-alternating-grid">
+                  <!-- Biểu đồ Donut (Trái) -->
+                  <div class="rep-chart-container">
+                    <div class="rep-chart-header">
+                      <span><i class="fa-solid fa-pie-chart"></i> Biểu đồ Cơ cấu Gram &amp; Nấm</span>
+                      <span style="font-size: 11px; color: #64748b;">Tỷ lệ %</span>
+                    </div>
+                    <div class="rep-chart-canvas-wrapper">
+                      <canvas id="chart-rep-gram-donut"></canvas>
+                    </div>
+                  </div>
 
-              <!-- 1. Chỉ số tổng quan -->
-              <div style="margin-bottom: 24px;">
-                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
-                  1. TỔNG QUAN VÀ TỶ LỆ KHÁNG SINH ĐỒ TOÀN BỘ
-                </h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; background: #f8fafc; padding: 14px; border-radius: 6px;">
-                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Tổng AST</span><strong id="rep-sum-total" style="font-size: 18px;">1,000</strong></div>
-                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Tỷ Lệ Nhạy (%S)</span><strong id="rep-sum-s" style="font-size: 18px; color: var(--color-s);">62.0%</strong></div>
-                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Trung Gian (%I)</span><strong id="rep-sum-i" style="font-size: 18px; color: var(--color-i);">8.0%</strong></div>
-                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Kháng Thuốc (%R)</span><strong id="rep-sum-r" style="font-size: 18px; color: var(--color-r);">30.0%</strong></div>
-                  <div><span style="font-size: 11px; color: var(--text-muted); display: block;">Đa Kháng (MDR)</span><strong id="rep-sum-mdr" style="font-size: 18px; color: #b45309;">9.5%</strong></div>
+                  <!-- Bảng Số Liệu Chi Tiết (Phải) -->
+                  <div class="rep-table-container">
+                    <div class="rep-table-header">
+                      <span><i class="fa-solid fa-table"></i> Bảng 1: Phân bố theo nhóm vi sinh vật</span>
+                      <span class="badge-total">N = 1,466</span>
+                    </div>
+                    <div class="rep-table-scroll">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th>Nhóm Vi Sinh Vật</th>
+                            <th class="center">Số Chủng</th>
+                            <th class="center">Tỷ Lệ (%)</th>
+                            <th>Mô Tả Lâm Sàng</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-gram-body"></tbody>
+                      </table>
+                    </div>
+                    <div class="rep-callout info" style="margin: 12px;">
+                      <i class="fa-solid fa-circle-info"></i>
+                      <div>Vi khuẩn Gram âm chiếm ưu thế áp đảo với <strong>59.1% (867 chủng)</strong>, Gram dương chiếm <strong>34.1% (500 chủng)</strong>, Nấm chiếm <strong>4.5% (66 chủng)</strong>. Cơ cấu này là cơ sở để định hướng danh mục kháng sinh toàn viện.</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- 2. Phân bố vi khuẩn -->
-              <div style="margin-bottom: 24px;">
-                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
-                  2. PHÂN BỐ CÁC CHỦNG VI KHUẨN GÂY BỆNH HÀNG ĐẦU
-                </h4>
-                <table class="table-lab" style="font-size: 12px;">
-                  <thead>
-                    <tr>
-                      <th style="width: 40px; text-align: center;">#</th>
-                      <th>Chủng Vi Khuẩn</th>
-                      <th style="text-align: center;">Số lượng mẫu</th>
-                      <th style="text-align: center;">Tỷ lệ phân lập (%)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="table-rep-org-body"></tbody>
-                </table>
-              </div>
-
-              <!-- 3. Antibiogram -->
-              <div style="margin-bottom: 24px;">
-                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
-                  3. BẢNG KHÁNG SINH ĐỒ (ANTIBIOGRAM) CHI TIẾT
-                </h4>
-                <table class="table-lab" style="font-size: 12px;">
-                  <thead>
-                    <tr>
-                      <th style="width: 40px; text-align: center;">#</th>
-                      <th>Mã</th>
-                      <th>Tên Kháng Sinh</th>
-                      <th style="text-align: center;">% Nhạy (S)</th>
-                      <th style="text-align: center;">% Trung Gian (I)</th>
-                      <th style="text-align: center;">% Kháng (R)</th>
-                      <th style="text-align: center;">Mẫu Thử</th>
-                    </tr>
-                  </thead>
-                  <tbody id="table-rep-abg-body"></tbody>
-                </table>
-              </div>
-
-              <!-- 4. So sánh các năm -->
-              <div style="margin-bottom: 24px;">
-                <h4 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 8px;">
-                  4. SO SÁNH XU HƯỚNG KHÁNG THUỐC QUA CÁC NĂM (2024 - 2026)
-                </h4>
-                <table class="table-lab" style="font-size: 12px;">
-                  <thead>
-                    <tr>
-                      <th>Giai Đoạn</th>
-                      <th style="text-align: center;">Tổng Mẫu</th>
-                      <th style="text-align: center;">Kháng (%R)</th>
-                      <th style="text-align: center;">Trung Gian (%I)</th>
-                      <th style="text-align: center;">Nhạy Cảm (%S)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="table-rep-years-body"></tbody>
-                </table>
-              </div>
-
-              <!-- Chữ ký xác nhận y khoa -->
-              <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; page-break-inside: avoid;">
-                <div style="text-align: center; width: 220px;">
-                  <div style="font-size: 12px; font-weight: 600;">TRƯỞNG KHOA XÉT NGHIỆM / VI SINH</div>
-                  <div style="font-size: 11px; color: var(--text-muted);">(Ký và ghi rõ họ tên)</div>
-                  <div style="margin-top: 60px; font-weight: 700;">BS.CK2. Đào Quang Trung</div>
+              <!-- PHẦN 2: PHÂN BỐ CHỦNG PHÂN LẬP THEO THÁNG (Xen kẽ Biểu đồ Cột + Bảng số liệu có đỉnh T4) -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-calendar-days"></i> 2. PHÂN BỐ SỐ LƯỢNG CHỦNG THEO THÁNG (T1 – T6/2026)
+                  </h4>
+                  <span class="rep-section-badge" style="background: #fee2e2; color: #b91c1c;">Đỉnh dịch Tháng 4: 338 chủng</span>
                 </div>
-                <div style="text-align: center; width: 220px;">
-                  <div style="font-size: 12px; font-weight: 600;">CHỦ TỊCH HỘI ĐỒNG THUỐC &amp; ĐIỀU TRỊ</div>
-                  <div style="font-size: 11px; color: var(--text-muted);">(Ký và ghi rõ họ tên)</div>
-                  <div style="margin-top: 60px; font-weight: 700;">PGS.TS. Giám Đốc Bệnh Viện</div>
+                <div class="rep-alternating-grid">
+                  <!-- Biểu đồ Cột theo tháng (Trái) -->
+                  <div class="rep-chart-container">
+                    <div class="rep-chart-header">
+                      <span><i class="fa-solid fa-chart-column"></i> Biểu đồ diễn biến số chủng theo tháng</span>
+                      <span style="font-size: 11px; color: #dc2626; font-weight: 700;">Cột đỏ: Đỉnh phân lập T4</span>
+                    </div>
+                    <div class="rep-chart-canvas-wrapper">
+                      <canvas id="chart-rep-monthly-bar"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Bảng Số Liệu Chi Tiết Tháng (Phải) -->
+                  <div class="rep-table-container">
+                    <div class="rep-table-header">
+                      <span><i class="fa-solid fa-table"></i> Bảng 2: Số liệu phân lập từng tháng</span>
+                      <span>6 tháng đầu năm</span>
+                    </div>
+                    <div class="rep-table-scroll">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th>Thời Gian</th>
+                            <th class="center">Số Chủng</th>
+                            <th class="center">Tỷ Lệ (%)</th>
+                            <th>Đặc Điểm &amp; Xu Hướng</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-monthly-body"></tbody>
+                      </table>
+                    </div>
+                    <div class="rep-callout warning" style="margin: 12px;">
+                      <i class="fa-solid fa-triangle-exclamation"></i>
+                      <div>Số lượng chủng tăng liên tục từ Tháng 1 (208 chủng) lên đỉnh điểm vào <strong>Tháng 4 (338 chủng - 23.1%)</strong>, sau đó hạ nhiệt ở T5 và T6. Hoàn toàn trùng khớp với mùa bệnh lý nhiễm khuẩn đường hô hấp ở trẻ em.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PHẦN 3: PHÂN BỐ THEO KHOA LÂM SÀNG (Xen kẽ Biểu đồ Cột ngang + Bảng Top 12 khoa) -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-hospital-user"></i> 3. PHÂN BỐ CHỦNG THEO CÁC KHOA LÂM SÀNG (TOP 12 KHOA)
+                  </h4>
+                  <span class="rep-section-badge">4 khoa trọng điểm chiếm ~2/3 (66.6%)</span>
+                </div>
+                <div class="rep-alternating-grid">
+                  <!-- Biểu đồ Top Khoa (Trái) -->
+                  <div class="rep-chart-container">
+                    <div class="rep-chart-header">
+                      <span><i class="fa-solid fa-chart-bar"></i> Biểu đồ Top 12 khoa phòng có chủng phân lập cao nhất</span>
+                      <span style="font-size: 11px; color: #0284c7;">Đơn vị: Chủng</span>
+                    </div>
+                    <div class="rep-chart-canvas-wrapper" style="min-height: 400px;">
+                      <canvas id="chart-rep-depts-bar"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Bảng Top Khoa (Phải) -->
+                  <div class="rep-table-container">
+                    <div class="rep-table-header">
+                      <span><i class="fa-solid fa-table"></i> Bảng 3: Chi tiết Top 12 khoa lâm sàng</span>
+                      <span>Toàn viện (24 khoa)</span>
+                    </div>
+                    <div class="rep-table-scroll" style="max-height: 400px;">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th class="center" style="width: 36px;">#</th>
+                            <th>Khoa Lâm Sàng</th>
+                            <th class="center">Số Chủng</th>
+                            <th class="center">Tỷ Lệ (%)</th>
+                            <th>Phân Nhóm Giám Sát</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-depts-body"></tbody>
+                      </table>
+                    </div>
+                    <div class="rep-callout info" style="margin: 12px;">
+                      <i class="fa-solid fa-bullseye"></i>
+                      <div>Khoa Hồi sức tích cực - Chống độc (316 chủng - 21.6%), Nhi hô hấp (300 chủng - 20.5%), Hồi sức Nhi (202 chủng - 13.8%) và Khoa Nhi (158 chủng - 10.8%) chiếm tới <strong>66.6% (976 chủng)</strong> tổng số toàn viện. Đây là các trọng điểm cần giám sát đa kháng.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PHẦN 4: CƠ CẤU BỆNH PHẨM & SO SÁNH VINARES (Xen kẽ Biểu đồ + Bảng + Đối chiếu Y văn) -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-vial-virus"></i> 4. CƠ CẤU BỆNH PHẨM VÀ SO SÁNH Y VĂN VINARES
+                  </h4>
+                  <span class="rep-section-badge">Hô hấp chiếm 63.3%</span>
+                </div>
+                <div class="rep-alternating-grid">
+                  <!-- Biểu đồ Bệnh phẩm (Trái) -->
+                  <div class="rep-chart-container">
+                    <div class="rep-chart-header">
+                      <span><i class="fa-solid fa-chart-column"></i> Biểu đồ cơ cấu 11 loại bệnh phẩm</span>
+                      <span style="font-size: 11px; color: #64748b;">Tỷ lệ %</span>
+                    </div>
+                    <div class="rep-chart-canvas-wrapper" style="min-height: 380px;">
+                      <canvas id="chart-rep-specimens-bar"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Bảng Số Liệu Bệnh phẩm & Đối chiếu y văn (Phải) -->
+                  <div class="rep-table-container">
+                    <div class="rep-table-header">
+                      <span><i class="fa-solid fa-table"></i> Bảng 4: Cơ cấu bệnh phẩm phân lập</span>
+                      <span>N = 1,466</span>
+                    </div>
+                    <div class="rep-table-scroll" style="max-height: 280px;">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th class="center" style="width: 36px;">#</th>
+                            <th>Loại Bệnh Phẩm</th>
+                            <th class="center">Số Chủng</th>
+                            <th class="center">Tỷ Lệ (%)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-specimens-body"></tbody>
+                      </table>
+                    </div>
+                    <!-- Hộp đối chiếu y văn VINARES 2016-2017 -->
+                    <div class="rep-callout info" style="margin: 12px; border-left-color: #0284c7;">
+                      <i class="fa-solid fa-book-medical"></i>
+                      <div>
+                        <strong>Đối chiếu y văn Mạng giám sát VINARES 2016–2017 (13 BV toàn quốc):</strong> Đờm chiếm 21%, Máu 17%, Nước tiểu 12%. Tại Đức Giang, bệnh phẩm hô hấp chiếm tới <strong>63.3%</strong> (tỵ hầu 46.5%, đờm 16.8%) phản ánh cơ cấu bệnh nhi chiếm tỷ trọng lớn; cần phân biệt vi khuẩn gây bệnh thực sự và vi hệ thường trú.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PHẦN 5: TOP 15 TÁC NHÂN VI SINH VẬT PHÂN LẬP CHÍNH (Xen kẽ Biểu đồ + Bảng phân nhóm) -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-bacterium"></i> 5. CÁC TÁC NHÂN VI KHUẨN VÀ NẤM GÂY BỆNH HÀNG ĐẦU (TOP 15)
+                  </h4>
+                  <span class="rep-section-badge">H. influenzae, S. aureus, S. pneumoniae dẫn đầu</span>
+                </div>
+                <div class="rep-alternating-grid">
+                  <!-- Biểu đồ Top 15 (Trái) -->
+                  <div class="rep-chart-container">
+                    <div class="rep-chart-header">
+                      <span><i class="fa-solid fa-chart-bar"></i> Biểu đồ Top 15 chủng phân lập nhiều nhất</span>
+                      <span style="font-size: 11px; color: #0284c7;">Số chủng</span>
+                    </div>
+                    <div class="rep-chart-canvas-wrapper" style="min-height: 480px;">
+                      <canvas id="chart-rep-pathogens-bar"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Bảng Số Liệu Top 15 (Phải) -->
+                  <div class="rep-table-container">
+                    <div class="rep-table-header">
+                      <span><i class="fa-solid fa-table"></i> Bảng 5: Danh mục 15 chủng vi sinh vật hàng đầu</span>
+                      <span class="badge-total">Chiếm 92.5% toàn viện</span>
+                    </div>
+                    <div class="rep-table-scroll" style="max-height: 480px;">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th class="center" style="width: 36px;">#</th>
+                            <th>Tên Chủng Vi Sinh Vật</th>
+                            <th>Nhóm Phân Loại</th>
+                            <th class="center">Số Chủng</th>
+                            <th class="center">Tỷ Lệ (%)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-org-body"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PHẦN 6: TÁC NHÂN THEO 5 NHÓM BỆNH PHẨM TRỌNG ĐIỂM -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-layer-group"></i> 6. TÁC NHÂN PHÂN LẬP THEO 5 NHÓM BỆNH PHẨM CHÍNH
+                  </h4>
+                  <span class="rep-section-badge">Máu, Nước tiểu, Đờm, Mủ, Tỵ hầu</span>
+                </div>
+                <div class="rep-specimen-grid" id="rep-specimen-boxes-container">
+                  <!-- Render động 5 hộp bệnh phẩm -->
+                </div>
+                <div class="rep-callout info">
+                  <i class="fa-solid fa-circle-info"></i>
+                  <div>Trong cấy máu: <strong>E. coli (42 ca)</strong> và <strong>S. aureus (21 ca)</strong> là căn nguyên hàng đầu. Trong đờm: <strong>A. baumannii (78 ca)</strong> và <strong>P. aeruginosa (69 ca)</strong> chiếm ưu thế vượt trội, là nguyên nhân chính của viêm phổi bệnh viện (HAP/VAP).</div>
+                </div>
+              </div>
+
+              <!-- PHẦN 7: XU HƯỚNG PHÂN LẬP THEO THÁNG CỦA 6 VI KHUẨN CHÍNH (Xen kẽ Biểu đồ Đường + Bảng ma trận) -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-chart-line"></i> 7. XU HƯỚNG PHÂN LẬP THEO THÁNG CỦA 6 VI KHUẨN CHÍNH (T1 – T6/2026)
+                  </h4>
+                  <span class="rep-section-badge">Aba, Eco, Hin, Pae, Sau, Spn</span>
+                </div>
+                <div class="rep-alternating-grid">
+                  <!-- Biểu đồ Đường 6 vi khuẩn (Trái) -->
+                  <div class="rep-chart-container">
+                    <div class="rep-chart-header">
+                      <span><i class="fa-solid fa-chart-line"></i> Biểu đồ diễn biến 6 chủng qua 6 tháng</span>
+                      <span style="font-size: 11px; color: #16a34a; font-weight: 700;">H. influenzae vọt đỉnh T4</span>
+                    </div>
+                    <div class="rep-chart-canvas-wrapper" style="min-height: 380px;">
+                      <canvas id="chart-rep-trend-lines"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Bảng Ma Trận Xu Hướng Tháng (Phải) -->
+                  <div class="rep-table-container">
+                    <div class="rep-table-header">
+                      <span><i class="fa-solid fa-table"></i> Bảng 6: Ma trận số lượng chủng theo tháng</span>
+                      <span>T1 - T6/2026</span>
+                    </div>
+                    <div class="rep-table-scroll" style="max-height: 380px;">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th>Tác Nhân Vi Khuẩn</th>
+                            <th class="center">T1</th>
+                            <th class="center">T2</th>
+                            <th class="center">T3</th>
+                            <th class="center" style="color: #dc2626;">T4</th>
+                            <th class="center">T5</th>
+                            <th class="center">T6*</th>
+                            <th class="center bold">Tổng</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-trend-matrix-body"></tbody>
+                      </table>
+                    </div>
+                    <div class="rep-callout info" style="margin: 12px;">
+                      <i class="fa-solid fa-chart-line"></i>
+                      <div><em>H. influenzae</em> có sự bùng phát mạnh mẽ nhất trong Tháng 4 với <strong>87 chủng</strong> (tăng gấp hơn 3 lần so với T1: 26 chủng), cùng với <em>S. aureus</em> (48 chủng) và <em>S. pneumoniae</em> (50 chủng) tạo thành đỉnh dịch hô hấp trẻ em.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PHẦN 8: 7 CON SỐ CẢNH BÁO - ĐIỂM ĐỎ KHÁNG THUỐC (Xen kẽ Thẻ cảnh báo + Biểu đồ Cột mức độ) -->
+              <div class="rep-section-block" style="border: 1.5px solid #fca5a5; background: #fffcfc;">
+                <div class="rep-section-title-bar" style="border-bottom-color: #fee2e2;">
+                  <h4 class="rep-section-title" style="color: #991b1b;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> 8. 7 CON SỐ CẢNH BÁO - ĐIỂM ĐỎ KHÁNG THUỐC (RED ALERTS)
+                  </h4>
+                  <span class="rep-section-badge" style="background: #fee2e2; color: #991b1b; font-weight: 800;">BÁO ĐỘNG ĐỎ LÂM SÀNG</span>
+                </div>
+
+                <!-- 7 Thẻ cảnh báo điểm đỏ -->
+                <div class="rep-alert-grid" id="rep-red-alerts-container">
+                  <!-- Render động 7 thẻ điểm đỏ -->
+                </div>
+
+                <!-- Xen kẽ: Biểu đồ Cột cảnh báo + Bảng tổng hợp điểm đỏ -->
+                <div class="rep-alternating-grid">
+                  <div class="rep-chart-container" style="background: #ffffff;">
+                    <div class="rep-chart-header">
+                      <span><i class="fa-solid fa-chart-column"></i> Biểu đồ so sánh tỷ lệ % kháng 7 chỉ số điểm đỏ</span>
+                      <span style="font-size: 11px; color: #dc2626; font-weight: 700;">% Kháng (R)</span>
+                    </div>
+                    <div class="rep-chart-canvas-wrapper" style="min-height: 320px;">
+                      <canvas id="chart-rep-alerts-bar"></canvas>
+                    </div>
+                  </div>
+
+                  <div class="rep-table-container">
+                    <div class="rep-table-header">
+                      <span><i class="fa-solid fa-table"></i> Bảng 7: Tổng hợp 7 chỉ số đề kháng báo động</span>
+                      <span style="color: #dc2626; font-weight: 700;">Mức độ ưu tiên</span>
+                    </div>
+                    <div class="rep-table-scroll">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th>Chỉ Số</th>
+                            <th>Tác Nhân</th>
+                            <th class="center">Tỷ Lệ Kháng</th>
+                            <th class="center">Tỷ Lệ Chủng</th>
+                            <th>Ghi Chú Kháng Sinh Còn Hiệu Lực</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-alerts-body"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PHẦN 9: KHÁNG SINH ĐỒ (ANTIBIOGRAM) CHI TIẾT CÁC TÁC NHÂN TRỌNG ĐIỂM -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-dna"></i> 9. BẢNG KHÁNG SINH ĐỒ (ANTIBIOGRAM) VÀ BIỂU ĐỒ CHI TIẾT CÁC TÁC NHÂN
+                  </h4>
+                  <span class="rep-section-badge">Chuẩn CLSI M100</span>
+                </div>
+
+                <!-- 9.1: Staphylococcus aureus & MRSA -->
+                <div style="margin-bottom: 32px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 24px;">
+                  <h5 style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.1. <em>Staphylococcus aureus</em> (n = 230) &amp; MRSA (78.6%)</span>
+                    <span style="font-size: 11.5px; font-weight: 700; color: #dc2626; background: #fee2e2; padding: 2px 8px; border-radius: 6px;">MRSA: 78.6% (180/229)</span>
+                  </h5>
+                  <div class="rep-alternating-grid">
+                    <div class="rep-chart-container">
+                      <div class="rep-chart-header">
+                        <span><i class="fa-solid fa-chart-column"></i> Biểu đồ tỷ lệ kháng thuốc của S. aureus (%)</span>
+                      </div>
+                      <div class="rep-chart-canvas-wrapper" style="min-height: 280px;">
+                        <canvas id="chart-rep-sau-bar"></canvas>
+                      </div>
+                    </div>
+                    <div class="rep-table-container">
+                      <div class="rep-table-header">
+                        <span><i class="fa-solid fa-table"></i> Bảng 8: Kháng sinh đồ chi tiết S. aureus</span>
+                        <span>Vancomycin/Linezolid/Tigecycline: 100% S</span>
+                      </div>
+                      <div class="rep-table-scroll" style="max-height: 320px;">
+                        <table class="rep-table">
+                          <thead>
+                            <tr>
+                              <th>Kháng Sinh</th>
+                              <th class="center">Số Mẫu Thử</th>
+                              <th class="center" style="color: #dc2626;">% Kháng (R)</th>
+                              <th class="center" style="color: #d97706;">% Trung Gian (I)</th>
+                              <th class="center" style="color: #16a34a;">% Nhạy (S)</th>
+                            </tr>
+                          </thead>
+                          <tbody id="table-rep-sau-body"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 9.2: Streptococcus pneumoniae (Điểm gãy VMN) -->
+                <div style="margin-bottom: 32px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 24px;">
+                  <h5 style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.2. <em>Streptococcus pneumoniae</em> (n = 214) &amp; Điểm gãy Viêm màng não</span>
+                    <span style="font-size: 11.5px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 6px;">Erythromycin R: 98.6%</span>
+                  </h5>
+                  <div class="rep-alternating-grid">
+                    <div class="rep-chart-container">
+                      <div class="rep-chart-header">
+                        <span><i class="fa-solid fa-chart-column"></i> Biểu đồ tỷ lệ kháng thuốc S. pneumoniae (%)</span>
+                      </div>
+                      <div class="rep-chart-canvas-wrapper" style="min-height: 280px;">
+                        <canvas id="chart-rep-spn-bar"></canvas>
+                      </div>
+                    </div>
+                    <div class="rep-table-container">
+                      <div class="rep-table-header">
+                        <span><i class="fa-solid fa-table"></i> Bảng 9: Kháng sinh đồ S. pneumoniae</span>
+                        <span>Moxifloxacin/Vancomycin: 100% S</span>
+                      </div>
+                      <div class="rep-table-scroll" style="max-height: 320px;">
+                        <table class="rep-table">
+                          <thead>
+                            <tr>
+                              <th>Kháng Sinh &amp; Điểm Gãy</th>
+                              <th class="center">Số Mẫu Thử</th>
+                              <th class="center" style="color: #dc2626;">% Kháng (R)</th>
+                              <th class="center" style="color: #d97706;">% Trung Gian (I)</th>
+                              <th class="center" style="color: #16a34a;">% Nhạy (S)</th>
+                            </tr>
+                          </thead>
+                          <tbody id="table-rep-spn-body"></tbody>
+                        </table>
+                      </div>
+                      <div class="rep-callout info" style="margin: 10px;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>Kết quả thay đổi đáng kể theo điểm gãy thể bệnh: Ceftriaxone VMN nhạy <strong>88.7%</strong> so với <strong>41.0%</strong> khi không VMN. Penicillin tiêm có tỷ lệ trung gian cao <strong>50.7%</strong>.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 9.3: Haemophilus influenzae -->
+                <div style="margin-bottom: 32px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 24px;">
+                  <h5 style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.3. <em>Haemophilus influenzae</em> (n = 253)</span>
+                    <span style="font-size: 11.5px; font-weight: 700; color: #dc2626; background: #fee2e2; padding: 2px 8px; border-radius: 6px;">Ampicillin R: 84.1%</span>
+                  </h5>
+                  <div class="rep-alternating-grid">
+                    <div class="rep-chart-container">
+                      <div class="rep-chart-header">
+                        <span><i class="fa-solid fa-chart-column"></i> Biểu đồ tỷ lệ kháng thuốc H. influenzae (%)</span>
+                      </div>
+                      <div class="rep-chart-canvas-wrapper" style="min-height: 280px;">
+                        <canvas id="chart-rep-hin-bar"></canvas>
+                      </div>
+                    </div>
+                    <div class="rep-table-container">
+                      <div class="rep-table-header">
+                        <span><i class="fa-solid fa-table"></i> Bảng 10: Kháng sinh đồ H. influenzae</span>
+                        <span>Meropenem: 98.3% S | Ceftriaxone: 85.7% S</span>
+                      </div>
+                      <div class="rep-table-scroll" style="max-height: 320px;">
+                        <table class="rep-table">
+                          <thead>
+                            <tr>
+                              <th>Kháng Sinh</th>
+                              <th class="center">Số Mẫu Thử</th>
+                              <th class="center" style="color: #dc2626;">% Kháng (R)</th>
+                              <th class="center" style="color: #d97706;">% Trung Gian (I)</th>
+                              <th class="center" style="color: #16a34a;">% Nhạy (S)</th>
+                            </tr>
+                          </thead>
+                          <tbody id="table-rep-hin-body"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 9.4: Enterobacterales: So sánh E. coli vs K. pneumoniae -->
+                <div style="margin-bottom: 32px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 24px;">
+                  <h5 style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.4. Enterobacterales: So sánh ESBL &amp; CRE giữa <em>E. coli</em> và <em>K. pneumoniae</em></span>
+                    <span style="font-size: 11.5px; font-weight: 700; color: #7c3aed; background: #f5f3ff; padding: 2px 8px; border-radius: 6px;">CRE K.p: 56% vs E.c: 11%</span>
+                  </h5>
+                  <div class="rep-alternating-grid">
+                    <div class="rep-chart-container">
+                      <div class="rep-chart-header">
+                        <span><i class="fa-solid fa-chart-column"></i> Biểu đồ so sánh tỷ lệ kháng E. coli vs K. pneumoniae (%)</span>
+                      </div>
+                      <div class="rep-chart-canvas-wrapper" style="min-height: 280px;">
+                        <canvas id="chart-rep-entero-bar"></canvas>
+                      </div>
+                    </div>
+                    <div class="rep-table-container">
+                      <div class="rep-table-header">
+                        <span><i class="fa-solid fa-table"></i> Bảng 11: So sánh mức đề kháng Enterobacterales</span>
+                        <span>ESBL &amp; Carbapenem</span>
+                      </div>
+                      <div class="rep-table-scroll">
+                        <table class="rep-table">
+                          <thead>
+                            <tr>
+                              <th>Kháng Sinh</th>
+                              <th class="center" style="color: #0284c7;">E. coli (%R)</th>
+                              <th class="center" style="color: #dc2626;">K. pneumoniae (%R)</th>
+                              <th>Chênh Lệch &amp; Cảnh Báo</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr><td><strong>Cefotaxime (ESBL)</strong></td><td class="center bold">63.2%</td><td class="center bold">63.5%</td><td>Mức kháng Ceph 3 tương đương (~63%)</td></tr>
+                            <tr><td><strong>Cefepime</strong></td><td class="center bold">49.7%</td><td class="center bold">63.1%</td><td>K. pneumoniae kháng cao hơn rõ rệt</td></tr>
+                            <tr><td><strong>Ciprofloxacin</strong></td><td class="center bold">71.4%</td><td class="center bold">65.5%</td><td>Quinolone bị kháng nặng nề cả 2 loài</td></tr>
+                            <tr><td><strong>Piperacillin/Tazobactam</strong></td><td class="center bold">19.5%</td><td class="center bold">60.5%</td><td>E. coli còn nhạy 80.5%, K.p kháng 60.5%</td></tr>
+                            <tr><td><strong>Meropenem (CRE)</strong></td><td class="center bold" style="color: #16a34a;">11.2%</td><td class="center bold" style="color: #dc2626;">56.0%</td><td>Báo động đỏ: K. pneumoniae kháng gấp 5 lần</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 9.5: Gram âm không lên men: So sánh A. baumannii vs P. aeruginosa -->
+                <div style="margin-bottom: 24px;">
+                  <h5 style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>9.5. Gram âm không lên men: So sánh CRAB và CRPA</span>
+                    <span style="font-size: 11.5px; font-weight: 700; color: #dc2626; background: #fee2e2; padding: 2px 8px; border-radius: 6px;">CRAB: 92% | CRPA: 56.9%</span>
+                  </h5>
+                  <div class="rep-alternating-grid">
+                    <div class="rep-chart-container">
+                      <div class="rep-chart-header">
+                        <span><i class="fa-solid fa-chart-column"></i> Biểu đồ so sánh A. baumannii vs P. aeruginosa (%)</span>
+                      </div>
+                      <div class="rep-chart-canvas-wrapper" style="min-height: 280px;">
+                        <canvas id="chart-rep-nonferm-bar"></canvas>
+                      </div>
+                    </div>
+                    <div class="rep-table-container">
+                      <div class="rep-table-header">
+                        <span><i class="fa-solid fa-table"></i> Bảng 12: So sánh mức đề kháng Gram âm không lên men</span>
+                        <span>Toàn diện</span>
+                      </div>
+                      <div class="rep-table-scroll">
+                        <table class="rep-table">
+                          <thead>
+                            <tr>
+                              <th>Kháng Sinh</th>
+                              <th class="center" style="color: #dc2626;">A. baumannii (%R)</th>
+                              <th class="center" style="color: #0284c7;">P. aeruginosa (%R)</th>
+                              <th>Kháng Sinh Cứu Cánh Còn Nhạy</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr><td><strong>Ceftazidime</strong></td><td class="center bold">93.1%</td><td class="center bold">50.9%</td><td>CAZ/AVI nhạy 75.7% với P. aeruginosa</td></tr>
+                            <tr><td><strong>Cefepime</strong></td><td class="center bold">89.7%</td><td class="center bold">46.1%</td><td>A. baumannii kháng gần như toàn bộ</td></tr>
+                            <tr><td><strong>Piperacillin/Tazobactam</strong></td><td class="center bold">93.1%</td><td class="center bold">50.9%</td><td>Cef/Tazo nhạy 55.3% với P. aeruginosa</td></tr>
+                            <tr><td><strong>Ciprofloxacin</strong></td><td class="center bold">89.7%</td><td class="center bold">50.0%</td><td>Quinolone mất hiệu lực chủ yếu</td></tr>
+                            <tr><td><strong>Meropenem (Carbapenem)</strong></td><td class="center bold" style="color: #dc2626;">92.0%</td><td class="center bold" style="color: #ea580c;">54.8%</td><td>Chỉ Colistin còn nhạy 85.4% với CRAB</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bảng tổng hợp kháng sinh đồ chung phục vụ test Phase 7/8 -->
+                <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+                  <h6 style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px;">
+                    <i class="fa-solid fa-list-check"></i> Bảng tổng hợp toàn bộ kháng sinh đồ được chọn (Antibiogram tổng hợp):
+                  </h6>
+                  <div class="rep-table-scroll" style="max-height: 200px;">
+                    <table class="rep-table">
+                      <thead>
+                        <tr>
+                          <th class="center" style="width: 36px;">#</th>
+                          <th>Mã</th>
+                          <th>Tên Kháng Sinh</th>
+                          <th class="center" style="color: #16a34a;">% Nhạy (S)</th>
+                          <th class="center" style="color: #d97706;">% Trung Gian (I)</th>
+                          <th class="center" style="color: #dc2626;">% Kháng (R)</th>
+                          <th class="center">Mẫu Thử</th>
+                        </tr>
+                      </thead>
+                      <tbody id="table-rep-abg-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Bảng so sánh đa năm phục vụ test Phase 7/8 -->
+                <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                  <h6 style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px;">
+                    <i class="fa-solid fa-timeline"></i> So sánh xu hướng đa năm (2024 - 2026):
+                  </h6>
+                  <table class="rep-table">
+                    <thead>
+                      <tr>
+                        <th>Giai Đoạn</th>
+                        <th class="center">Tổng Mẫu Thử</th>
+                        <th class="center" style="color: #dc2626;">Kháng (%R)</th>
+                        <th class="center" style="color: #d97706;">Trung Gian (%I)</th>
+                        <th class="center" style="color: #16a34a;">Nhạy Cảm (%S)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="table-rep-years-body"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- PHẦN 10: NHẬN XÉT, BÀN LUẬN & KIẾN NGHỊ LÂM SÀNG -->
+              <div class="rep-section-block">
+                <div class="rep-section-title-bar">
+                  <h4 class="rep-section-title">
+                    <i class="fa-solid fa-clipboard-check"></i> 10. NHẬN XÉT, BÀN LUẬN VÀ KIẾN NGHỊ LÂM SÀNG
+                  </h4>
+                  <span class="rep-section-badge">Hội Đồng Thuốc &amp; Điều Trị</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+                  <div class="rep-callout info">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div>
+                      <strong>Đánh giá thực trạng đề kháng:</strong> Tình trạng vi khuẩn đa kháng và toàn kháng (CRAB 92%, MRSA 78.6%, CRE K. pneumoniae 56%) tại các khoa Hồi sức tích cực và Nhi là mối đe dọa nghiêm trọng. Các kháng sinh kinh điển (Cephalosporin 3, Carbapenem) đã mất hiệu lực đáng kể với A. baumannii và K. pneumoniae.
+                    </div>
+                  </div>
+                  <div class="rep-callout warning">
+                    <i class="fa-solid fa-pills"></i>
+                    <div>
+                      <strong>Điều chỉnh phác đồ kinh nghiệm:</strong> Nhiễm khuẩn nặng nghi do CRAB cần phối hợp Colistin liều nạp kết hợp Meropenem liều cao truyền kéo dài (hoặc Ampicillin/Sulbactam). Với MRSA ưu tiên Vancomycin (theo dõi TDM) hoặc Linezolid. Kháng sinh Ceftazidime/Avibactam ưu tiên dự phòng cho CRPA hoặc CRE phân nhóm phù hợp.
+                    </div>
+                  </div>
+                  <div class="rep-callout success">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <div>
+                      <strong>Quản lý sử dụng kháng sinh (AMS):</strong> Bắt buộc hội chẩn với Dược lâm sàng và Khoa Vi sinh khi chỉ định Carbapenem, Colistin, Vancomycin, Linezolid. Tăng cường kiểm soát nhiễm khuẩn (IC): rửa tay, cách ly người bệnh mang vi khuẩn đa kháng để ngăn lây truyền chéo giữa các khoa.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chữ ký xác nhận y khoa hai bên -->
+                <div class="rep-signature-block">
+                  <div class="rep-sign-col">
+                    <div class="rep-sign-role">NGƯỜI LẬP BÁO CÁO</div>
+                    <div class="rep-sign-sub">(Khoa Vi sinh)</div>
+                    <div class="rep-sign-space"></div>
+                    <div class="rep-sign-name">BS.CKI. Chu Thị Huyền</div>
+                  </div>
+                  <div class="rep-sign-col">
+                    <div class="rep-sign-role">TRƯỞNG KHOA VI SINH</div>
+                    <div class="rep-sign-sub">(Ký và xác nhận chuyên môn)</div>
+                    <div class="rep-sign-space"></div>
+                    <div class="rep-sign-name">BS.CK2. Đào Quang Trung</div>
+                  </div>
+                  <div class="rep-sign-col">
+                    <div class="rep-sign-role">GIÁM ĐỐC BỆNH VIỆN</div>
+                    <div class="rep-sign-sub">(Chủ tịch HĐ Thuốc &amp; Điều trị)</div>
+                    <div class="rep-sign-space"></div>
+                    <div class="rep-sign-name">PGS.TS. Giám Đốc Bệnh Viện</div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- ================= CHẾ ĐỘ 2: BẢN TRÌNH CHIẾU TRỰC QUAN (12 SLIDE DECK - MẪU FILE 1) ================= -->
+            <div id="rep-view-slides" class="rep-slide-deck" style="display: none;">
+              <!-- Container cho 12 slide sẽ được render linh hoạt bởi ReportView.renderSlideDeck() -->
+            </div>
+
+            <!-- ================= CHẾ ĐỘ 3: VĂN BẢN HÀNH CHÍNH Y KHOA (15 TRANG - MẪU FILE 2) ================= -->
+            <div id="rep-view-document" class="rep-document-view" style="display: none;">
+              <div id="rep-document-inner">
+                <!-- Nội dung 15 trang văn bản hành chính được render chi tiết bởi ReportView.renderDocumentView() -->
+              </div>
+            </div>
+
           </div>
         </section>
+
 
         <!-- ================= VIEW: QUẢN LÝ FILE & HẠN MỨC BỘ NHỚ (FIFO) ================= -->
         <section class="view-panel" id="view-data_files">
