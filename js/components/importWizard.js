@@ -436,12 +436,25 @@ const ImportWizard = {
 
       window.Toast?.success(`Import hoàn tất! Đã lưu thành công ${importedCount.toLocaleString()} kết quả AST.`);
 
-      // Refresh Dashboard data & select file for analysis
+      // Lưu file vừa import làm file kích hoạt cho Báo Cáo AMR Tự Động & Dashboard
+      try {
+        localStorage.setItem('amr_last_imported_file', currentFileName);
+      } catch (e) {}
+
       if (window.App) {
-        if (window.App.state?.filters) {
-          window.App.state.filters.file = currentFileName;
-        }
+        if (!window.App.state) window.App.state = {};
+        if (!window.App.state.filters) window.App.state.filters = {};
+        window.App.state.filters.file = currentFileName;
+        window.App.state.lastImportedFile = currentFileName;
         await window.App.refreshData();
+      }
+
+      // Thông báo cập nhật danh sách file cho ReportView và FileManager
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('fileUploaded', { detail: { fileName: currentFileName } }));
+        if (window.ReportView?.populateFileOptions) {
+          window.ReportView.populateFileOptions(currentFileName);
+        }
       }
     } catch (err) {
       console.error('[ImportWizard] Commit error:', err);

@@ -91,11 +91,11 @@ const ReportView = {
   /**
    * Nạp danh sách các file có thể phân tích vào dropdown
    */
-  populateFileOptions() {
+  populateFileOptions(preferredFileName) {
     const select = document.getElementById('report-select-file');
     if (!select) return;
 
-    const currentVal = select.value;
+    const currentVal = preferredFileName || select.value || (typeof localStorage !== 'undefined' ? localStorage.getItem('amr_last_imported_file') : null) || window.App?.state?.filters?.file;
     const files = new Set(['ĐG Dương tính (010126. 230626).xls']);
 
     // Đọc từ DemoDataService
@@ -114,6 +114,10 @@ const ReportView = {
       });
     }
 
+    if (preferredFileName) {
+      files.add(preferredFileName);
+    }
+
     // Render options
     select.innerHTML = '';
     files.forEach(fn => {
@@ -122,7 +126,7 @@ const ReportView = {
       if (fn === 'ĐG Dương tính (010126. 230626).xls') {
         opt.textContent = `${fn} (Dữ liệu chuẩn BVĐK Đức Giang - 1.466 chủng)`;
       } else {
-        opt.textContent = `${fn} (Tập tin người dùng tải lên)`;
+        opt.textContent = `${fn} (File nạp từ Import dữ liệu)`;
       }
       select.appendChild(opt);
     });
@@ -137,6 +141,41 @@ const ReportView = {
     } else {
       select.value = 'ĐG Dương tính (010126. 230626).xls';
     }
+  },
+
+  /**
+   * Chọn file cụ thể và chuyển thẳng tới xem Báo cáo AMR
+   */
+  selectFileAndOpen(fileName) {
+    if (!fileName) return;
+    this.populateFileOptions(fileName);
+    const select = document.getElementById('report-select-file');
+    if (select) select.value = fileName;
+    if (window.Navigation?.navigateTo) {
+      window.Navigation.navigateTo('reports');
+    }
+    this.renderFullReport(fileName);
+  },
+
+  /**
+   * Mở file vừa được import gần nhất
+   */
+  openLatestImported() {
+    let latest = null;
+    try {
+      latest = localStorage.getItem('amr_last_imported_file');
+    } catch (e) {}
+    if (!latest && window.App?.state?.lastImportedFile) {
+      latest = window.App.state.lastImportedFile;
+    }
+    if (!latest) {
+      const demo = window.DemoDataService?.getAll();
+      const jobs = demo?.importJobs || [];
+      if (jobs.length > 0) {
+        latest = jobs[jobs.length - 1].file_name;
+      }
+    }
+    this.selectFileAndOpen(latest || 'ĐG Dương tính (010126. 230626).xls');
   },
 
   /**
@@ -174,11 +213,14 @@ const ReportView = {
   },
 
   /**
-   * Tạo báo cáo đầy đủ
+   * Tạo báo cáo đầy đủ theo file được chọn
    */
-  renderFullReport() {
+  renderFullReport(overrideFileName) {
     const fileSelect = document.getElementById('report-select-file');
-    const targetFile = fileSelect ? fileSelect.value : 'ĐG Dương tính (010126. 230626).xls';
+    if (overrideFileName && fileSelect) {
+      fileSelect.value = overrideFileName;
+    }
+    const targetFile = overrideFileName || (fileSelect ? fileSelect.value : 'ĐG Dương tính (010126. 230626).xls');
 
     const filters = {
       file: targetFile,

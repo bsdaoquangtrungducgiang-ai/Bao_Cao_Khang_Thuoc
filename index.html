@@ -766,12 +766,15 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   </div>
                 </div>
 
-                <div style="display: flex; gap: 12px; justify-content: center;">
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                   <button class="btn-reset-filters" onclick="window.ImportWizard.goToStep(1)">
                     <i class="fa-solid fa-file-arrow-up"></i> Import file khác
                   </button>
                   <button class="btn-setup-action" onclick="window.Navigation.navigateTo('dashboard')">
-                    <i class="fa-solid fa-chart-line"></i> Chuyển tới Dashboard xem phân tích
+                    <i class="fa-solid fa-chart-line"></i> Xem Dashboard
+                  </button>
+                  <button class="btn-setup-action" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);" onclick="if (window.ReportView?.openLatestImported) { window.ReportView.openLatestImported(); } else { window.Navigation.navigateTo('reports'); }">
+                    <i class="fa-solid fa-file-medical"></i> Xem Báo Cáo AMR Tự Động Cho File Này
                   </button>
                 </div>
               </div>

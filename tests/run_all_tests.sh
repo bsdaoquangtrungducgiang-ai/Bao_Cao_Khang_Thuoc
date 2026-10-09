@@ -55,9 +55,13 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/comprehensive_amr_report_test.js
     P12_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ] && [ $P10_STATUS -eq 0 ] && [ $P11_STATUS -eq 0 ] && [ $P12_STATUS -eq 0 ]; then
+    echo "13. Chạy Bộ Test Báo Cáo AMR Động 100% Theo File Chọn Phân Tích (Import & File Switcher)..."
+    "$JSC_BIN" tests/dynamic_file_report_test.js
+    P13_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ] && [ $P10_STATUS -eq 0 ] && [ $P11_STATUS -eq 0 ] && [ $P12_STATUS -eq 0 ] && [ $P13_STATUS -eq 0 ]; then
         echo "================================================================"
-        echo "  ✔ TOÀN BỘ 12 BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
+        echo "  ✔ TOÀN BỘ 13 BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"
         exit 0
     else

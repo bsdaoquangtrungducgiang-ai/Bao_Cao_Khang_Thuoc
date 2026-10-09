@@ -340,8 +340,8 @@ const App = {
     window.Toast?.success(`Đang phân tích chuyên sâu cho file "${fileName}"!`);
   },
 
-  getActiveAstRecords() {
-    const f = this.state.filters?.file;
+  getActiveAstRecords(overrideFile) {
+    const f = (overrideFile !== undefined && overrideFile !== null) ? overrideFile : this.state.filters?.file;
     let data = this.state.surveillanceData;
     let rawAst = data?.astResults || [];
     const localData = window.DemoDataService?.getAll();
