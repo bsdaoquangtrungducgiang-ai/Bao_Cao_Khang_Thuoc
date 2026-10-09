@@ -72,6 +72,18 @@ const DemoDataService = {
     this.data.departments = ['ICU (Hồi sức tích cực)', 'Cấp cứu', 'Nội Hô hấp', 'Ngoại Tổng hợp', 'Ngoại Tiết niệu', 'Nhi Sơ sinh', 'Truyền nhiễm'];
     this.data.specimenTypes = ['Nước tiểu', 'Máu', 'Đờm', 'Dịch vết thương', 'Mủ ổ áp xe', 'Dịch phế quản (BAL)', 'Dịch màng phổi'];
 
+    // Nếu ở chế độ Clean Slate (chỉ ghi nhận số liệu file người dùng nạp):
+    if (this.isCleanSlateActive()) {
+      this.data.patients = [];
+      this.data.specimens = [];
+      this.data.cultures = [];
+      this.data.astResults = [];
+      this.data.importJobs = [];
+      this.isInitialized = true;
+      this.loadPersistedFiles();
+      return this.data;
+    }
+
     // 4. Sinh 100 bệnh nhân
     const depts = this.data.departments;
     const specTypes = this.data.specimenTypes;
@@ -306,10 +318,46 @@ const DemoDataService = {
     }
   },
 
+  isCleanSlateActive() {
+    return (typeof localStorage !== 'undefined' && localStorage.getItem('amr_clean_slate_active') === 'true');
+  },
+
+  clearAllFiles() {
+    this.data.patients = [];
+    this.data.specimens = [];
+    this.data.cultures = [];
+    this.data.astResults = [];
+    this.data.importJobs = [];
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const manifestStr = localStorage.getItem('amr_persisted_files_manifest');
+        if (manifestStr) {
+          const manifest = JSON.parse(manifestStr) || [];
+          manifest.forEach(m => {
+            if (m && m.fileName) {
+              localStorage.removeItem('amr_file_records_' + encodeURIComponent(m.fileName));
+            }
+          });
+        }
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('amr_file_records_') || key === 'amr_persisted_files_manifest' || key === 'amr_last_imported_file' || key === 'amr_active_selected_file')) {
+            localStorage.removeItem(key);
+          }
+        }
+        localStorage.setItem('amr_clean_slate_active', 'true');
+      } catch (e) {}
+    }
+    return this.data;
+  },
+
   getAll() {
     if (!this.isInitialized) this.init();
-    if (this.data && this.data.importJobs && !this.data.importJobs.some(j => j.file_name === 'ĐG Dương tính (010126. 230626).xls')) {
-      this.loadHospitalDataset();
+    if (!this.isCleanSlateActive()) {
+      if (this.data && this.data.importJobs && !this.data.importJobs.some(j => j.file_name === 'ĐG Dương tính (010126. 230626).xls')) {
+        this.loadHospitalDataset();
+      }
     }
     this.loadPersistedFiles();
     return this.data;

@@ -1000,10 +1000,10 @@ const ReportExportService = {
     });
 
     const gramGroups = [
-      { name: 'Gram âm', count: gramCounts['Gram âm'], percent: Number(((gramCounts['Gram âm'] / totalIsolates) * 100).toFixed(1)), color: '#dc2626' },
-      { name: 'Gram dương', count: gramCounts['Gram dương'], percent: Number(((gramCounts['Gram dương'] / totalIsolates) * 100).toFixed(1)), color: '#0284c7' },
-      { name: 'Nấm', count: gramCounts['Nấm'], percent: Number(((gramCounts['Nấm'] / totalIsolates) * 100).toFixed(1)), color: '#0d9488' },
-      { name: 'Khác / chưa phân loại', count: gramCounts['Khác / chưa phân loại'], percent: Number(((gramCounts['Khác / chưa phân loại'] / totalIsolates) * 100).toFixed(1)), color: '#64748b' }
+      { name: 'Gram âm', count: gramCounts['Gram âm'], percent: totalIsolates > 0 ? Number(((gramCounts['Gram âm'] / totalIsolates) * 100).toFixed(1)) : 0, color: '#dc2626' },
+      { name: 'Gram dương', count: gramCounts['Gram dương'], percent: totalIsolates > 0 ? Number(((gramCounts['Gram dương'] / totalIsolates) * 100).toFixed(1)) : 0, color: '#0284c7' },
+      { name: 'Nấm', count: gramCounts['Nấm'], percent: totalIsolates > 0 ? Number(((gramCounts['Nấm'] / totalIsolates) * 100).toFixed(1)) : 0, color: '#0d9488' },
+      { name: 'Khác / chưa phân loại', count: gramCounts['Khác / chưa phân loại'], percent: totalIsolates > 0 ? Number(((gramCounts['Khác / chưa phân loại'] / totalIsolates) * 100).toFixed(1)) : 0, color: '#64748b' }
     ];
 
     // 3. Phân bố theo tháng (Phần 2)
@@ -1038,7 +1038,7 @@ const ReportExportService = {
         month: m,
         shortName: isPeak ? `${shortName}*` : shortName,
         count: c,
-        percent: Number(((c / totalIsolates) * 100).toFixed(1)),
+        percent: totalIsolates > 0 ? Number(((c / totalIsolates) * 100).toFixed(1)) : 0,
         isPeak
       };
     });
@@ -1046,7 +1046,7 @@ const ReportExportService = {
     const monthlyComments = {
       peakIsolates: maxMonthCount,
       peakMonth: peakMonthKey || 'Tháng 4',
-      trendDesc: `Số lượng chủng phân lập đạt đỉnh vào ${peakMonthKey || 'Tháng 4'} với ${maxMonthCount} chủng (${((maxMonthCount / totalIsolates) * 100).toFixed(1)}%). Phù hợp với mô hình bệnh lý nhiễm khuẩn thực tế tại cơ sở y tế.`,
+      trendDesc: totalIsolates > 0 ? `Số lượng chủng phân lập đạt đỉnh vào ${peakMonthKey || 'Tháng 4'} với ${maxMonthCount} chủng (${((maxMonthCount / totalIsolates) * 100).toFixed(1)}%). Phù hợp với mô hình bệnh lý nhiễm khuẩn thực tế tại cơ sở y tế.` : 'Chưa ghi nhận chủng phân lập trong kỳ báo cáo.',
       note: '* Số liệu chốt theo tập tin phân tích'
     };
 
@@ -1063,7 +1063,7 @@ const ReportExportService = {
       return {
         name: d,
         count: c,
-        percent: Number(((c / totalIsolates) * 100).toFixed(1)),
+        percent: totalIsolates > 0 ? Number(((c / totalIsolates) * 100).toFixed(1)) : 0,
         priority: idx < 4
       };
     });
@@ -1245,11 +1245,18 @@ const ReportExportService = {
       }
     }
 
+    const isCleanSlate = (typeof window !== 'undefined' && window.DemoDataService?.isCleanSlateActive) ? window.DemoDataService.isCleanSlateActive() : false;
+
+    // Nếu ở chế độ Clean Slate và không có dữ liệu thực tế, hiển thị báo cáo trống sẵn sàng nạp file
+    if (isCleanSlate && (!astRecords || astRecords.length === 0)) {
+      return this.createDynamicEmptyReportForFile(currentFileName || 'Chưa nạp tập tin');
+    }
+
     // Nếu file được chọn là file mẫu bệnh viện chuẩn ĐG Dương tính thì dùng hospitalBenchmarkData
     const isHospitalDgFile = (!targetFileName || targetFileName === 'ALL' || 
       currentFileName.includes('010126') || currentFileName.includes('Dương tính') || currentFileName.includes('Duong tinh'));
 
-    if (isHospitalDgFile) {
+    if (isHospitalDgFile && !isCleanSlate) {
       const fallback = JSON.parse(JSON.stringify(this.hospitalBenchmarkData));
       fallback.metadata.fileName = currentFileName;
       return fallback;

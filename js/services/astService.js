@@ -169,10 +169,22 @@ const ASTService = {
       filteredAst = filteredAst.filter(a => a.gram_stain === filters.gram);
     }
 
+    let retPatients = raw.patients || [];
+    let retSpecimens = raw.specimens || [];
+    let retCultures = raw.cultures || [];
+
+    if (filters.file && filters.file !== 'ALL') {
+      const patCodes = new Set(filteredAst.map(a => a.patient_code || a.patient_id).filter(Boolean));
+      const cultIds = new Set(filteredAst.map(a => a.culture_id).filter(Boolean));
+      retPatients = retPatients.filter(p => patCodes.has(p.patient_code) || p.file_name === filters.file);
+      retSpecimens = retSpecimens.filter(s => patCodes.has(s.patient_code) || s.file_name === filters.file);
+      retCultures = retCultures.filter(c => cultIds.has(c.id) || patCodes.has(c.patient_code) || c.file_name === filters.file);
+    }
+
     return {
-      patients: raw.patients,
-      specimens: raw.specimens,
-      cultures: raw.cultures,
+      patients: retPatients,
+      specimens: retSpecimens,
+      cultures: retCultures,
       astResults: filteredAst,
       importJobs: raw.importJobs || [],
       source: 'local_demo'

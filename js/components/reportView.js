@@ -57,7 +57,34 @@ const ReportView = {
     // Dropdown chọn file
     const fileSelect = document.getElementById('report-select-file');
     if (fileSelect) {
-      fileSelect.addEventListener('change', () => this.renderFullReport());
+      fileSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (window.App?.setActiveFile) {
+          window.App.setActiveFile(val);
+        } else {
+          this.renderFullReport(val);
+        }
+      });
+    }
+
+    // Nút xóa toàn bộ các file đã nạp trong Báo cáo
+    const btnPurge = document.getElementById('btn-report-purge-all-files');
+    if (btnPurge) {
+      btnPurge.addEventListener('click', async () => {
+        if (!confirm('Bạn có chắc chắn muốn xóa TOÀN BỘ các file đã nạp?\n\nToàn bộ dữ liệu xét nghiệm sẽ được làm sạch hoàn toàn để chuẩn bị nạp file mới.')) {
+          return;
+        }
+        btnPurge.disabled = true;
+        btnPurge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xóa...';
+        try {
+          await window.StorageQuotaManager?.deleteAllFiles();
+        } catch (err) {
+          window.Toast?.error('Lỗi khi xóa file: ' + err.message);
+        } finally {
+          btnPurge.disabled = false;
+          btnPurge.innerHTML = '<i class="fa-solid fa-trash-can"></i> Xóa Tất Cả File';
+        }
+      });
     }
 
     // Các bộ lọc bổ trợ
@@ -111,9 +138,14 @@ const ReportView = {
     const select = document.getElementById('report-select-file');
     if (!select) return;
 
+    const isCleanSlate = (typeof window !== 'undefined' && window.DemoDataService?.isCleanSlateActive) ? window.DemoDataService.isCleanSlateActive() : false;
     const lastImported = (typeof localStorage !== 'undefined' ? localStorage.getItem('amr_last_imported_file') : null) || window.App?.state?.lastImportedFile;
-    const currentVal = preferredFileName || lastImported || select.value || window.App?.state?.filters?.file || 'ĐG Dương tính (010126. 230626).xls';
-    const files = new Set(['ĐG Dương tính (010126. 230626).xls']);
+    const currentVal = preferredFileName || lastImported || select.value || window.App?.state?.filters?.file;
+    const files = new Set();
+
+    if (!isCleanSlate) {
+      files.add('ĐG Dương tính (010126. 230626).xls');
+    }
 
     // Đọc từ DemoDataService
     const demo = window.DemoDataService?.getAll ? window.DemoDataService.getAll() : (typeof DemoDataService !== 'undefined' ? DemoDataService.getAll() : null);
@@ -161,12 +193,20 @@ const ReportView = {
     if (preferredFileName) {
       files.add(preferredFileName);
     }
-    if (lastImported) {
+    if (lastImported && !isCleanSlate) {
       files.add(lastImported);
     }
 
     // Render options
     select.innerHTML = '';
+    if (files.size === 0) {
+      const optEmpty = document.createElement('option');
+      optEmpty.value = '';
+      optEmpty.textContent = '(Chưa có file nào - Vui lòng nạp file tại mục Import dữ liệu)';
+      select.appendChild(optEmpty);
+      return;
+    }
+
     files.forEach(fn => {
       const opt = document.createElement('option');
       opt.value = fn;
@@ -185,8 +225,8 @@ const ReportView = {
 
     if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
       select.value = currentVal;
-    } else {
-      select.value = 'ĐG Dương tính (010126. 230626).xls';
+    } else if (select.options.length > 0) {
+      select.selectedIndex = 0;
     }
   },
 

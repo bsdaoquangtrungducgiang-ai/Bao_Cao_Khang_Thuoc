@@ -39,10 +39,25 @@ const ClinicalDataViews = {
     const data = window.App?.state?.surveillanceData || window.DemoDataService?.getAll();
     if (!data) return;
 
-    if (this.currentTab === 'patients') this.renderPatients(data.patients || []);
-    else if (this.currentTab === 'specimens') this.renderSpecimens(data.specimens || []);
-    else if (this.currentTab === 'cultures') this.renderCultures(data.cultures || []);
-    else if (this.currentTab === 'ast') this.renderAST(data.astResults || []);
+    const activeFile = window.App?.state?.filters?.file;
+    let patients = data.patients || [];
+    let specimens = data.specimens || [];
+    let cultures = data.cultures || [];
+    let astList = window.App?.getActiveAstRecords ? window.App.getActiveAstRecords() : (data.astResults || []);
+
+    if (activeFile && activeFile !== 'ALL') {
+      const activePatientCodes = new Set(astList.map(a => a.patient_code || a.patient_id).filter(Boolean));
+      const activeCultureIds = new Set(astList.map(a => a.culture_id).filter(Boolean));
+
+      patients = patients.filter(p => activePatientCodes.has(p.patient_code) || p.file_name === activeFile);
+      specimens = specimens.filter(s => activePatientCodes.has(s.patient_code) || s.file_name === activeFile);
+      cultures = cultures.filter(c => activeCultureIds.has(c.id) || activePatientCodes.has(c.patient_code) || c.file_name === activeFile);
+    }
+
+    if (this.currentTab === 'patients') this.renderPatients(patients);
+    else if (this.currentTab === 'specimens') this.renderSpecimens(specimens);
+    else if (this.currentTab === 'cultures') this.renderCultures(cultures);
+    else if (this.currentTab === 'ast') this.renderAST(astList);
   },
 
   // 1. BẢNG BỆNH NHÂN (PATIENTS)

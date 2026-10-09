@@ -441,7 +441,9 @@ const ImportWizard = {
         localStorage.setItem('amr_last_imported_file', currentFileName);
       } catch (e) {}
 
-      if (window.App) {
+      if (window.App?.setActiveFile) {
+        await window.App.setActiveFile(currentFileName, 'dashboard');
+      } else if (window.App) {
         if (!window.App.state) window.App.state = {};
         if (!window.App.state.filters) window.App.state.filters = {};
         window.App.state.filters.file = currentFileName;

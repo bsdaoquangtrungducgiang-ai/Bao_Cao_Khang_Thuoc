@@ -238,6 +238,84 @@ const StorageQuotaManager = {
   },
 
   /**
+   * Xóa toàn bộ các file đã nạp trong kho lưu trữ và bộ nhớ, làm sạch 100% hệ thống
+   */
+  async deleteAllFiles() {
+    const sb = window.SupabaseManager?.client;
+    const hasDb = window.SupabaseManager?.hasTables;
+
+    // 1. Xóa từ Supabase nếu có kết nối
+    if (sb && hasDb) {
+      try {
+        await sb.from('ast_results').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await sb.from('import_jobs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await sb.from('cultures').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await sb.from('specimens').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await sb.from('patients').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (err) {
+        console.warn('[StorageQuotaManager] Supabase delete all error:', err);
+      }
+    }
+
+    // 2. Xóa sạch Local Storage & Demo Data
+    if (window.DemoDataService?.clearAllFiles) {
+      window.DemoDataService.clearAllFiles();
+    } else if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('amr_clean_slate_active', 'true');
+        localStorage.removeItem('amr_persisted_files_manifest');
+        localStorage.removeItem('amr_last_imported_file');
+        localStorage.removeItem('amr_active_selected_file');
+      } catch (e) {}
+    }
+
+    // 3. Xóa sạch App state
+    if (window.App) {
+      window.App.state.surveillanceData = {
+        patients: [],
+        specimens: [],
+        cultures: [],
+        astResults: [],
+        importJobs: []
+      };
+      window.App.state.filteredAst = [];
+      window.App.state.filters.file = 'ALL';
+      window.App.state.activeFile = 'ALL';
+      window.App.state.lastImportedFile = null;
+      window.App.updateFileBanner();
+      window.App.populateFilterDropdowns(window.App.state.surveillanceData);
+      window.App.applyFiltersAndRender();
+    }
+
+    // 4. Cập nhật Báo cáo AMR & các màn hình
+    if (window.ReportView) {
+      window.ReportView.populateFileOptions();
+      window.ReportView.renderFullReport('');
+    }
+    if (window.AntibiogramView) {
+      window.AntibiogramView.populateDropdowns();
+      window.AntibiogramView.renderAntibiogram();
+    }
+    if (window.HeatmapView) {
+      window.HeatmapView.renderHeatmap();
+    }
+    if (window.FileManagerView) {
+      window.FileManagerView.render();
+    }
+    if (window.ClinicalDataViews) {
+      window.ClinicalDataViews.renderCurrentView();
+    }
+
+    window.AuditService?.log('DELETE_ALL_FILES', 'import_jobs', 'ALL', {
+      reason: 'User requested clean slate purge'
+    });
+
+    this.notify();
+    window.Toast?.success('Đã xóa toàn bộ các file đã nạp! Hệ thống đã được làm mới hoàn toàn.');
+    return { success: true };
+  },
+
+  /**
    * Lấy danh sách đồng bộ các file lưu trong browser storage & demo data
    */
   getStoredFiles() {

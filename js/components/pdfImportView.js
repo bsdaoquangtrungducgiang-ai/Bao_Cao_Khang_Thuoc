@@ -155,9 +155,14 @@ const PDFImportView = {
         totalRows: validatedRecords.length
       });
 
+      const pdfFileName = this.currentReport.fileName || 'pdf_import.pdf';
       window.Toast.success(`Đã nạp thành công ${validatedRecords.length} kết quả AST từ PDF vào Database!`);
       document.getElementById('pdf-result-container').classList.add('hidden');
-      if (window.App?.refreshData) window.App.refreshData();
+      if (window.App?.setActiveFile) {
+        await window.App.setActiveFile(pdfFileName, 'dashboard');
+      } else if (window.App?.refreshData) {
+        window.App.refreshData();
+      }
     } catch (err) {
       window.Toast.error('Lỗi khi nạp dữ liệu: ' + err.message);
     }

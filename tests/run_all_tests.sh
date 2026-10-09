@@ -59,9 +59,13 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/dynamic_file_report_test.js
     P13_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ] && [ $P10_STATUS -eq 0 ] && [ $P11_STATUS -eq 0 ] && [ $P12_STATUS -eq 0 ] && [ $P13_STATUS -eq 0 ]; then
+    echo "14. Chạy Bộ Test Clean Slate & Đồng Bộ Phân Tích Toàn Hệ Thống (Xóa File, Nạp File & Đồng Bộ)..."
+    "$JSC_BIN" tests/clean_slate_and_sync_test.js
+    P14_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ] && [ $P10_STATUS -eq 0 ] && [ $P11_STATUS -eq 0 ] && [ $P12_STATUS -eq 0 ] && [ $P13_STATUS -eq 0 ] && [ $P14_STATUS -eq 0 ]; then
         echo "================================================================"
-        echo "  ✔ TOÀN BỘ 13 BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
+        echo "  ✔ TOÀN BỘ 14 BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"
         exit 0
     else

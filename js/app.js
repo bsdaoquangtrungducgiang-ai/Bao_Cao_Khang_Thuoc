@@ -26,6 +26,17 @@ const App = {
   async init() {
     console.log('[App] Khởi động hệ thống BAO-CAO-KHANG-THUOC...');
     
+    // 0. Làm sạch toàn bộ các file nạp cũ theo yêu cầu người dùng (Clean slate khởi tạo)
+    if (typeof localStorage !== 'undefined' && !localStorage.getItem('amr_clean_slate_initialized_v2')) {
+      try {
+        localStorage.setItem('amr_clean_slate_initialized_v2', 'true');
+        localStorage.setItem('amr_clean_slate_active', 'true');
+        if (window.DemoDataService?.clearAllFiles) {
+          window.DemoDataService.clearAllFiles();
+        }
+      } catch (e) {}
+    }
+
     // 1. Khởi tạo tiện ích và kết nối
     window.Toast?.init();
     window.SupabaseManager?.init();
@@ -122,8 +133,12 @@ const App = {
       const el = document.getElementById(id);
       if (el) {
         el.addEventListener('change', (e) => {
-          this.state.filters[key] = e.target.value;
-          this.applyFiltersAndRender();
+          if (key === 'file') {
+            this.setActiveFile(e.target.value);
+          } else {
+            this.state.filters[key] = e.target.value;
+            this.applyFiltersAndRender();
+          }
         });
       }
     };
@@ -139,12 +154,12 @@ const App = {
     const resetBtn = document.getElementById('btn-reset-filters');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
-        this.state.filters = { file: 'ALL', time: 'ALL', department: 'ALL', specimenType: 'ALL', organism: 'ALL', gram: 'ALL' };
-        ['filter-file', 'filter-time', 'filter-department', 'filter-specimen', 'filter-organism', 'filter-gram'].forEach(id => {
+        ['filter-time', 'filter-department', 'filter-specimen', 'filter-organism', 'filter-gram'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = 'ALL';
         });
-        this.applyFiltersAndRender();
+        this.state.filters = { file: 'ALL', time: 'ALL', department: 'ALL', specimenType: 'ALL', organism: 'ALL', gram: 'ALL' };
+        this.setActiveFile('ALL');
         window.Toast?.info('Đã xóa tất cả bộ lọc');
       });
     }
@@ -276,8 +291,8 @@ const App = {
       sRate: rates.sRate,
       iRate: rates.iRate,
       rRate: rates.rRate,
-      totalOrganismTypes: uniqueOrganisms || 8,
-      totalAntibioticTypes: uniqueAntibiotics || 16
+      totalOrganismTypes: uniqueOrganisms || (filtered.length > 0 ? 8 : 0),
+      totalAntibioticTypes: uniqueAntibiotics || (filtered.length > 0 ? 16 : 0)
     });
 
     // 2. Render Charts
@@ -316,10 +331,7 @@ const App = {
       const clearBtn = document.getElementById('btn-banner-clear-file');
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-          this.state.filters.file = 'ALL';
-          const fileSelect = document.getElementById('filter-file');
-          if (fileSelect) fileSelect.value = 'ALL';
-          this.applyFiltersAndRender();
+          this.setActiveFile('ALL');
         });
       }
     } else {
@@ -327,22 +339,104 @@ const App = {
     }
   },
 
-  selectFileForAnalysis(fileName) {
+  /**
+   * Thiết lập file đang hoạt động và đồng bộ phân tích trên toàn bộ hệ thống
+   */
+  async setActiveFile(fileName, navigateTo = null) {
+    if (!fileName) fileName = 'ALL';
     this.state.filters.file = fileName;
-    const fileSelect = document.getElementById('filter-file');
-    if (fileSelect) {
-      let opt = Array.from(fileSelect.options).find(o => o.value === fileName);
-      if (!opt) {
-        opt = document.createElement('option');
+    this.state.activeFile = fileName;
+    if (fileName !== 'ALL') {
+      this.state.lastImportedFile = fileName;
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('amr_active_selected_file', fileName);
+        if (fileName !== 'ALL') {
+          localStorage.setItem('amr_last_imported_file', fileName);
+        }
+      } catch (e) {}
+    }
+
+    // 1. Đồng bộ dropdown #filter-file (Dashboard)
+    const filterFileSelect = document.getElementById('filter-file');
+    if (filterFileSelect) {
+      if (fileName !== 'ALL' && !Array.from(filterFileSelect.options).some(o => o.value === fileName)) {
+        const opt = document.createElement('option');
         opt.value = fileName;
         opt.textContent = `📄 ${fileName}`;
-        fileSelect.appendChild(opt);
+        filterFileSelect.appendChild(opt);
       }
-      fileSelect.value = fileName;
+      filterFileSelect.value = fileName;
     }
-    window.Navigation?.navigateTo('dashboard');
+
+    // 2. Đồng bộ dropdown #report-select-file (Báo Cáo AMR)
+    if (window.ReportView?.populateFileOptions) {
+      window.ReportView.populateFileOptions(fileName);
+      const repSelect = document.getElementById('report-select-file');
+      if (repSelect && fileName !== 'ALL') {
+        repSelect.value = fileName;
+      }
+    }
+
+    // 3. Cập nhật Banner cảnh báo file
+    this.updateFileBanner();
+
+    // 4. Chuyển tab nếu có yêu cầu
+    if (navigateTo && window.Navigation?.navigateTo) {
+      window.Navigation.navigateTo(navigateTo);
+    }
+
+    // 5. Cập nhật Dashboard & Biểu đồ
     this.applyFiltersAndRender();
-    window.Toast?.success(`Đang phân tích chuyên sâu cho file "${fileName}"!`);
+
+    // 6. Cập nhật Antibiogram
+    if (window.AntibiogramView) {
+      window.AntibiogramView.populateDropdowns();
+      window.AntibiogramView.renderAntibiogram();
+    }
+
+    // 7. Cập nhật Heatmap
+    if (window.HeatmapView) {
+      window.HeatmapView.renderHeatmap();
+    }
+
+    // 8. Cập nhật Báo Cáo AMR Tự Động
+    if (window.ReportView?.renderFullReport) {
+      window.ReportView.renderFullReport(fileName === 'ALL' ? undefined : fileName);
+    }
+
+    // 9. Cập nhật Màn hình Dữ liệu lâm sàng (Patients, Specimens, Cultures, AST)
+    if (window.ClinicalDataViews) {
+      window.ClinicalDataViews.renderCurrentView();
+    }
+
+    // 10. Cập nhật File Manager nếu đang mở
+    if (window.FileManagerView) {
+      window.FileManagerView.render();
+    }
+
+    // 11. Cập nhật các module giám sát chuyên biệt (MDR, ESBL, Carbapenem, MRSA)
+    const currentTab = window.Navigation?.currentTab;
+    if (window.SurveillanceModulesView) {
+      if (currentTab === 'analytics_mdr') window.SurveillanceModulesView.renderMDR();
+      else if (currentTab === 'analytics_esbl') window.SurveillanceModulesView.renderESBL();
+      else if (currentTab === 'analytics_carbapenem') window.SurveillanceModulesView.renderCarbapenem();
+      else if (currentTab === 'analytics_mrsa') window.SurveillanceModulesView.renderMRSA();
+      else if (currentTab === 'analytics_epi') window.SurveillanceModulesView.renderEpidemiology();
+      else if (currentTab === 'analytics_resistance') window.SurveillanceModulesView.renderResistanceByDept();
+    }
+
+    if (fileName && fileName !== 'ALL') {
+      window.Toast?.success(`Hệ thống đang phân tích theo file: "${fileName}"`);
+    } else {
+      window.Toast?.info('Hệ thống đang phân tích tổng hợp toàn viện');
+    }
+  },
+
+  selectFileForAnalysis(fileName) {
+    return this.setActiveFile(fileName, 'dashboard');
   },
 
   getActiveAstRecords(overrideFile) {

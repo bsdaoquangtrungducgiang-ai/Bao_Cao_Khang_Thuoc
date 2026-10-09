@@ -91,6 +91,27 @@ const FileManagerView = {
         window.Navigation?.navigateTo('import_excel');
       });
     }
+
+    // Nút xóa toàn bộ các file đã nạp (Clean Slate)
+    const btnPurgeAll = document.getElementById('btn-purge-all-files');
+    if (btnPurgeAll) {
+      btnPurgeAll.addEventListener('click', async () => {
+        if (!confirm('Bạn có chắc chắn muốn xóa TOÀN BỘ các file đã nạp?\n\nToàn bộ dữ liệu xét nghiệm sẽ được làm sạch hoàn toàn để chuẩn bị nạp file mới.')) {
+          return;
+        }
+        btnPurgeAll.disabled = true;
+        btnPurgeAll.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xóa...';
+        try {
+          await window.StorageQuotaManager?.deleteAllFiles();
+          await this.render();
+        } catch (err) {
+          window.Toast?.error('Lỗi khi xóa toàn bộ file: ' + err.message);
+        } finally {
+          btnPurgeAll.disabled = false;
+          btnPurgeAll.innerHTML = '<i class="fa-solid fa-trash-can"></i> Xóa Toàn Bộ File Đã Nạp';
+        }
+      });
+    }
   },
 
   async render() {
@@ -246,6 +267,9 @@ const FileManagerView = {
             <button class="btn-action-abg" data-file="${file.fileName}" title="Xem Antibiogram của riêng file này">
               <i class="fa-solid fa-table-list"></i> Antibiogram
             </button>
+            <button class="btn-action-report" data-file="${file.fileName}" title="Xem Báo Cáo AMR tự động của riêng file này">
+              <i class="fa-solid fa-file-medical"></i> Báo Cáo AMR
+            </button>
             <button class="btn-action-delete" data-file="${file.fileName}" title="Xóa file và giải phóng bộ nhớ Supabase">
               <i class="fa-regular fa-trash-can"></i>
             </button>
@@ -261,12 +285,12 @@ const FileManagerView = {
   },
 
   bindRowActions() {
-    // 1. Phân tích chuyên sâu
+    // 1. Phân tích chuyên sâu (Dashboard)
     document.querySelectorAll('.btn-action-analyze').forEach(btn => {
       btn.addEventListener('click', () => {
         const fileName = btn.getAttribute('data-file');
         if (fileName && window.App) {
-          window.App.selectFileForAnalysis(fileName);
+          window.App.setActiveFile(fileName, 'dashboard');
         }
       });
     });
@@ -276,11 +300,17 @@ const FileManagerView = {
       btn.addEventListener('click', () => {
         const fileName = btn.getAttribute('data-file');
         if (fileName && window.App) {
-          window.App.state.filters.file = fileName;
-          const fileSelect = document.getElementById('filter-file');
-          if (fileSelect) fileSelect.value = fileName;
-          window.Navigation?.navigateTo('analytics_antibiogram');
-          window.Toast?.info(`Đang xem Antibiogram dữ liệu file "${fileName}"`);
+          window.App.setActiveFile(fileName, 'analytics_antibiogram');
+        }
+      });
+    });
+
+    // 3. Xem Báo Cáo AMR tự động theo file
+    document.querySelectorAll('.btn-action-report').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const fileName = btn.getAttribute('data-file');
+        if (fileName && window.App) {
+          window.App.setActiveFile(fileName, 'reports');
         }
       });
     });
@@ -300,10 +330,7 @@ const FileManagerView = {
             }
             // Nếu file đang được chọn làm bộ lọc phân tích, reset về ALL
             if (window.App && window.App.state.filters.file === fileName) {
-              window.App.state.filters.file = 'ALL';
-              const fileSelect = document.getElementById('filter-file');
-              if (fileSelect) fileSelect.value = 'ALL';
-              await window.App.refreshData();
+              await window.App.setActiveFile('ALL');
             }
             await this.render();
           } catch (err) {
