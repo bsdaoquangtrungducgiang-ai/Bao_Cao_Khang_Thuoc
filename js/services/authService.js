@@ -373,6 +373,14 @@ const AuthService = {
     return this.currentUser;
   },
 
+  getCurrentUser() {
+    return this.currentUser || this.currentProfile || { name: 'BS.CKI. Chu Thị Huyền', role: 'user' };
+  },
+
+  getUserName() {
+    return this.currentProfile?.full_name || this.currentUser?.email || 'BS.CKI. Chu Thị Huyền';
+  },
+
   getProfile() {
     return this.currentProfile;
   },

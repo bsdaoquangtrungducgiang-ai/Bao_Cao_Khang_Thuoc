@@ -51,7 +51,12 @@ const App = {
     // 3. Tải dữ liệu ban đầu
     await this.refreshData();
 
-    // 4. Lắng nghe chuyển tab
+    // 4. Nếu người dùng đang mở tab reports khi hoàn tất nạp dữ liệu, kích hoạt render báo cáo
+    if (window.Navigation?.currentTab === 'reports' || (typeof window !== 'undefined' && window.location.hash === '#reports')) {
+      window.ReportView?.renderFullReport();
+    }
+
+    // 5. Lắng nghe chuyển tab
     window.addEventListener('tabChanged', (e) => {
       if (e.detail.tab === 'dashboard') {
         this.renderDashboard();

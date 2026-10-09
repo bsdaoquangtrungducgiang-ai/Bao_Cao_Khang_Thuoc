@@ -969,6 +969,11 @@ const ImportService = {
   persistFileToBrowserStore(fileName, validatedRecords = [], jobId = '', fileType = 'xlsx', metadata = {}) {
     if (typeof localStorage === 'undefined' || !fileName) return;
 
+    // Không lưu file mẫu mặc định bệnh viện vào localStorage để tránh cạn kiệt hạn mức 5MB của trình duyệt
+    if (fileName === 'ĐG Dương tính (010126. 230626).xls' || fileName.includes('010126')) {
+      return;
+    }
+
     try {
       // 1. Cập nhật Manifest các file đã lưu
       let manifest = [];

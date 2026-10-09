@@ -1122,11 +1122,13 @@ const ReportExportService = {
     });
 
     // 7. Tác nhân theo 5 nhóm bệnh phẩm (Phần 6)
+    const woundItem = this.getTopPathogensForSpecimen(isolates, ['mủ', 'vết thương', 'áp xe', 'wound', 'pus'], 'Mủ / Vết thương', 'fa-hand-dots', '#7c3aed');
     const pathogensBySpecimen = {
       blood: this.getTopPathogensForSpecimen(isolates, ['máu', 'blood'], 'Cấy máu', 'fa-droplet', '#dc2626'),
       urine: this.getTopPathogensForSpecimen(isolates, ['nước tiểu', 'tiết niệu', 'urine'], 'Cấy nước tiểu', 'fa-flask-vial', '#0284c7'),
       lowerRespiratory: this.getTopPathogensForSpecimen(isolates, ['đờm', 'hô hấp dưới', 'phế quản', 'sputum'], 'Đờm / Hô hấp dưới', 'fa-lungs', '#d97706'),
-      wound: this.getTopPathogensForSpecimen(isolates, ['mủ', 'vết thương', 'áp xe', 'wound', 'pus'], 'Mủ / Vết thương', 'fa-hand-dots', '#7c3aed'),
+      wound: woundItem,
+      pusWound: woundItem,
       nasopharyngeal: this.getTopPathogensForSpecimen(isolates, ['tỵ hầu', 'họng', 'mũi', 'naso'], 'Dịch tỵ hầu / họng', 'fa-head-side-cough', '#0d9488')
     };
 
@@ -1196,7 +1198,7 @@ const ReportExportService = {
         subtitle: `DỮ LIỆU TẬP TIN: ${targetFileName} (${dateRangeStr})`,
         fileName: targetFileName,
         dateRange: dateRangeStr,
-        author: (typeof window !== 'undefined' && window.AuthService?.getCurrentUser()?.name) || 'BS.CKI. Chu Thị Huyền',
+        author: (typeof window !== 'undefined' && (window.AuthService?.getUserName?.() || window.AuthService?.getCurrentUser?.()?.name || window.AuthService?.getProfile?.()?.full_name)) || 'BS.CKI. Chu Thị Huyền',
         reviewer: 'BS.CK2. Đào Quang Trung',
         committee: 'PGS.TS. Giám Đốc Bệnh Viện - Chủ Tịch HĐ Thuốc & Điều Trị',
         reportDate: new Date().toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' }),
@@ -1291,7 +1293,7 @@ const ReportExportService = {
         subtitle: `DỮ LIỆU TẬP TIN: ${currentFileName}`,
         fileName: currentFileName,
         dateRange: 'Kỳ phân tích theo tập tin',
-        author: (typeof window !== 'undefined' && window.AuthService?.getCurrentUser()?.name) || 'BS.CKI. Chu Thị Huyền',
+        author: (typeof window !== 'undefined' && (window.AuthService?.getUserName?.() || window.AuthService?.getCurrentUser?.()?.name || window.AuthService?.getProfile?.()?.full_name)) || 'BS.CKI. Chu Thị Huyền',
         reviewer: 'BS.CK2. Đào Quang Trung',
         committee: 'PGS.TS. Giám Đốc Bệnh Viện - Chủ Tịch HĐ Thuốc & Điều Trị',
         reportDate: new Date().toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' }),
@@ -1344,6 +1346,7 @@ const ReportExportService = {
         urine: { title: 'Cấy nước tiểu (0 ca)', icon: 'fa-flask-vial', color: '#0284c7', items: [] },
         lowerRespiratory: { title: 'Đờm / Hô hấp dưới (0 ca)', icon: 'fa-lungs', color: '#d97706', items: [] },
         wound: { title: 'Mủ / Vết thương (0 ca)', icon: 'fa-hand-dots', color: '#7c3aed', items: [] },
+        pusWound: { title: 'Mủ / Vết thương (0 ca)', icon: 'fa-hand-dots', color: '#7c3aed', items: [] },
         nasopharyngeal: { title: 'Dịch tỵ hầu / họng (0 ca)', icon: 'fa-head-side-cough', color: '#0d9488', items: [] }
       },
       monthlyTrendTop6: { months: [], series: [] },

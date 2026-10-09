@@ -31,6 +31,19 @@ const ReportView = {
         this.populateFileOptions(fn);
         this.renderFullReport(fn);
       });
+
+      // Tự động render ngay nếu tab hiện tại là reports khi khởi động hoặc reload trang
+      setTimeout(() => {
+        const hash = (typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '');
+        if (hash === 'reports' || window.Navigation?.currentTab === 'reports') {
+          const fileSelect = document.getElementById('report-select-file');
+          const currentVal = fileSelect ? fileSelect.value : null;
+          const lastImported = (typeof localStorage !== 'undefined' ? localStorage.getItem('amr_last_imported_file') : null) || window.App?.state?.lastImportedFile;
+          const target = currentVal || lastImported;
+          this.populateFileOptions(target);
+          this.renderFullReport(target);
+        }
+      }, 50);
     }
   },
 
@@ -250,46 +263,53 @@ const ReportView = {
    * Tạo báo cáo đầy đủ theo file được chọn
    */
   renderFullReport(overrideFileName) {
-    const fileSelect = document.getElementById('report-select-file');
-    if (overrideFileName && fileSelect) {
-      fileSelect.value = overrideFileName;
-    }
-    const targetFile = overrideFileName || (fileSelect ? fileSelect.value : 'ĐG Dương tính (010126. 230626).xls');
+    try {
+      const fileSelect = document.getElementById('report-select-file');
+      if (overrideFileName && fileSelect) {
+        fileSelect.value = overrideFileName;
+      }
+      const targetFile = overrideFileName || (fileSelect ? fileSelect.value : 'ĐG Dương tính (010126. 230626).xls');
 
-    const filters = {
-      file: targetFile,
-      time: document.getElementById('report-filter-time')?.value || '2026',
-      organism: document.getElementById('report-filter-organism')?.value || 'ALL',
-      specimenType: document.getElementById('report-filter-specimen')?.value || 'ALL'
-    };
+      const filters = {
+        file: targetFile,
+        time: document.getElementById('report-filter-time')?.value || '2026',
+        organism: document.getElementById('report-filter-organism')?.value || 'ALL',
+        specimenType: document.getElementById('report-filter-specimen')?.value || 'ALL'
+      };
 
-    if (!window.ReportExportService?.generateFullReportData) {
-      console.warn('[ReportView] ReportExportService not available yet.');
-      return;
-    }
+      if (!window.ReportExportService?.generateFullReportData) {
+        console.warn('[ReportView] ReportExportService not available yet.');
+        return;
+      }
 
-    const rep = window.ReportExportService.generateFullReportData(filters);
-    this.currentReportData = rep;
-    const comp = rep.comprehensiveReport || window.ReportExportService.getComprehensiveAmrReport(targetFile);
+      const rep = window.ReportExportService.generateFullReportData(filters);
+      this.currentReportData = rep;
+      const comp = rep.comprehensiveReport || window.ReportExportService.getComprehensiveAmrReport(targetFile);
 
-    // Nếu số chủng đang là 0 và không phải file chuẩn viện, thử kiểm tra ngầm ASTService để tải dữ liệu nếu có
-    if (comp.overview?.totalIsolates === 0 && targetFile !== 'ĐG Dương tính (010126. 230626).xls' && window.ASTService?.getSurveillanceData) {
-      window.ASTService.getSurveillanceData({ file: targetFile }).then(res => {
-        if (res && res.astResults && res.astResults.length > 0) {
-          if (window.App && window.App.state) {
-            window.App.state.surveillanceData = res;
+      // Nếu số chủng đang là 0 và không phải file chuẩn viện, thử kiểm tra ngầm ASTService để tải dữ liệu nếu có
+      if (comp.overview?.totalIsolates === 0 && targetFile !== 'ĐG Dương tính (010126. 230626).xls' && window.ASTService?.getSurveillanceData) {
+        window.ASTService.getSurveillanceData({ file: targetFile }).then(res => {
+          if (res && res.astResults && res.astResults.length > 0) {
+            if (window.App && window.App.state) {
+              window.App.state.surveillanceData = res;
+            }
+            const currentSel = document.getElementById('report-select-file')?.value;
+            if (currentSel === targetFile) {
+              this.renderFullReport(targetFile);
+            }
           }
-          const currentSel = document.getElementById('report-select-file')?.value;
-          if (currentSel === targetFile) {
-            this.renderFullReport(targetFile);
-          }
-        }
-      }).catch(() => {});
-    }
+        }).catch(() => {});
+      }
 
-    // Cập nhật các trường Header metadata
-    this.setTextContent('rep-hospital-name', comp.metadata.hospitalName);
-    this.setTextContent('rep-department-name', `${comp.metadata.departmentName} - ${comp.metadata.governingBody || 'HỘI ĐỒNG THUỐC'}`);
+      // Cập nhật phụ đề tiêu đề tài liệu
+      const elSubtitle = document.getElementById('rep-doc-subtitle');
+      if (elSubtitle) {
+        elSubtitle.textContent = comp.metadata?.subtitle || `DỮ LIỆU TẬP TIN: ${comp.metadata?.fileName || targetFile}`;
+      }
+
+      // Cập nhật các trường Header metadata
+      this.setTextContent('rep-hospital-name', comp.metadata.hospitalName);
+      this.setTextContent('rep-department-name', `${comp.metadata.departmentName} - ${comp.metadata.governingBody || 'HỘI ĐỒNG THUỐC'}`);
     this.setTextContent('rep-timestamp', comp.metadata.reportDate || rep.metadata.createdAt);
     this.setTextContent('rep-author', comp.metadata.author);
     this.setTextContent('rep-reviewer', comp.metadata.reviewer);
@@ -442,7 +462,11 @@ const ReportView = {
     } else if (this.currentMode === 'document') {
       this.renderDocumentView();
     }
-  },
+  } catch (err) {
+    console.error('[ReportView] Lỗi khi tạo báo cáo AMR:', err);
+    window.Toast?.error('Lỗi khi tính toán báo cáo: ' + (err.message || err));
+  }
+},
 
   setTextContent(elementId, text) {
     const el = document.getElementById(elementId);
