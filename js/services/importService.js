@@ -724,6 +724,8 @@ const ImportService = {
     const demo = window.DemoDataService?.getAll();
     if (demo) {
       this.syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata);
+    } else {
+      this.persistFileToBrowserStore(fileName, validatedRecords, jobId, fileType, metadata);
     }
 
     let mode = 'local';
@@ -768,7 +770,7 @@ const ImportService = {
             await sb.from('patients').upsert(chunk, { onConflict: 'patient_code' });
           }
 
-          // C. Bulk Insert AST Results (chunks of 200)
+          // C. Bulk Insert AST Results (chunks of 500 để tối ưu tốc độ)
           const astRows = validatedRecords.map(rec => ({
             antibiotic_code: rec.antibiotic_code,
             raw_result: rec.raw_result || '',
@@ -780,17 +782,17 @@ const ImportService = {
             file_name: fileName
           }));
 
-          for (let i = 0; i < astRows.length; i += 200) {
-            const chunk = astRows.slice(i, i + 200);
+          for (let i = 0; i < astRows.length; i += 500) {
+            const chunk = astRows.slice(i, i + 500);
             await sb.from('ast_results').insert(chunk);
           }
 
           return true;
         })();
 
-        // Giới hạn timeout 3.5s để bảo đảm UI không bao giờ bị đơ
+        // Giới hạn timeout 12s cho các file quy mô lớn (5.000+ bản ghi)
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Supabase sync timeout (>3.5s)')), 3500);
+          setTimeout(() => reject(new Error('Supabase sync timeout (>12s)')), 12000);
         });
 
         await Promise.race([supabaseSyncPromise, timeoutPromise]);
@@ -816,7 +818,9 @@ const ImportService = {
     return { success: true, count: successful, mode, jobId };
   },
 
-  syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata) {
+  syncToLocalStore(demo, validatedRecords, jobId, fileName, fileType, metadata = {}) {
+    this.persistFileToBrowserStore(fileName, validatedRecords, jobId, fileType, metadata);
+
     if (!demo.importJobs) demo.importJobs = [];
     if (!demo.importJobs.some(j => j.id === jobId || j.file_name === fileName)) {
       demo.importJobs.push({
@@ -956,6 +960,143 @@ const ImportService = {
     XLSX.utils.book_append_sheet(wb, ws, 'Bao_Cao_Loi_Du_Lieu');
 
     XLSX.writeFile(wb, `Bao_Cao_Loi_Import_${new Date().toISOString().split('T')[0]}.xlsx`);
+  },
+
+  /**
+   * Lưu trữ bền vững dữ liệu file và bản ghi AST vào Browser Local Storage & IndexedDB
+   * Đảm bảo sau khi reload trang / mở tab mới vẫn giữ 100% dữ liệu đã import
+   */
+  persistFileToBrowserStore(fileName, validatedRecords = [], jobId = '', fileType = 'xlsx', metadata = {}) {
+    if (typeof localStorage === 'undefined' || !fileName) return;
+
+    try {
+      // 1. Cập nhật Manifest các file đã lưu
+      let manifest = [];
+      try {
+        const existingManifest = localStorage.getItem('amr_persisted_files_manifest');
+        if (existingManifest) manifest = JSON.parse(existingManifest) || [];
+      } catch (e) {
+        manifest = [];
+      }
+
+      // Loại bỏ bản ghi cũ cùng tên nếu có
+      manifest = manifest.filter(m => m.fileName !== fileName);
+      manifest.unshift({
+        id: jobId || ('job-' + Date.now()),
+        fileName: fileName,
+        fileType: fileType,
+        fileSize: metadata.fileSize || 0,
+        recordCount: validatedRecords.length,
+        createdAt: new Date().toISOString()
+      });
+
+      // Giữ tối đa 20 file gần nhất trong manifest
+      if (manifest.length > 20) manifest = manifest.slice(0, 20);
+      localStorage.setItem('amr_persisted_files_manifest', JSON.stringify(manifest));
+
+      // 2. Nén dạng compact để lưu trữ tối ưu trong localStorage
+      const compactRecords = validatedRecords.map(r => ({
+        p: r.patient_code || '',
+        n: r.patient_name || '',
+        a: r.age || null,
+        g: r.sex || '',
+        d: r.department || '',
+        s: r.specimen_type || '',
+        o: r.organism_name || '',
+        b: r.antibiotic_code || '',
+        w: r.raw_result || '',
+        r: r.interpretation || '',
+        t: r.collection_date || r.tested_date || '',
+        c: r.culture_id || '',
+        row: r.source_row || null
+      }));
+
+      const storageKey = 'amr_file_records_' + encodeURIComponent(fileName);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(compactRecords));
+      } catch (quotaErr) {
+        console.warn('[ImportService] localStorage đầy khi lưu file ' + fileName + ', dọn dẹp các cache cũ...');
+        if (manifest.length > 1) {
+          const oldest = manifest.pop();
+          if (oldest) {
+            localStorage.removeItem('amr_file_records_' + encodeURIComponent(oldest.fileName));
+            localStorage.setItem('amr_persisted_files_manifest', JSON.stringify(manifest));
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(compactRecords));
+            } catch (retryErr) {
+              console.warn('[ImportService] Không thể lưu vào localStorage sau khi dọn dẹp:', retryErr.message);
+            }
+          }
+        }
+      }
+
+      localStorage.setItem('amr_last_imported_file', fileName);
+    } catch (err) {
+      console.warn('[ImportService] Lỗi khi lưu vào browser store:', err);
+    }
+  },
+
+  /**
+   * Đọc danh sách bản ghi AST của một file từ bộ nhớ bền vững của trình duyệt
+   */
+  getPersistedFileRecords(targetFileName) {
+    if (typeof localStorage === 'undefined' || !targetFileName) return [];
+
+    try {
+      // 1. Thử đọc trực tiếp theo tên file mã hóa
+      const directKey = 'amr_file_records_' + encodeURIComponent(targetFileName);
+      let rawJson = localStorage.getItem(directKey);
+
+      // 2. Nếu chưa tìm thấy, duyệt qua manifest để so khớp không phân biệt hoa thường / phần mở rộng
+      if (!rawJson) {
+        const manifestStr = localStorage.getItem('amr_persisted_files_manifest');
+        if (manifestStr) {
+          const manifest = JSON.parse(manifestStr);
+          if (Array.isArray(manifest)) {
+            const target = String(targetFileName).trim().toLowerCase();
+            const cleanTarget = target.replace(/\.[a-z0-9]+$/i, '').replace(/[\s\.\(\)\-_]/g, '');
+            const matchedMeta = manifest.find(m => {
+              const fn = String(m.fileName || '').trim().toLowerCase();
+              if (fn === target || fn.includes(target) || target.includes(fn)) return true;
+              const cleanFn = fn.replace(/\.[a-z0-9]+$/i, '').replace(/[\s\.\(\)\-_]/g, '');
+              return cleanFn && cleanTarget && (cleanFn === cleanTarget || cleanFn.includes(cleanTarget) || cleanTarget.includes(cleanFn));
+            });
+            if (matchedMeta) {
+              rawJson = localStorage.getItem('amr_file_records_' + encodeURIComponent(matchedMeta.fileName));
+            }
+          }
+        }
+      }
+
+      if (!rawJson) return [];
+
+      const compact = JSON.parse(rawJson);
+      if (!Array.isArray(compact)) return [];
+
+      return compact.map((c, idx) => ({
+        id: 'persisted-ast-' + targetFileName + '-' + idx,
+        patient_code: c.p || '',
+        patient_name: c.n || '',
+        age: c.a || null,
+        sex: c.g || '',
+        department: c.d || 'Chưa xác định',
+        specimen_type: c.s || 'Chưa xác định',
+        organism_name: c.o || 'Chưa định danh',
+        antibiotic_code: c.b || '',
+        raw_result: c.w || c.r || '',
+        normalized_result: c.r || '',
+        interpretation: c.r || '',
+        tested_date: c.t || '',
+        collection_date: c.t || '',
+        culture_id: c.c || ('cult-persisted-' + targetFileName + '-' + (c.row || idx)),
+        source_row: c.row || null,
+        file_name: targetFileName,
+        import_job_id: 'job-persisted-' + targetFileName
+      }));
+    } catch (e) {
+      console.warn('[ImportService] Lỗi khi giải mã persisted records:', e);
+      return [];
+    }
   }
 };
 

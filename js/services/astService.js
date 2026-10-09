@@ -10,6 +10,19 @@ const ASTService = {
     const sb = window.SupabaseManager?.client;
     const hasDb = window.SupabaseManager?.hasTables;
 
+    // Nếu chỉ định phân tích một file cụ thể (khác ALL): ưu tiên lấy từ Local/Persisted store nếu có đủ thông tin lâm sàng
+    if (filters.file && filters.file !== 'ALL') {
+      const local = this.fetchFromDemoData(filters);
+      if (local && local.astResults && local.astResults.length > 0) {
+        const hasClinicalInfo = local.astResults.some(r =>
+          r.organism_name && r.organism_name !== 'Chưa định danh' && r.organism_name !== 'Khác'
+        );
+        if (hasClinicalInfo) {
+          return local;
+        }
+      }
+    }
+
     if (sb && hasDb) {
       try {
         const res = await this.fetchFromSupabase(filters);
@@ -118,10 +131,26 @@ const ASTService = {
       patients: [], specimens: [], cultures: [], astResults: [], importJobs: []
     };
 
-    let filteredAst = [...raw.astResults];
+    let filteredAst = [...(raw.astResults || [])];
 
     if (filters.file && filters.file !== 'ALL') {
-      filteredAst = filteredAst.filter(a => a.file_name === filters.file || a.import_job_id === filters.file);
+      const target = String(filters.file).trim().toLowerCase();
+      const cleanTarget = target.replace(/\.[a-z0-9]+$/i, '').replace(/[\s\.\(\)\-_]/g, '');
+      filteredAst = filteredAst.filter(a => {
+        const fn = String(a.file_name || '').trim().toLowerCase();
+        const jid = String(a.import_job_id || '').trim().toLowerCase();
+        if (fn === target || jid === target || fn.includes(target) || target.includes(fn)) return true;
+        const cleanFn = fn.replace(/\.[a-z0-9]+$/i, '').replace(/[\s\.\(\)\-_]/g, '');
+        return cleanFn && cleanTarget && (cleanFn === cleanTarget || cleanFn.includes(cleanTarget) || cleanTarget.includes(cleanFn));
+      });
+
+      // Nếu demo data chưa có, thử tìm trong ImportService persisted records
+      if (filteredAst.length === 0 && (typeof window !== 'undefined' && window.ImportService?.getPersistedFileRecords)) {
+        const persisted = window.ImportService.getPersistedFileRecords(filters.file);
+        if (persisted && persisted.length > 0) {
+          filteredAst = persisted;
+        }
+      }
     }
 
     if (filters.organism && filters.organism !== 'ALL') {

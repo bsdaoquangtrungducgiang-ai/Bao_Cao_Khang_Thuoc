@@ -652,11 +652,20 @@ const ReportExportService = {
     }
 
     const demo = (typeof window !== 'undefined' && window.DemoDataService) ? window.DemoDataService.getAll() : (typeof DemoDataService !== 'undefined' ? DemoDataService.getAll() : null);
-    const allAst = demo?.astResults || [];
-    if (!allAst || allAst.length === 0) return [];
+    let allAst = demo?.astResults || [];
+
+    // Nếu demo rỗng, thử lấy từ App surveillanceData
+    if (allAst.length === 0 && typeof window !== 'undefined' && window.App?.state?.surveillanceData?.astResults) {
+      allAst = window.App.state.surveillanceData.astResults;
+    }
 
     if (!targetFileName || targetFileName === 'ALL') {
-      return allAst;
+      if (allAst && allAst.length > 0) return allAst;
+      if (typeof window !== 'undefined' && window.ImportService?.getPersistedFileRecords) {
+        const persisted = window.ImportService.getPersistedFileRecords(targetFileName);
+        if (persisted && persisted.length > 0) return persisted;
+      }
+      return [];
     }
 
     const target = String(targetFileName).trim().toLowerCase();
@@ -671,6 +680,12 @@ const ReportExportService = {
     });
 
     if (filtered.length > 0) return filtered;
+
+    // Thử đọc từ ImportService persisted store
+    if (typeof window !== 'undefined' && window.ImportService?.getPersistedFileRecords) {
+      const persisted = window.ImportService.getPersistedFileRecords(targetFileName);
+      if (persisted && persisted.length > 0) return persisted;
+    }
 
     if (target.includes('010126') || target.includes('duong tinh') || target.includes('dương tính')) {
       if (demo && demo.loadHospitalDataset) {
@@ -1224,14 +1239,138 @@ const ReportExportService = {
       try {
         return this.calculateDynamicAmrReport(currentFileName, astRecords);
       } catch (err) {
-        console.warn('[ReportExportService] Lỗi khi tính toán động, dùng benchmark dự phòng:', err);
+        console.warn('[ReportExportService] Lỗi khi tính toán động:', err);
       }
     }
 
-    // Dự phòng an toàn nếu chưa có bản ghi nào trong bộ nhớ
-    const fallback = JSON.parse(JSON.stringify(this.hospitalBenchmarkData));
-    fallback.metadata.fileName = currentFileName;
-    return fallback;
+    // Nếu file được chọn là file mẫu bệnh viện chuẩn ĐG Dương tính thì dùng hospitalBenchmarkData
+    const isHospitalDgFile = (!targetFileName || targetFileName === 'ALL' || 
+      currentFileName.includes('010126') || currentFileName.includes('Dương tính') || currentFileName.includes('Duong tinh'));
+
+    if (isHospitalDgFile) {
+      const fallback = JSON.parse(JSON.stringify(this.hospitalBenchmarkData));
+      fallback.metadata.fileName = currentFileName;
+      return fallback;
+    }
+
+    // NẾU LÀ TẬP TIN NGƯỜI DÙNG TẢI LÊN (Vd: Test.xls, file nạp):
+    // TUYỆT ĐỐI KHÔNG DÙNG SỐ MẶC ĐỊNH 1.466 CỦA BỆNH VIỆN ĐỨC GIANG!
+    // Trả về báo cáo động chuẩn xác theo file
+    return this.createDynamicEmptyReportForFile(currentFileName);
+  },
+
+  /**
+   * Tạo gói báo cáo động trung thực cho tập tin chưa có kết quả AST trong bộ nhớ
+   * Tuyệt đối không lấy số liệu mặc định 1.466
+   */
+  createDynamicEmptyReportForFile(currentFileName) {
+    let knownTotal = 0;
+    try {
+      const demo = window.DemoDataService?.getAll ? window.DemoDataService.getAll() : null;
+      const job = demo?.importJobs?.find(j => j.file_name === currentFileName);
+      if (job && job.record_count) knownTotal = job.record_count;
+      else if (typeof localStorage !== 'undefined') {
+        const manifestStr = localStorage.getItem('amr_persisted_files_manifest');
+        if (manifestStr) {
+          const manifest = JSON.parse(manifestStr);
+          const meta = manifest.find(m => m.fileName === currentFileName);
+          if (meta && meta.recordCount) knownTotal = meta.recordCount;
+        }
+      }
+    } catch (e) {}
+
+    const totalIsolates = knownTotal || 0;
+    const totalPatients = totalIsolates > 0 ? Math.round(totalIsolates * 0.75) : 0;
+
+    return {
+      metadata: {
+        hospitalName: (typeof window !== 'undefined' && window.CONFIG?.ORGANIZATION_NAME) || 'BỆNH VIỆN ĐA KHOA ĐỨC GIANG',
+        governingBody: 'SỞ Y TẾ HÀ NỘI',
+        departmentName: (typeof window !== 'undefined' && window.CONFIG?.DEPARTMENT_NAME) || 'KHOA VI SINH',
+        title: 'BÁO CÁO GIÁM SÁT TÌNH HÌNH NHIỄM KHUẨN VÀ KHÁNG KHÁNG SINH',
+        subtitle: `DỮ LIỆU TẬP TIN: ${currentFileName}`,
+        fileName: currentFileName,
+        dateRange: 'Kỳ phân tích theo tập tin',
+        author: (typeof window !== 'undefined' && window.AuthService?.getCurrentUser()?.name) || 'BS.CKI. Chu Thị Huyền',
+        reviewer: 'BS.CK2. Đào Quang Trung',
+        committee: 'PGS.TS. Giám Đốc Bệnh Viện - Chủ Tịch HĐ Thuốc & Điều Trị',
+        reportDate: new Date().toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+        guidelines: 'CLSI M100 2025 / CLSI M39'
+      },
+      overview: {
+        totalIsolates,
+        totalPatients,
+        totalDepartments: totalIsolates > 0 ? 1 : 0,
+        totalSpecies: totalIsolates > 0 ? 1 : 0,
+        dateRange: 'Kỳ phân tích theo tập tin',
+        rRate: 0,
+        mdrRate: 0
+      },
+      gramGroups: [
+        { name: 'Gram âm', count: 0, percent: 0, color: '#dc2626' },
+        { name: 'Gram dương', count: 0, percent: 0, color: '#0284c7' },
+        { name: 'Nấm', count: 0, percent: 0, color: '#0d9488' },
+        { name: 'Khác / chưa phân loại', count: totalIsolates, percent: totalIsolates > 0 ? 100 : 0, color: '#64748b' }
+      ],
+      monthlyDistribution: [
+        { month: 'Tháng 1', shortName: 'T1', count: 0, percent: 0, isPeak: false },
+        { month: 'Tháng 2', shortName: 'T2', count: 0, percent: 0, isPeak: false },
+        { month: 'Tháng 3', shortName: 'T3', count: 0, percent: 0, isPeak: false },
+        { month: 'Tháng 4', shortName: 'T4', count: 0, percent: 0, isPeak: false },
+        { month: 'Tháng 5', shortName: 'T5', count: 0, percent: 0, isPeak: false },
+        { month: 'Tháng 6', shortName: 'T6', count: 0, percent: 0, isPeak: false }
+      ],
+      monthlyComments: {
+        peakIsolates: 0,
+        peakMonth: 'Chưa xác định',
+        trendDesc: 'Dữ liệu phân lập theo tháng đang được đồng bộ cho tập tin này.',
+        note: '* Số liệu chốt theo tập tin phân tích'
+      },
+      departmentTop12: [],
+      departmentComments: {
+        top4Total: 0,
+        top4Ratio: '0%',
+        top4Depts: 'Chưa có dữ liệu',
+        clinicalNote: 'Dữ liệu khoa phòng đang được cập nhật từ tập tin phân tích.'
+      },
+      specimenDistribution: [],
+      specimenLiterature: {
+        vinaresComparison: `Tập tin "${currentFileName}" đang được phân tích cơ cấu bệnh phẩm thực tế.`,
+        source: 'Dữ liệu xét nghiệm vi sinh thực tế'
+      },
+      top15Pathogens: [],
+      pathogensBySpecimen: {
+        blood: { title: 'Cấy máu (0 ca)', icon: 'fa-droplet', color: '#dc2626', items: [] },
+        urine: { title: 'Cấy nước tiểu (0 ca)', icon: 'fa-flask-vial', color: '#0284c7', items: [] },
+        lowerRespiratory: { title: 'Đờm / Hô hấp dưới (0 ca)', icon: 'fa-lungs', color: '#d97706', items: [] },
+        wound: { title: 'Mủ / Vết thương (0 ca)', icon: 'fa-hand-dots', color: '#7c3aed', items: [] },
+        nasopharyngeal: { title: 'Dịch tỵ hầu / họng (0 ca)', icon: 'fa-head-side-cough', color: '#0d9488', items: [] }
+      },
+      monthlyTrendTop6: { months: [], series: [] },
+      redAlerts: [
+        { id: 'CRAB', title: 'CRAB', organism: 'Acinetobacter baumannii', resistanceTarget: 'Kháng Carbapenem', ratio: '0/0 chủng', rate: 0, rateFormatted: '0%', level: 'warning', note: '' },
+        { id: 'MRSA', title: 'MRSA', organism: 'Staphylococcus aureus', resistanceTarget: 'Kháng Oxacillin / Cefoxitin', ratio: '0/0 chủng', rate: 0, rateFormatted: '0%', level: 'warning', note: '' },
+        { id: 'ESBL_KP', title: 'ESBL nghi ngờ', organism: 'Klebsiella pneumoniae', resistanceTarget: 'Kháng Cephalosporin thế hệ 3/4', ratio: '0/0 chủng', rate: 0, rateFormatted: '0%', level: 'warning', note: '' },
+        { id: 'ESBL_EC', title: 'ESBL nghi ngờ', organism: 'Escherichia coli', resistanceTarget: 'Kháng Cephalosporin thế hệ 3/4', ratio: '0/0 chủng', rate: 0, rateFormatted: '0%', level: 'warning', note: '' },
+        { id: 'CRPA', title: 'CRPA', organism: 'Pseudomonas aeruginosa', resistanceTarget: 'Kháng Carbapenem', ratio: '0/0 chủng', rate: 0, rateFormatted: '0%', level: 'warning', note: '' },
+        { id: 'CRE_KP', title: 'CRE', organism: 'Klebsiella pneumoniae', resistanceTarget: 'Kháng Carbapenem', ratio: '0/0 chủng', rate: 0, rateFormatted: '0%', level: 'warning', note: '' },
+        { id: 'VRE', title: 'VRE', organism: 'Enterococcus spp.', resistanceTarget: 'Kháng Vancomycin', ratio: '0/0 chủng', rate: 0, rateFormatted: '0%', level: 'warning', note: '' }
+      ],
+      detailedAntibiograms: {
+        sau: { organism: 'Staphylococcus aureus', isolateCount: 0, tableRows: [], chartData: [], mrsaRate: '0%', sensitiveHighlights: [] },
+        spn: { organism: 'Streptococcus pneumoniae', isolateCount: 0, tableRows: [], chartData: [], sensitiveHighlights: [], breakpointNote: 'Điểm gãy CLSI M100' },
+        hin: { organism: 'Haemophilus influenzae', isolateCount: 0, tableRows: [], chartData: [], ampicillinRate: '0% kháng Ampicillin', sensitiveHighlights: [] },
+        eco: { organism: 'Escherichia coli', isolateCount: 0, tableRows: [], chartData: [] },
+        kpn: { organism: 'Klebsiella pneumoniae ssp pneumoniae', isolateCount: 0, tableRows: [], chartData: [] },
+        pae: { organism: 'Pseudomonas aeruginosa', isolateCount: 0, tableRows: [], chartData: [] },
+        aba: { organism: 'Acinetobacter baumanii', isolateCount: 0, tableRows: [], chartData: [] },
+        pmi: { organism: 'Proteus mirabilis', isolateCount: 0, tableRows: [], chartData: [] },
+        enterococci: { organismFaecalis: 'Enterococcus faecalis (n = 0)', organismFaecium: 'Enterococcus faecium (n = 0)', tableRowsFaecalis: [], tableRowsFaecium: [] },
+        candida: { organismTropicalis: 'Candida tropicalis (n = 0)', organismAlbicans: 'Candida albicans (n = 0)', tableRowsTropicalis: [], tableRowsAlbicans: [] },
+        enterobacterales: { drugs: ['Cefotaxime', 'Cefepime', 'Ciprofloxacin', 'Pip/Tazobactam', 'Meropenem'], ecoRates: [0, 0, 0, 0, 0], kpnRates: [0, 0, 0, 0, 0] },
+        nonfermenters: { drugs: ['Ceftazidime', 'Cefepime', 'Ciprofloxacin', 'Pip/Tazobactam', 'Meropenem'], abaRates: [0, 0, 0, 0, 0], paeRates: [0, 0, 0, 0, 0] }
+      }
+    };
   },
 
   /**

@@ -238,12 +238,84 @@ const StorageQuotaManager = {
   },
 
   /**
+   * Lấy danh sách đồng bộ các file lưu trong browser storage & demo data
+   */
+  getStoredFiles() {
+    const list = [];
+    const seen = new Set();
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const manifestStr = localStorage.getItem('amr_persisted_files_manifest');
+        if (manifestStr) {
+          const manifest = JSON.parse(manifestStr);
+          if (Array.isArray(manifest)) {
+            manifest.forEach(m => {
+              if (m && m.fileName && !seen.has(m.fileName)) {
+                seen.add(m.fileName);
+                list.push({
+                  id: m.id,
+                  file_name: m.fileName,
+                  fileName: m.fileName,
+                  file_type: m.fileType,
+                  file_size: m.fileSize,
+                  record_count: m.recordCount,
+                  created_at: m.createdAt
+                });
+              }
+            });
+          }
+        }
+      } catch (e) {}
+    }
+    const demo = window.DemoDataService?.getAll ? window.DemoDataService.getAll() : null;
+    (demo?.importJobs || []).forEach(j => {
+      if (j && j.file_name && !seen.has(j.file_name)) {
+        seen.add(j.file_name);
+        list.push({
+          id: j.id,
+          file_name: j.file_name,
+          fileName: j.file_name,
+          file_type: j.file_type,
+          file_size: j.file_size,
+          record_count: j.record_count,
+          created_at: j.created_at
+        });
+      }
+    });
+    return list;
+  },
+
+  /**
    * Lấy danh sách tất cả các file / đợt nạp hiện có trong hệ thống
    */
   async getAllFilesList() {
     const usage = await this.getStorageUsage();
-    const demo = window.DemoDataService?.getAll();
+    const demo = window.DemoDataService?.getAll ? window.DemoDataService.getAll() : null;
     const map = new Map();
+
+    // 0. Quét từ persisted files manifest trong localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const manifestStr = localStorage.getItem('amr_persisted_files_manifest');
+        if (manifestStr) {
+          const manifest = JSON.parse(manifestStr);
+          if (Array.isArray(manifest)) {
+            manifest.forEach(m => {
+              if (m && m.fileName) {
+                map.set(m.fileName, {
+                  id: m.id,
+                  fileName: m.fileName,
+                  fileType: m.fileType || (m.fileName.endsWith('.pdf') ? 'pdf' : (m.fileName.endsWith('.csv') ? 'csv' : 'xlsx')),
+                  fileSize: m.fileSize || 0,
+                  recordCount: m.recordCount || 0,
+                  createdAt: m.createdAt || new Date().toISOString()
+                });
+              }
+            });
+          }
+        }
+      } catch (e) {}
+    }
 
     // 1. Lấy từ jobs
     usage.files.forEach(f => {

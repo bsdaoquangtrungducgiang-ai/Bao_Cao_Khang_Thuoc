@@ -236,8 +236,44 @@ const DemoDataService = {
 
     this.isInitialized = true;
     this.loadHospitalDataset();
+    this.loadPersistedFiles();
     console.log(`[DemoDataService] Initialized: ${this.data.patients.length} patients, ${this.data.specimens.length} specimens, ${this.data.cultures.length} cultures, ${this.data.astResults.length} AST results.`);
     return this.data;
+  },
+
+  loadPersistedFiles() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const manifestStr = localStorage.getItem('amr_persisted_files_manifest');
+      if (!manifestStr) return;
+      const manifest = JSON.parse(manifestStr);
+      if (!Array.isArray(manifest)) return;
+
+      const ImportRef = (typeof window !== 'undefined' && window.ImportService) ? window.ImportService : (typeof ImportService !== 'undefined' ? ImportService : null);
+      if (!ImportRef || !ImportRef.getPersistedFileRecords) return;
+
+      manifest.forEach(item => {
+        if (!item || !item.fileName) return;
+        // Nếu file đã có trong danh sách importJobs thì không nạp lại
+        if (this.data.importJobs && this.data.importJobs.some(j => j.file_name === item.fileName)) {
+          return;
+        }
+
+        const recs = ImportRef.getPersistedFileRecords(item.fileName);
+        if (recs && recs.length > 0) {
+          ImportRef.syncToLocalStore(
+            this.data,
+            recs,
+            item.id || ('job-persisted-' + item.fileName),
+            item.fileName,
+            item.fileType || 'xlsx',
+            { fileSize: item.fileSize || 0, totalRows: recs.length }
+          );
+        }
+      });
+    } catch (e) {
+      console.warn('[DemoDataService] Lỗi khi nạp persisted files:', e);
+    }
   },
 
   loadHospitalDataset() {
@@ -275,6 +311,7 @@ const DemoDataService = {
     if (this.data && this.data.importJobs && !this.data.importJobs.some(j => j.file_name === 'ĐG Dương tính (010126. 230626).xls')) {
       this.loadHospitalDataset();
     }
+    this.loadPersistedFiles();
     return this.data;
   }
 };

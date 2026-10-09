@@ -377,10 +377,18 @@ const App = {
 
     let matched = rawAst.filter(filterFn);
     // Nếu chưa tìm thấy hoặc không có thông tin vi khuẩn thực tế nhưng Local Store có thì lấy từ Local Store
-    if ((!hasClinicalInfo(matched)) && localData?.astResults) {
+    if ((!matched || matched.length === 0 || !hasClinicalInfo(matched)) && localData?.astResults) {
       const localMatched = localData.astResults.filter(filterFn);
-      if (hasClinicalInfo(localMatched)) {
+      if (localMatched && localMatched.length > 0) {
         matched = localMatched;
+      }
+    }
+
+    // Nếu vẫn chưa tìm thấy, đọc trực tiếp từ ImportService persisted records
+    if ((!matched || matched.length === 0) && (typeof window !== 'undefined' && window.ImportService?.getPersistedFileRecords)) {
+      const persisted = window.ImportService.getPersistedFileRecords(f);
+      if (persisted && persisted.length > 0) {
+        matched = persisted;
       }
     }
 

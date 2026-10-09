@@ -150,6 +150,28 @@ assert(document.getElementById('table-rep-nonferm-body').children.length === 5, 
 assert(document.getElementById('rep-badge-top15').textContent.length > 0, "29. Huy hiệu Top tác nhân cập nhật động theo file");
 assert(document.getElementById('rep-callout-conclusion1').innerHTML.indexOf('CRAB') !== -1, "30. Nhận xét Phần 10 cập nhật tỷ lệ kháng của file mới");
 
+// KIỂM TRA 6: KIỂM TRA TIÊU ĐỀ BIỂU ĐỒ ĐỘNG VỚI N THỰC TẾ
+assert(document.getElementById('rep-chart-title-sau').innerHTML.indexOf('n=1') !== -1, "31. Tiêu đề biểu đồ S. aureus hiển thị đúng số lượng động n=1 (không bị giữ n=230)");
+assert(document.getElementById('rep-chart-title-spn').innerHTML.indexOf('n=0') !== -1, "32. Tiêu đề biểu đồ S. pneumoniae hiển thị đúng số lượng động n=0 (không bị giữ n=214)");
+assert(document.getElementById('rep-chart-title-hin').innerHTML.indexOf('n=0') !== -1, "33. Tiêu đề biểu đồ H. influenzae hiển thị đúng số lượng động n=0 (không bị giữ n=253)");
+
+// KIỂM TRA 7: CƠ CHẾ PERSIST BROWSER STORE & PHỤC HỒI KHI TẢI LẠI TRANG
+var persistedTestFileName = 'Tep_Kiem_Tra_Luu_Tru_5000.xls';
+var sampleImportRecords = [
+  { culture_id: 'C100', patient_code: 'BN100', department: 'Khoa Hồi sức tích cực', organism_name: 'Staphylococcus aureus', specimen_type: 'Máu', antibiotic_code: 'VAN', interpretation: 'S', tested_date: '2026-06-01' },
+  { culture_id: 'C100', patient_code: 'BN100', department: 'Khoa Hồi sức tích cực', organism_name: 'Staphylococcus aureus', specimen_type: 'Máu', antibiotic_code: 'OXA', interpretation: 'R', tested_date: '2026-06-01' }
+];
+ImportService.persistFileToBrowserStore(persistedTestFileName, sampleImportRecords, 'job-test-99', 'application/vnd.ms-excel', { rowCount: 2 });
+var restoredRecords = ImportService.getPersistedFileRecords(persistedTestFileName);
+assert(restoredRecords && restoredRecords.length === 2, "34. Lưu trữ và phục hồi từ amr_persisted_files thành công (" + (restoredRecords ? restoredRecords.length : 0) + " records)");
+assert(restoredRecords[0].organism_name === 'Staphylococcus aureus', "35. Dữ liệu phục hồi giữ nguyên vẹn vi khuẩn và kết quả");
+
+// KIỂM TRA 8: FILE HOÀN TOÀN MỚI CHƯA CÓ KẾT QUẢ KHÔNG BAO GIỜ BỊ GÁN 1.466 MẶC ĐỊNH
+var repUnknown = ReportExportService.getComprehensiveAmrReport('Tep_Hoan_Toan_Chua_Xac_Dinh_2026.csv');
+assert(repUnknown.metadata.fileName === 'Tep_Hoan_Toan_Chua_Xac_Dinh_2026.csv', "36. File mới chưa phân tích giữ đúng tên file");
+assert(repUnknown.overview.totalIsolates === 0, "37. File chưa có kết quả hiển thị 0 chủng, TUYỆT ĐỐI KHÔNG rơi về 1.466 mặc định");
+assert(repUnknown.overview.totalPatients === 0, "38. File chưa có kết quả hiển thị 0 bệnh nhân, KHÔNG rơi về 1.137 mặc định");
+
 print("\n================================================================");
 print("  KẾT QUẢ: " + passed + " PASS, " + failed + " FAIL");
 if (failed === 0) {

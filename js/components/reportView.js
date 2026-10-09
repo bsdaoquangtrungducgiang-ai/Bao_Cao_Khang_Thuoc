@@ -130,6 +130,21 @@ const ReportView = {
       });
     }
 
+    // Đọc từ persisted files manifest trong localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const manifestStr = localStorage.getItem('amr_persisted_files_manifest');
+        if (manifestStr) {
+          const manifest = JSON.parse(manifestStr);
+          if (Array.isArray(manifest)) {
+            manifest.forEach(m => {
+              if (m && m.fileName) files.add(m.fileName);
+            });
+          }
+        }
+      } catch (e) {}
+    }
+
     if (preferredFileName) {
       files.add(preferredFileName);
     }
@@ -257,6 +272,21 @@ const ReportView = {
     this.currentReportData = rep;
     const comp = rep.comprehensiveReport || window.ReportExportService.getComprehensiveAmrReport(targetFile);
 
+    // Nếu số chủng đang là 0 và không phải file chuẩn viện, thử kiểm tra ngầm ASTService để tải dữ liệu nếu có
+    if (comp.overview?.totalIsolates === 0 && targetFile !== 'ĐG Dương tính (010126. 230626).xls' && window.ASTService?.getSurveillanceData) {
+      window.ASTService.getSurveillanceData({ file: targetFile }).then(res => {
+        if (res && res.astResults && res.astResults.length > 0) {
+          if (window.App && window.App.state) {
+            window.App.state.surveillanceData = res;
+          }
+          const currentSel = document.getElementById('report-select-file')?.value;
+          if (currentSel === targetFile) {
+            this.renderFullReport(targetFile);
+          }
+        }
+      }).catch(() => {});
+    }
+
     // Cập nhật các trường Header metadata
     this.setTextContent('rep-hospital-name', comp.metadata.hospitalName);
     this.setTextContent('rep-department-name', `${comp.metadata.departmentName} - ${comp.metadata.governingBody || 'HỘI ĐỒNG THUỐC'}`);
@@ -344,8 +374,11 @@ const ReportView = {
     // Section 8: 8.1 S. aureus
     if (comp.detailedAntibiograms?.sau) {
       const sau = comp.detailedAntibiograms.sau;
+      const countSau = sau.isolateCount !== undefined ? sau.isolateCount : 230;
       const elSauTitle = document.getElementById('rep-title-sau');
-      if (elSauTitle) elSauTitle.innerHTML = `Biểu đồ "<em>S. aureus</em> (n=${sau.isolateCount || 230}): tỷ lệ kháng (%R)"`;
+      if (elSauTitle) elSauTitle.innerHTML = `Biểu đồ "<em>S. aureus</em> (n=${countSau}): tỷ lệ kháng (%R)"`;
+      const elSauChartTitle = document.getElementById('rep-chart-title-sau');
+      if (elSauChartTitle) elSauChartTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> Biểu đồ "<em>S. aureus</em> (n=${countSau}): tỷ lệ kháng (%R)"`;
       this.setTextContent('rep-badge-sau', `MRSA: ${sau.mrsaRate || '78.6%'}`);
       this.setTextContent('rep-sub-sau', 'Vancomycin / Linezolid: 100% S');
     }
@@ -353,8 +386,11 @@ const ReportView = {
     // 8.2 S. pneumoniae
     if (comp.detailedAntibiograms?.spn) {
       const spn = comp.detailedAntibiograms.spn;
+      const countSpn = spn.isolateCount !== undefined ? spn.isolateCount : 214;
       const elSpnTitle = document.getElementById('rep-title-spn');
-      if (elSpnTitle) elSpnTitle.innerHTML = `Biểu đồ "<em>S. pneumoniae</em> (n=${spn.isolateCount || 214}): tỷ lệ kháng (%R)"`;
+      if (elSpnTitle) elSpnTitle.innerHTML = `Biểu đồ "<em>S. pneumoniae</em> (n=${countSpn}): tỷ lệ kháng (%R)"`;
+      const elSpnChartTitle = document.getElementById('rep-chart-title-spn');
+      if (elSpnChartTitle) elSpnChartTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> Biểu đồ "<em>S. pneumoniae</em> (n=${countSpn}): tỷ lệ kháng (%R)"`;
       const eryR = spn.chartData?.find(c => c.drug && c.drug.toLowerCase().includes('erythro'))?.rate || 98.6;
       this.setTextContent('rep-badge-spn', `Kháng Erythromycin: ${eryR}%`);
       this.setTextContent('rep-sub-spn', 'Moxifloxacin / Vancomycin: 100% S');
@@ -363,8 +399,11 @@ const ReportView = {
     // 8.3 H. influenzae
     if (comp.detailedAntibiograms?.hin) {
       const hin = comp.detailedAntibiograms.hin;
+      const countHin = hin.isolateCount !== undefined ? hin.isolateCount : 253;
       const elHinTitle = document.getElementById('rep-title-hin');
-      if (elHinTitle) elHinTitle.innerHTML = `Biểu đồ "<em>H. influenzae</em> (n=${hin.isolateCount || 253}): tỷ lệ kháng (%R)"`;
+      if (elHinTitle) elHinTitle.innerHTML = `Biểu đồ "<em>H. influenzae</em> (n=${countHin}): tỷ lệ kháng (%R)"`;
+      const elHinChartTitle = document.getElementById('rep-chart-title-hin');
+      if (elHinChartTitle) elHinChartTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> Biểu đồ "<em>H. influenzae</em> (n=${countHin}): tỷ lệ kháng (%R)"`;
       this.setTextContent('rep-badge-hin', hin.ampicillinRate || 'Ampicillin R: 84.1%');
       this.setTextContent('rep-sub-hin', 'Meropenem / Ceftriaxone nhạy cảm cao');
     }
