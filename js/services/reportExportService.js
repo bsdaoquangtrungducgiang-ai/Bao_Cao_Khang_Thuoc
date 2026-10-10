@@ -841,33 +841,40 @@ const ReportExportService = {
 
   calcEnterobacteralesComparison(eco, kpn) {
     const drugs = ['Cefotaxime', 'Cefepime', 'Ciprofloxacin', 'Pip/Tazobactam', 'Meropenem'];
-    const findRate = (orgObj, drugKw) => {
-      const match = (orgObj.tableRows || []).find(r => r.antibiotic.toLowerCase().includes(drugKw.toLowerCase()));
+    const findRate = (orgObj, nameKws, codeKws) => {
+      if (!orgObj || !orgObj.tableRows) return 0;
+      const match = orgObj.tableRows.find(r => {
+        const name = (r.antibiotic || '').toLowerCase();
+        const code = (r.code || '').toUpperCase();
+        return nameKws.some(kw => name.includes(kw.toLowerCase())) ||
+               codeKws.some(ck => code === ck.toUpperCase());
+      });
       return match ? match.rRate : 0;
     };
 
     const ecoRates = [
-      findRate(eco, 'Cefotaxime'),
-      findRate(eco, 'Cefepime'),
-      findRate(eco, 'Ciprofloxacin'),
-      findRate(eco, 'Piperacillin/Tazobactam'),
-      findRate(eco, 'Meropenem')
+      findRate(eco, ['cefotaxime', 'ceftriaxone', 'ceftazidime'], ['CTX', 'CRO', 'CAZ']),
+      findRate(eco, ['cefepime'], ['FEP']),
+      findRate(eco, ['ciprofloxacin', 'levofloxacin'], ['CIP', 'LVX']),
+      findRate(eco, ['piperacillin/tazobactam', 'pip/tazo', 'piperacillin'], ['TZP', 'PIP']),
+      findRate(eco, ['meropenem', 'imipenem', 'ertapenem', 'carbapenem'], ['MEM', 'IPM', 'ETP', 'DOR'])
     ];
 
     const kpnRates = [
-      findRate(kpn, 'Cefotaxime'),
-      findRate(kpn, 'Cefepime'),
-      findRate(kpn, 'Ciprofloxacin'),
-      findRate(kpn, 'Piperacillin/Tazobactam'),
-      findRate(kpn, 'Meropenem')
+      findRate(kpn, ['cefotaxime', 'ceftriaxone', 'ceftazidime'], ['CTX', 'CRO', 'CAZ']),
+      findRate(kpn, ['cefepime'], ['FEP']),
+      findRate(kpn, ['ciprofloxacin', 'levofloxacin'], ['CIP', 'LVX']),
+      findRate(kpn, ['piperacillin/tazobactam', 'pip/tazo', 'piperacillin'], ['TZP', 'PIP']),
+      findRate(kpn, ['meropenem', 'imipenem', 'ertapenem', 'carbapenem'], ['MEM', 'IPM', 'ETP', 'DOR'])
     ];
 
+    const hasData = (eco?.isolateCount > 0 || kpn?.isolateCount > 0);
     const comparisonRows = [
-      { drug: 'Cefotaxime (ESBL)', ecoR: ecoRates[0], kpnR: kpnRates[0], note: `Ceph 3: Eco ${ecoRates[0]}%, Kpn ${kpnRates[0]}%` },
-      { drug: 'Cefepime', ecoR: ecoRates[1], kpnR: kpnRates[1], note: kpnRates[1] > ecoRates[1] ? 'K. pneumoniae kháng cao hơn rõ rệt' : 'Mức kháng tương đương' },
-      { drug: 'Ciprofloxacin', ecoR: ecoRates[2], kpnR: kpnRates[2], note: 'Quinolone bị kháng nặng nề cả 2 loài' },
-      { drug: 'Piperacillin/Tazobactam', ecoR: ecoRates[3], kpnR: kpnRates[3], note: ecoRates[3] < kpnRates[3] ? `E. coli nhạy tốt hơn K. pneumoniae` : `Mức độ kháng tương đương` },
-      { drug: 'Meropenem (CRE)', ecoR: ecoRates[4], kpnR: kpnRates[4], note: kpnRates[4] > ecoRates[4] ? 'Báo động CRE: K. pneumoniae kháng cao' : 'Kháng Carbapenem ở mức kiểm soát' }
+      { drug: 'Cefotaxime (ESBL)', ecoR: ecoRates[0], kpnR: kpnRates[0], note: hasData ? `Ceph 3: Eco ${ecoRates[0]}%, Kpn ${kpnRates[0]}%` : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Cefepime', ecoR: ecoRates[1], kpnR: kpnRates[1], note: hasData ? (kpnRates[1] > ecoRates[1] ? 'K. pneumoniae kháng cao hơn rõ rệt' : 'Mức kháng tương đương') : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Ciprofloxacin', ecoR: ecoRates[2], kpnR: kpnRates[2], note: hasData ? 'Quinolone bị kháng nặng nề cả 2 loài' : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Piperacillin/Tazobactam', ecoR: ecoRates[3], kpnR: kpnRates[3], note: hasData ? (ecoRates[3] < kpnRates[3] ? `E. coli nhạy tốt hơn K. pneumoniae` : `Mức độ kháng tương đương`) : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Meropenem (CRE)', ecoR: ecoRates[4], kpnR: kpnRates[4], note: hasData ? (kpnRates[4] > ecoRates[4] ? 'Báo động CRE: K. pneumoniae kháng cao' : 'Kháng Carbapenem ở mức kiểm soát') : 'Chưa có dữ liệu phân lập' }
     ];
 
     return {
@@ -879,45 +886,52 @@ const ReportExportService = {
       ecoSummary: {
         esbl: `${ecoRates[0]}%`,
         cre: `${ecoRates[4]}%`,
-        note: 'E. coli còn nhạy Carbapenem, Amikacin'
+        note: hasData ? 'E. coli còn nhạy Carbapenem, Amikacin' : 'Chưa có chủng'
       },
       kpnSummary: {
         esbl: `${kpnRates[0]}%`,
         cre: `${kpnRates[4]}%`,
-        note: 'K. pneumoniae đa kháng báo động'
+        note: hasData ? 'K. pneumoniae đa kháng báo động' : 'Chưa có chủng'
       }
     };
   },
 
   calcNonfermentersComparison(aba, pae) {
     const drugs = ['Ceftazidime', 'Cefepime', 'Pip/Tazobactam', 'Ciprofloxacin', 'Meropenem'];
-    const findRate = (orgObj, drugKw) => {
-      const match = (orgObj.tableRows || []).find(r => r.antibiotic.toLowerCase().includes(drugKw.toLowerCase()));
+    const findRate = (orgObj, nameKws, codeKws) => {
+      if (!orgObj || !orgObj.tableRows) return 0;
+      const match = orgObj.tableRows.find(r => {
+        const name = (r.antibiotic || '').toLowerCase();
+        const code = (r.code || '').toUpperCase();
+        return nameKws.some(kw => name.includes(kw.toLowerCase())) ||
+               codeKws.some(ck => code === ck.toUpperCase());
+      });
       return match ? match.rRate : 0;
     };
 
     const abaRates = [
-      findRate(aba, 'Ceftazidime'),
-      findRate(aba, 'Cefepime'),
-      findRate(aba, 'Piperacillin/Tazobactam'),
-      findRate(aba, 'Ciprofloxacin'),
-      findRate(aba, 'Meropenem')
+      findRate(aba, ['ceftazidime'], ['CAZ']),
+      findRate(aba, ['cefepime'], ['FEP']),
+      findRate(aba, ['piperacillin/tazobactam', 'pip/tazo', 'piperacillin'], ['TZP', 'PIP']),
+      findRate(aba, ['ciprofloxacin', 'levofloxacin'], ['CIP', 'LVX']),
+      findRate(aba, ['meropenem', 'imipenem', 'carbapenem'], ['MEM', 'IPM', 'DOR'])
     ];
 
     const paeRates = [
-      findRate(pae, 'Ceftazidime'),
-      findRate(pae, 'Cefepime'),
-      findRate(pae, 'Piperacillin/Tazobactam'),
-      findRate(pae, 'Ciprofloxacin'),
-      findRate(pae, 'Meropenem')
+      findRate(pae, ['ceftazidime'], ['CAZ']),
+      findRate(pae, ['cefepime'], ['FEP']),
+      findRate(pae, ['piperacillin/tazobactam', 'pip/tazo', 'piperacillin'], ['TZP', 'PIP']),
+      findRate(pae, ['ciprofloxacin', 'levofloxacin'], ['CIP', 'LVX']),
+      findRate(pae, ['meropenem', 'imipenem', 'carbapenem'], ['MEM', 'IPM', 'DOR'])
     ];
 
+    const hasData = (aba?.isolateCount > 0 || pae?.isolateCount > 0);
     const comparisonRows = [
-      { drug: 'Ceftazidime', abaR: abaRates[0], paeR: paeRates[0], note: paeRates[0] < abaRates[0] ? 'P. aeruginosa còn nhạy tốt hơn' : 'Đề kháng mức cao' },
-      { drug: 'Cefepime', abaR: abaRates[1], paeR: paeRates[1], note: 'A. baumannii kháng gần như toàn bộ' },
-      { drug: 'Piperacillin/Tazobactam', abaR: abaRates[2], paeR: paeRates[2], note: `Aba: ${abaRates[2]}%, Pae: ${paeRates[2]}%` },
-      { drug: 'Ciprofloxacin', abaR: abaRates[3], paeR: paeRates[3], note: 'Quinolone mất hiệu lực chủ yếu' },
-      { drug: 'Meropenem (Carbapenem)', abaR: abaRates[4], paeR: paeRates[4], note: `Báo động CRAB: ${abaRates[4]}%, CRPA: ${paeRates[4]}%` }
+      { drug: 'Ceftazidime', abaR: abaRates[0], paeR: paeRates[0], note: hasData ? (paeRates[0] < abaRates[0] ? 'P. aeruginosa còn nhạy tốt hơn' : 'Đề kháng mức cao') : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Cefepime', abaR: abaRates[1], paeR: paeRates[1], note: hasData ? 'A. baumannii kháng gần như toàn bộ' : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Piperacillin/Tazobactam', abaR: abaRates[2], paeR: paeRates[2], note: hasData ? `Aba: ${abaRates[2]}%, Pae: ${paeRates[2]}%` : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Ciprofloxacin', abaR: abaRates[3], paeR: paeRates[3], note: hasData ? 'Quinolone mất hiệu lực chủ yếu' : 'Chưa có dữ liệu phân lập' },
+      { drug: 'Meropenem (Carbapenem)', abaR: abaRates[4], paeR: paeRates[4], note: hasData ? `Báo động CRAB: ${abaRates[4]}%, CRPA: ${paeRates[4]}%` : 'Chưa có dữ liệu phân lập' }
     ];
 
     return {
@@ -927,12 +941,12 @@ const ReportExportService = {
       paeRates,
       comparisonRows,
       abaSummary: {
-        crab: `${abaRates[4]}% (${aba.isolateCount} chủng)`,
-        effective: 'Colistin'
+        crab: `${abaRates[4]}% (${aba.isolateCount || 0} chủng)`,
+        effective: hasData ? 'Colistin' : '--'
       },
       paeSummary: {
-        crpa: `${paeRates[4]}% (${pae.isolateCount} chủng)`,
-        effective: 'Ceftazidime/Avibactam'
+        crpa: `${paeRates[4]}% (${pae.isolateCount || 0} chủng)`,
+        effective: hasData ? 'Ceftazidime/Avibactam' : '--'
       }
     };
   },
@@ -1233,8 +1247,12 @@ const ReportExportService = {
    * Lấy thông tin theo file "Import dữ liệu" và tính toán 100% động từ dữ liệu thực tế
    */
   getComprehensiveAmrReport(targetFileName = 'ALL') {
-    const currentFileName = (targetFileName && targetFileName !== 'ALL') ? targetFileName : 'ĐG Dương tính (010126. 230626).xls';
-    const astRecords = this.getAstRecordsForFile(currentFileName);
+    const isCleanSlate = (typeof window !== 'undefined' && window.DemoDataService?.isCleanSlateActive) ? window.DemoDataService.isCleanSlateActive() : false;
+    let currentFileName = (targetFileName && targetFileName !== 'ALL') ? targetFileName : '';
+    if (!currentFileName && !isCleanSlate) {
+      currentFileName = 'ĐG Dương tính (010126. 230626).xls';
+    }
+    const astRecords = currentFileName ? this.getAstRecordsForFile(currentFileName) : [];
 
     // Nếu có dữ liệu thực tế cho file này, tính toán 100% động
     if (astRecords && astRecords.length > 0) {
@@ -1244,8 +1262,6 @@ const ReportExportService = {
         console.warn('[ReportExportService] Lỗi khi tính toán động:', err);
       }
     }
-
-    const isCleanSlate = (typeof window !== 'undefined' && window.DemoDataService?.isCleanSlateActive) ? window.DemoDataService.isCleanSlateActive() : false;
 
     // Nếu ở chế độ Clean Slate và không có dữ liệu thực tế, hiển thị báo cáo trống sẵn sàng nạp file
     if (isCleanSlate && (!astRecords || astRecords.length === 0)) {
@@ -1258,7 +1274,7 @@ const ReportExportService = {
 
     if (isHospitalDgFile && !isCleanSlate) {
       const fallback = JSON.parse(JSON.stringify(this.hospitalBenchmarkData));
-      fallback.metadata.fileName = currentFileName;
+      fallback.metadata.fileName = currentFileName || 'ĐG Dương tính (010126. 230626).xls';
       return fallback;
     }
 
@@ -1377,8 +1393,34 @@ const ReportExportService = {
         pmi: { organism: 'Proteus mirabilis', isolateCount: 0, tableRows: [], chartData: [] },
         enterococci: { organismFaecalis: 'Enterococcus faecalis (n = 0)', organismFaecium: 'Enterococcus faecium (n = 0)', tableRowsFaecalis: [], tableRowsFaecium: [] },
         candida: { organismTropicalis: 'Candida tropicalis (n = 0)', organismAlbicans: 'Candida albicans (n = 0)', tableRowsTropicalis: [], tableRowsAlbicans: [] },
-        enterobacterales: { drugs: ['Cefotaxime', 'Cefepime', 'Ciprofloxacin', 'Pip/Tazobactam', 'Meropenem'], ecoRates: [0, 0, 0, 0, 0], kpnRates: [0, 0, 0, 0, 0] },
-        nonfermenters: { drugs: ['Ceftazidime', 'Cefepime', 'Ciprofloxacin', 'Pip/Tazobactam', 'Meropenem'], abaRates: [0, 0, 0, 0, 0], paeRates: [0, 0, 0, 0, 0] }
+        enterobacterales: {
+          drugs: ['Cefotaxime', 'Cefepime', 'Ciprofloxacin', 'Pip/Tazobactam', 'Meropenem'],
+          ecoRates: [0, 0, 0, 0, 0],
+          kpnRates: [0, 0, 0, 0, 0],
+          comparisonRows: [
+            { drug: 'Cefotaxime (ESBL)', ecoR: 0, kpnR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Cefepime', ecoR: 0, kpnR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Ciprofloxacin', ecoR: 0, kpnR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Piperacillin/Tazobactam', ecoR: 0, kpnR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Meropenem (CRE)', ecoR: 0, kpnR: 0, note: 'Chưa có dữ liệu phân lập' }
+          ],
+          ecoSummary: { esbl: '0%', cre: '0%', note: 'Chưa có chủng' },
+          kpnSummary: { esbl: '0%', cre: '0%', note: 'Chưa có chủng' }
+        },
+        nonfermenters: {
+          drugs: ['Ceftazidime', 'Cefepime', 'Pip/Tazobactam', 'Ciprofloxacin', 'Meropenem'],
+          abaRates: [0, 0, 0, 0, 0],
+          paeRates: [0, 0, 0, 0, 0],
+          comparisonRows: [
+            { drug: 'Ceftazidime', abaR: 0, paeR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Cefepime', abaR: 0, paeR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Piperacillin/Tazobactam', abaR: 0, paeR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Ciprofloxacin', abaR: 0, paeR: 0, note: 'Chưa có dữ liệu phân lập' },
+            { drug: 'Meropenem (Carbapenem)', abaR: 0, paeR: 0, note: 'Chưa có dữ liệu phân lập' }
+          ],
+          abaSummary: { crab: '0% (0 chủng)', effective: '--' },
+          paeSummary: { crpa: '0% (0 chủng)', effective: '--' }
+        }
       }
     };
   },

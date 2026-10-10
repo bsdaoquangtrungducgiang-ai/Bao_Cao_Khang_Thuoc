@@ -178,6 +178,67 @@ const ReportView = {
         } catch (e) {}
       });
     }
+
+    // Chuyển đổi toàn bộ biểu đồ Chart.js sang ảnh tĩnh chất lượng cao chống méo/cắt xén khi in PDF
+    this.prepareChartsForPrint();
+  },
+
+  /**
+   * Chuyển đổi tất cả các biểu đồ Chart.js đang hiển thị thành ảnh PNG sắc nét (100% tỷ lệ)
+   * nhằm tránh lỗi trình duyệt Safari/Chrome làm mờ, méo, zoom 2x Retina hoặc cắt xén trục tọa độ khi xuất PDF
+   */
+  prepareChartsForPrint() {
+    if (!this.charts || typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+    Object.entries(this.charts).forEach(([canvasId, chart]) => {
+      try {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const wrapper = (canvas.closest ? canvas.closest('.rep-chart-canvas-wrapper') : null) || canvas.parentElement;
+        if (!wrapper || typeof wrapper.querySelector !== 'function') return;
+
+        // Cập nhật trạng thái vẽ tĩnh
+        if (chart.update) chart.update('none');
+        let imgUrl = null;
+        if (typeof chart.toBase64Image === 'function') {
+          imgUrl = chart.toBase64Image('image/png', 1.0);
+        } else if (typeof canvas.toDataURL === 'function') {
+          imgUrl = canvas.toDataURL('image/png');
+        }
+
+        if (!imgUrl || imgUrl === 'data:,' || imgUrl.length < 50) return;
+
+        let img = wrapper.querySelector('.rep-chart-print-img');
+        if (!img) {
+          img = document.createElement('img');
+          img.className = 'rep-chart-print-img';
+          img.alt = canvasId;
+          wrapper.appendChild(img);
+        }
+        img.src = imgUrl;
+        if (wrapper.classList && wrapper.classList.add) {
+          wrapper.classList.add('has-print-img');
+        }
+      } catch (e) {
+        console.warn(`[ReportView] prepareChartsForPrint error for ${canvasId}:`, e);
+      }
+    });
+  },
+
+  /**
+   * Dọn dẹp ảnh in và khôi phục canvas tương tác sau khi in xong
+   */
+  cleanupChartsAfterPrint() {
+    if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+    const wrappers = document.querySelectorAll('.has-print-img');
+    wrappers.forEach(wrapper => {
+      if (wrapper.classList && wrapper.classList.remove) {
+        wrapper.classList.remove('has-print-img');
+      }
+      const img = wrapper.querySelector ? wrapper.querySelector('.rep-chart-print-img') : null;
+      if (img && img.remove) {
+        img.remove();
+      }
+    });
   },
 
   /**
@@ -207,6 +268,9 @@ const ReportView = {
         el.removeAttribute('data-prev-overflow-y');
       });
     }
+
+    // Dọn dẹp ảnh in
+    this.cleanupChartsAfterPrint();
 
     if (this.charts) {
       Object.values(this.charts).forEach(chart => {
@@ -434,7 +498,11 @@ const ReportView = {
       if (overrideFileName && fileSelect) {
         fileSelect.value = overrideFileName;
       }
-      const targetFile = overrideFileName || (fileSelect ? fileSelect.value : 'ĐG Dương tính (010126. 230626).xls');
+      const isCleanSlate = (typeof window !== 'undefined' && window.DemoDataService?.isCleanSlateActive) ? window.DemoDataService.isCleanSlateActive() : false;
+      let targetFile = overrideFileName || (fileSelect ? fileSelect.value : '');
+      if (!targetFile && !isCleanSlate) {
+        targetFile = 'ĐG Dương tính (010126. 230626).xls';
+      }
 
       const filters = {
         file: targetFile,
@@ -560,60 +628,64 @@ const ReportView = {
     // Section 8: 8.1 S. aureus
     if (comp.detailedAntibiograms?.sau) {
       const sau = comp.detailedAntibiograms.sau;
-      const countSau = sau.isolateCount !== undefined ? sau.isolateCount : 230;
+      const countSau = sau.isolateCount !== undefined ? sau.isolateCount : 0;
       const elSauTitle = document.getElementById('rep-title-sau');
       if (elSauTitle) elSauTitle.innerHTML = `Biểu đồ "<em>S. aureus</em> (n=${countSau}): tỷ lệ kháng (%R)"`;
       const elSauChartTitle = document.getElementById('rep-chart-title-sau');
       if (elSauChartTitle) elSauChartTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> Biểu đồ "<em>S. aureus</em> (n=${countSau}): tỷ lệ kháng (%R)"`;
-      this.setTextContent('rep-badge-sau', `MRSA: ${sau.mrsaRate || '78.6%'}`);
-      this.setTextContent('rep-sub-sau', 'Vancomycin / Linezolid: 100% S');
+      this.setTextContent('rep-badge-sau', `MRSA: ${sau.mrsaRate ? sau.mrsaRate : '0%'}`);
+      this.setTextContent('rep-sub-sau', countSau > 0 ? 'Vancomycin / Linezolid: 100% S' : 'Chưa có phân lập');
     }
 
     // 8.2 S. pneumoniae
     if (comp.detailedAntibiograms?.spn) {
       const spn = comp.detailedAntibiograms.spn;
-      const countSpn = spn.isolateCount !== undefined ? spn.isolateCount : 214;
+      const countSpn = spn.isolateCount !== undefined ? spn.isolateCount : 0;
       const elSpnTitle = document.getElementById('rep-title-spn');
       if (elSpnTitle) elSpnTitle.innerHTML = `Biểu đồ "<em>S. pneumoniae</em> (n=${countSpn}): tỷ lệ kháng (%R)"`;
       const elSpnChartTitle = document.getElementById('rep-chart-title-spn');
       if (elSpnChartTitle) elSpnChartTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> Biểu đồ "<em>S. pneumoniae</em> (n=${countSpn}): tỷ lệ kháng (%R)"`;
-      const eryR = spn.chartData?.find(c => c.drug && c.drug.toLowerCase().includes('erythro'))?.rate || 98.6;
-      this.setTextContent('rep-badge-spn', `Kháng Erythromycin: ${eryR}%`);
-      this.setTextContent('rep-sub-spn', 'Moxifloxacin / Vancomycin: 100% S');
+      const eryR = spn.chartData?.find(c => c.drug && c.drug.toLowerCase().includes('erythro'))?.rate;
+      this.setTextContent('rep-badge-spn', `Kháng Erythromycin: ${eryR !== undefined ? eryR + '%' : '0%'}`);
+      this.setTextContent('rep-sub-spn', countSpn > 0 ? 'Moxifloxacin / Vancomycin: 100% S' : 'Chưa có phân lập');
     }
 
     // 8.3 H. influenzae
     if (comp.detailedAntibiograms?.hin) {
       const hin = comp.detailedAntibiograms.hin;
-      const countHin = hin.isolateCount !== undefined ? hin.isolateCount : 253;
+      const countHin = hin.isolateCount !== undefined ? hin.isolateCount : 0;
       const elHinTitle = document.getElementById('rep-title-hin');
       if (elHinTitle) elHinTitle.innerHTML = `Biểu đồ "<em>H. influenzae</em> (n=${countHin}): tỷ lệ kháng (%R)"`;
       const elHinChartTitle = document.getElementById('rep-chart-title-hin');
       if (elHinChartTitle) elHinChartTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> Biểu đồ "<em>H. influenzae</em> (n=${countHin}): tỷ lệ kháng (%R)"`;
-      this.setTextContent('rep-badge-hin', hin.ampicillinRate || 'Ampicillin R: 84.1%');
-      this.setTextContent('rep-sub-hin', 'Meropenem / Ceftriaxone nhạy cảm cao');
+      this.setTextContent('rep-badge-hin', hin.ampicillinRate || 'Ampicillin R: 0%');
+      this.setTextContent('rep-sub-hin', countHin > 0 ? 'Meropenem / Ceftriaxone nhạy cảm cao' : 'Chưa có phân lập');
     }
 
     // 9.4 Enterobacterales
     if (comp.detailedAntibiograms?.enterobacterales) {
       const ent = comp.detailedAntibiograms.enterobacterales;
-      this.setTextContent('rep-badge-entero', `CRE K.p: ${ent.kpnSummary?.cre || '56%'} vs E.c: ${ent.ecoSummary?.cre || '11%'}`);
+      const kpnCre = ent.kpnSummary?.cre || '0%';
+      const ecoCre = ent.ecoSummary?.cre || '0%';
+      this.setTextContent('rep-badge-entero', `CRE K.p: ${kpnCre} vs E.c: ${ecoCre}`);
       this.setTextContent('rep-sub-entero', 'ESBL & Carbapenem');
     }
 
     // 9.5 Gram âm không lên men
     if (comp.detailedAntibiograms?.nonfermenters) {
       const nonf = comp.detailedAntibiograms.nonfermenters;
-      this.setTextContent('rep-badge-nonferm', `CRAB: ${nonf.abaSummary?.crab?.split(' ')?.[0] || '92%'} | CRPA: ${nonf.paeSummary?.crpa?.split(' ')?.[0] || '56.9%'}`);
-      this.setTextContent('rep-sub-nonferm', 'Colistin / CAZ-AVI cứu cánh');
+      const crabRate = nonf.abaSummary?.crab ? nonf.abaSummary.crab.split(' ')?.[0] : '0%';
+      const crpaRate = nonf.paeSummary?.crpa ? nonf.paeSummary.crpa.split(' ')?.[0] : '0%';
+      this.setTextContent('rep-badge-nonferm', `CRAB: ${crabRate} | CRPA: ${crpaRate}`);
+      this.setTextContent('rep-sub-nonferm', (crabRate !== '0%' || crpaRate !== '0%') ? 'Colistin / CAZ-AVI' : 'Chưa có phân lập');
     }
 
     // Section 10: Nhận xét
     const elConclusion = document.getElementById('rep-callout-conclusion1');
     if (elConclusion) {
-      const crabR = comp.detailedAntibiograms?.nonfermenters?.abaSummary?.crab?.split(' ')?.[0] || '92%';
-      const mrsaR = comp.detailedAntibiograms?.sau?.mrsaRate || '78.6%';
-      const creR = comp.detailedAntibiograms?.enterobacterales?.kpnSummary?.cre || '56%';
+      const crabR = comp.detailedAntibiograms?.nonfermenters?.abaSummary?.crab ? comp.detailedAntibiograms.nonfermenters.abaSummary.crab.split(' ')?.[0] : '0%';
+      const mrsaR = comp.detailedAntibiograms?.sau?.mrsaRate || '0%';
+      const creR = comp.detailedAntibiograms?.enterobacterales?.kpnSummary?.cre || '0%';
       elConclusion.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><div><strong>Đánh giá thực trạng đề kháng:</strong> Tình trạng vi khuẩn đa kháng và toàn kháng (CRAB: ${crabR}, MRSA: ${mrsaR}, CRE K. pneumoniae: ${creR}) tại các khoa lâm sàng là mối đe dọa nghiêm trọng. Các kháng sinh kinh điển (Cephalosporin 3, Carbapenem) đã mất hiệu lực đáng kể với vi khuẩn Gram âm, đòi hỏi giám sát sử dụng kháng sinh (AMS) nghiêm ngặt.</div>`;
     }
 
@@ -657,6 +729,10 @@ const ReportView = {
     }
 
     try {
+      config = config || {};
+      config.options = config.options || {};
+      // Tắt animation để biểu đồ hiển thị tức thì và sẵn sàng xuất bản in PDF sắc nét
+      config.options.animation = false;
       const ctx = canvas.getContext('2d');
       const chartInstance = new Chart(ctx, config);
       this.charts[canvasId] = chartInstance;
@@ -671,9 +747,11 @@ const ReportView = {
    * Render các bảng số liệu chi tiết cho Chế độ 1
    */
   renderIntegratedTables(comp, legacyRep) {
+    if (!comp) return;
+
     // Bảng 1: Cơ cấu Gram
     const gramTbody = document.getElementById('table-rep-gram-body');
-    if (gramTbody) {
+    if (gramTbody && comp.gramGroups) {
       gramTbody.innerHTML = '';
       comp.gramGroups.forEach(g => {
         const tr = document.createElement('tr');
@@ -689,7 +767,7 @@ const ReportView = {
 
     // Bảng 2: Phân bố theo tháng
     const monthlyTbody = document.getElementById('table-rep-monthly-body');
-    if (monthlyTbody) {
+    if (monthlyTbody && comp.monthlyDistribution) {
       monthlyTbody.innerHTML = '';
       comp.monthlyDistribution.forEach(m => {
         const tr = document.createElement('tr');
@@ -724,7 +802,7 @@ const ReportView = {
 
     // Bảng 4: Cơ cấu bệnh phẩm
     const specTbody = document.getElementById('table-rep-specimens-body');
-    if (specTbody) {
+    if (specTbody && comp.specimenDistribution) {
       specTbody.innerHTML = '';
       comp.specimenDistribution.forEach(s => {
         const tr = document.createElement('tr');
@@ -739,7 +817,7 @@ const ReportView = {
 
     // Bảng 5: Top 15 Vi sinh vật (#table-rep-org-body)
     const orgTbody = document.getElementById('table-rep-org-body');
-    if (orgTbody) {
+    if (orgTbody && comp.top15Pathogens) {
       orgTbody.innerHTML = '';
       comp.top15Pathogens.forEach((p, idx) => {
         const tr = document.createElement('tr');
@@ -930,19 +1008,21 @@ const ReportView = {
       enteroTbody.innerHTML = '';
       const ent = comp.detailedAntibiograms?.enterobacterales;
       const rows = ent?.comparisonRows || [
-        { drug: 'Cefotaxime (ESBL)', ecoR: ent?.ecoRates?.[0] || 63, kpnR: ent?.kpnRates?.[0] || 64, note: 'Kháng Ceph 3' },
-        { drug: 'Cefepime', ecoR: ent?.ecoRates?.[1] || 50, kpnR: ent?.kpnRates?.[1] || 63, note: 'Ceph 4' },
-        { drug: 'Ciprofloxacin', ecoR: ent?.ecoRates?.[2] || 71, kpnR: ent?.kpnRates?.[2] || 66, note: 'Quinolone' },
-        { drug: 'Piperacillin/Tazobactam', ecoR: ent?.ecoRates?.[3] || 20, kpnR: ent?.kpnRates?.[3] || 61, note: 'Beta-lactamase inhibitor' },
-        { drug: 'Meropenem (CRE)', ecoR: ent?.ecoRates?.[4] || 11, kpnR: ent?.kpnRates?.[4] || 56, note: 'Carbapenem' }
+        { drug: 'Cefotaxime (ESBL)', ecoR: ent?.ecoRates?.[0] ?? 0, kpnR: ent?.kpnRates?.[0] ?? 0, note: 'Kháng Ceph 3' },
+        { drug: 'Cefepime', ecoR: ent?.ecoRates?.[1] ?? 0, kpnR: ent?.kpnRates?.[1] ?? 0, note: 'Ceph 4' },
+        { drug: 'Ciprofloxacin', ecoR: ent?.ecoRates?.[2] ?? 0, kpnR: ent?.kpnRates?.[2] ?? 0, note: 'Quinolone' },
+        { drug: 'Piperacillin/Tazobactam', ecoR: ent?.ecoRates?.[3] ?? 0, kpnR: ent?.kpnRates?.[3] ?? 0, note: 'Beta-lactamase inhibitor' },
+        { drug: 'Meropenem (CRE)', ecoR: ent?.ecoRates?.[4] ?? 0, kpnR: ent?.kpnRates?.[4] ?? 0, note: 'Carbapenem' }
       ];
       rows.forEach(r => {
+        const ecoVal = r.ecoR ?? 0;
+        const kpnVal = r.kpnR ?? 0;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${r.drug}</strong></td>
-          <td class="center bold" style="color: ${r.ecoR > 50 ? '#dc2626' : '#0284c7'};">${r.ecoR}%</td>
-          <td class="center bold" style="color: ${r.kpnR > 50 ? '#dc2626' : '#dc2626'};">${r.kpnR}%</td>
-          <td>${r.note}</td>
+          <td class="center bold" style="color: ${ecoVal > 50 ? '#dc2626' : '#0284c7'};">${ecoVal}%</td>
+          <td class="center bold" style="color: ${kpnVal > 50 ? '#dc2626' : '#dc2626'};">${kpnVal}%</td>
+          <td>${r.note || '-'}</td>
         `;
         enteroTbody.appendChild(tr);
       });
@@ -954,19 +1034,21 @@ const ReportView = {
       nonfermTbody.innerHTML = '';
       const nonf = comp.detailedAntibiograms?.nonfermenters;
       const rows = nonf?.comparisonRows || [
-        { drug: 'Ceftazidime', abaR: nonf?.abaRates?.[0] || 93, paeR: nonf?.paeRates?.[0] || 51, note: 'CAZ' },
-        { drug: 'Cefepime', abaR: nonf?.abaRates?.[1] || 90, paeR: nonf?.paeRates?.[1] || 46, note: 'FEP' },
-        { drug: 'Piperacillin/Tazobactam', abaR: nonf?.abaRates?.[2] || 93, paeR: nonf?.paeRates?.[2] || 51, note: 'TZP' },
-        { drug: 'Ciprofloxacin', abaR: nonf?.abaRates?.[3] || 90, paeR: nonf?.paeRates?.[3] || 50, note: 'CIP' },
-        { drug: 'Meropenem (Carbapenem)', abaR: nonf?.abaRates?.[4] || 92, paeR: nonf?.paeRates?.[4] || 55, note: 'MEM' }
+        { drug: 'Ceftazidime', abaR: nonf?.abaRates?.[0] ?? 0, paeR: nonf?.paeRates?.[0] ?? 0, note: 'CAZ' },
+        { drug: 'Cefepime', abaR: nonf?.abaRates?.[1] ?? 0, paeR: nonf?.paeRates?.[1] ?? 0, note: 'FEP' },
+        { drug: 'Piperacillin/Tazobactam', abaR: nonf?.abaRates?.[2] ?? 0, paeR: nonf?.paeRates?.[2] ?? 0, note: 'TZP' },
+        { drug: 'Ciprofloxacin', abaR: nonf?.abaRates?.[3] ?? 0, paeR: nonf?.paeRates?.[3] ?? 0, note: 'CIP' },
+        { drug: 'Meropenem (Carbapenem)', abaR: nonf?.abaRates?.[4] ?? 0, paeR: nonf?.paeRates?.[4] ?? 0, note: 'MEM' }
       ];
       rows.forEach(r => {
+        const abaVal = r.abaR ?? 0;
+        const paeVal = r.paeR ?? 0;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${r.drug}</strong></td>
-          <td class="center bold" style="color: ${r.abaR > 50 ? '#dc2626' : '#475569'};">${r.abaR}%</td>
-          <td class="center bold" style="color: ${r.paeR > 50 ? '#dc2626' : '#0284c7'};">${r.paeR}%</td>
-          <td>${r.note}</td>
+          <td class="center bold" style="color: ${abaVal > 50 ? '#dc2626' : '#475569'};">${abaVal}%</td>
+          <td class="center bold" style="color: ${paeVal > 50 ? '#dc2626' : '#0284c7'};">${paeVal}%</td>
+          <td>${r.note || '-'}</td>
         `;
         nonfermTbody.appendChild(tr);
       });

@@ -2230,46 +2230,47 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                   </div>
                 </div>
 
-                <!-- Bảng tổng hợp kháng sinh đồ chung phục vụ test Phase 7/8 -->
-                <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
-                  <h6 style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px;">
-                    <i class="fa-solid fa-list-check"></i> Bảng tổng hợp toàn bộ kháng sinh đồ được chọn (Antibiogram tổng hợp):
-                  </h6>
-                  <div class="rep-table-scroll" style="max-height: 200px;">
+                <!-- Các bảng phụ trợ tương thích ngược (Ẩn khỏi giao diện báo cáo và in PDF) -->
+                <div style="display: none;">
+                  <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+                    <h6 style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px;">
+                      <i class="fa-solid fa-list-check"></i> Bảng tổng hợp toàn bộ kháng sinh đồ được chọn (Antibiogram tổng hợp):
+                    </h6>
+                    <div class="rep-table-scroll" style="max-height: 200px;">
+                      <table class="rep-table">
+                        <thead>
+                          <tr>
+                            <th class="center" style="width: 36px;">#</th>
+                            <th>Mã</th>
+                            <th>Tên Kháng Sinh</th>
+                            <th class="center" style="color: #16a34a;">% Nhạy (S)</th>
+                            <th class="center" style="color: #d97706;">% Trung Gian (I)</th>
+                            <th class="center" style="color: #dc2626;">% Kháng (R)</th>
+                            <th class="center">Mẫu Thử</th>
+                          </tr>
+                        </thead>
+                        <tbody id="table-rep-abg-body"></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                    <h6 style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px;">
+                      <i class="fa-solid fa-timeline"></i> So sánh xu hướng đa năm (2024 - 2026):
+                    </h6>
                     <table class="rep-table">
                       <thead>
                         <tr>
-                          <th class="center" style="width: 36px;">#</th>
-                          <th>Mã</th>
-                          <th>Tên Kháng Sinh</th>
-                          <th class="center" style="color: #16a34a;">% Nhạy (S)</th>
-                          <th class="center" style="color: #d97706;">% Trung Gian (I)</th>
-                          <th class="center" style="color: #dc2626;">% Kháng (R)</th>
-                          <th class="center">Mẫu Thử</th>
+                          <th>Giai Đoạn</th>
+                          <th class="center">Tổng Mẫu Thử</th>
+                          <th class="center" style="color: #dc2626;">Kháng (%R)</th>
+                          <th class="center" style="color: #d97706;">Trung Gian (%I)</th>
+                          <th class="center" style="color: #16a34a;">Nhạy Cảm (%S)</th>
                         </tr>
                       </thead>
-                      <tbody id="table-rep-abg-body"></tbody>
+                      <tbody id="table-rep-years-body"></tbody>
                     </table>
                   </div>
-                </div>
-
-                <!-- Bảng so sánh đa năm phục vụ test Phase 7/8 -->
-                <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-                  <h6 style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px;">
-                    <i class="fa-solid fa-timeline"></i> So sánh xu hướng đa năm (2024 - 2026):
-                  </h6>
-                  <table class="rep-table">
-                    <thead>
-                      <tr>
-                        <th>Giai Đoạn</th>
-                        <th class="center">Tổng Mẫu Thử</th>
-                        <th class="center" style="color: #dc2626;">Kháng (%R)</th>
-                        <th class="center" style="color: #d97706;">Trung Gian (%I)</th>
-                        <th class="center" style="color: #16a34a;">Nhạy Cảm (%S)</th>
-                      </tr>
-                    </thead>
-                    <tbody id="table-rep-years-body"></tbody>
-                  </table>
                 </div>
               </div>
 

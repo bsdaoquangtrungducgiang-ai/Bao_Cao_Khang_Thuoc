@@ -2965,6 +2965,10 @@ body {
   width: 100%;
 }
 
+.rep-chart-print-img {
+  display: none !important;
+}
+
 .rep-table-container {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -3619,20 +3623,38 @@ body.is-printing-report .content-body {
     height: auto !important;
   }
 
+  /* Khi có ảnh in tĩnh chất lượng cao: ẩn canvas động để tránh lỗi DPI Retina 2x và co giãn */
+  .rep-chart-canvas-wrapper.has-print-img canvas {
+    display: none !important;
+  }
+
+  /* Hiển thị ảnh chụp trực tiếp từ Chart.js: sắc nét 100%, tỷ lệ hoàn hảo, không bao giờ bị cắt xén hay co giãn */
+  .rep-chart-canvas-wrapper.has-print-img .rep-chart-print-img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 290px !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+  }
+
+  /* Khung bao biểu đồ: cho phép tự co giãn theo nội dung ảnh, không ép overflow: hidden làm cắt xén */
   .rep-chart-canvas-wrapper {
     position: relative !important;
     width: 100% !important;
-    height: 260px !important;
-    min-height: 240px !important;
-    max-height: 300px !important;
-    overflow: hidden !important;
+    height: auto !important;
+    min-height: 220px !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .rep-chart-canvas-wrapper canvas {
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
     max-width: 100% !important;
-    max-height: 100% !important;
     display: block !important;
   }
 
