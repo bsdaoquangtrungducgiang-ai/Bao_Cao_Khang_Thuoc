@@ -3819,5 +3819,50 @@ body.is-printing-report .content-body {
   box-shadow: 0 2px 6px rgba(14, 165, 233, 0.35);
 }
 
+/* ================= TRỢ LÝ PHÂN TÍCH AI KHÁNG THUỐC ================= */
+.rep-btn-ai {
+  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+.rep-btn-ai:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #1d4ed8 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 5px 14px rgba(124, 58, 237, 0.45) !important;
+}
+
+.ai-quick-chip {
+  background: var(--bg-main, #f1f5f9);
+  color: var(--text-main, #334155);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ai-quick-chip:hover {
+  background: #ede9fe;
+  color: #6d28d9;
+  border-color: #c4b5fd;
+  transform: translateY(-1px);
+}
+
 
 

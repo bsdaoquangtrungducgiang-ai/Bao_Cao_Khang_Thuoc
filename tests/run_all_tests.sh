@@ -71,9 +71,13 @@ if [ -f "$JSC_BIN" ]; then
     "$JSC_BIN" tests/document_library_test.js
     P16_STATUS=$?
 
-    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ] && [ $P10_STATUS -eq 0 ] && [ $P11_STATUS -eq 0 ] && [ $P12_STATUS -eq 0 ] && [ $P13_STATUS -eq 0 ] && [ $P14_STATUS -eq 0 ] && [ $P15_STATUS -eq 0 ] && [ $P16_STATUS -eq 0 ]; then
+    echo "17. Chạy Bộ Test Trợ Lý Phân Tích AI Kháng Kháng Sinh (2 Tầng Tra Cứu)..."
+    "$JSC_BIN" tests/ai_analysis_test.js
+    P17_STATUS=$?
+
+    if [ $P1_STATUS -eq 0 ] && [ $P2_STATUS -eq 0 ] && [ $P3_STATUS -eq 0 ] && [ $P4_STATUS -eq 0 ] && [ $P5_STATUS -eq 0 ] && [ $P6_STATUS -eq 0 ] && [ $P7_STATUS -eq 0 ] && [ $P8_STATUS -eq 0 ] && [ $P9_STATUS -eq 0 ] && [ $P10_STATUS -eq 0 ] && [ $P11_STATUS -eq 0 ] && [ $P12_STATUS -eq 0 ] && [ $P13_STATUS -eq 0 ] && [ $P14_STATUS -eq 0 ] && [ $P15_STATUS -eq 0 ] && [ $P16_STATUS -eq 0 ] && [ $P17_STATUS -eq 0 ]; then
         echo "================================================================"
-        echo "  ✔ TOÀN BỘ 16 BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
+        echo "  ✔ TOÀN BỘ 17 BÀI TEST HỆ THỐNG ĐÃ VƯỢT QUA XUẤT SẮC (100% SUCCESS)!"
         echo "================================================================"
         exit 0
     else
