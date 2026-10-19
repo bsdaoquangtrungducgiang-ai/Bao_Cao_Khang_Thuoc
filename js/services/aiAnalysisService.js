@@ -58,7 +58,7 @@ const AIAnalysisService = {
       specimenTypes: []
     };
 
-    if (window.ReportView?.state?.currentReportData) {
+    if (typeof window !== 'undefined' && window.ReportView?.state?.currentReportData) {
       const rep = window.ReportView.state.currentReportData;
       ctx.fileName = window.ReportView.state.selectedFile || rep.fileName || 'File xét nghiệm đang phân tích';
       ctx.totalIsolates = rep.kpi?.totalIsolates ?? rep.summary?.totalIsolates ?? 0;

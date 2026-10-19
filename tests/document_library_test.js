@@ -73,6 +73,47 @@ assert(colistinDocs.length === 5, 'Nhóm Kháng thuốc đặc biệt có đủ 
 const vitekDocs = DocumentLibraryData.documents.filter(d => d.cat_id === 'vitek_cards');
 assert(vitekDocs.length === 6, 'Nhóm Thẻ kháng sinh đồ VITEK 2 có đủ 6 tài liệu (N439, N240, danh mục thẻ)');
 
+// 8. Kiểm tra tính năng Xem Trực Tiếp Tài Liệu (openPreview & closePreview)
+const mockPreviewModal = {
+  classList: {
+    classes: new Set(),
+    add(c) { this.classes.add(c); },
+    remove(c) { this.classes.delete(c); },
+    contains(c) { return this.classes.has(c); }
+  },
+  style: { display: 'none' }
+};
+
+const mockElements = {
+  'doc-preview-modal': mockPreviewModal,
+  'doc-preview-title': { textContent: '' },
+  'doc-preview-meta': { textContent: '' },
+  'doc-preview-icon': { innerHTML: '' },
+  'doc-preview-open-ext': { href: '' },
+  'doc-preview-download': { href: '', setAttribute(k, v) {} },
+  'doc-preview-body': { innerHTML: '' }
+};
+
+if (typeof document === 'undefined') {
+  document = {};
+}
+document.getElementById = function(id) {
+  return mockElements[id] || null;
+};
+
+const sampleDoc = DocumentLibraryData.documents[0];
+DocumentLibraryView.openPreview(sampleDoc);
+
+assert(mockPreviewModal.classList.contains('open'), 'openPreview() thêm class "open"');
+assert(mockPreviewModal.style.display === 'flex', 'openPreview() mở modal với style.display = "flex"');
+assert(mockElements['doc-preview-title'].textContent === sampleDoc.title, 'openPreview() cập nhật đúng tiêu đề tài liệu');
+assert(mockElements['doc-preview-body'].innerHTML.includes('iframe') || mockElements['doc-preview-body'].innerHTML.includes('Đang tải'), 'openPreview() render trình đọc tài liệu vào modal body');
+
+DocumentLibraryView.closePreview();
+assert(!mockPreviewModal.classList.contains('open'), 'closePreview() gỡ bỏ class "open"');
+assert(mockPreviewModal.style.display === 'none', 'closePreview() thiết lập style.display = "none"');
+assert(mockElements['doc-preview-body'].innerHTML === '', 'closePreview() giải phóng tài nguyên iframe');
+
 print('================================================================');
 print('  KẾT QUẢ: ' + passCount + ' PASS, ' + failCount + ' FAIL');
 if (failCount === 0) {

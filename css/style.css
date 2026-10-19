@@ -2655,29 +2655,59 @@ body {
 }
 
 .rep-export-buttons {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.rep-btn-ai {
+  height: 36px;
+  padding: 0 13px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 5px rgba(99, 102, 241, 0.25) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.rep-btn-ai:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35) !important;
 }
 
 .rep-btn-print {
-  padding: 9px 15px;
+  height: 36px;
+  padding: 0 13px;
   border-radius: 8px;
   background: #0f172a;
   color: #ffffff;
-  border: none;
-  font-size: 12.5px;
-  font-weight: 600;
+  border: 1px solid #1e293b;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .rep-btn-print:hover {
-  background: #334155;
+  background: #1e293b;
+  border-color: #334155;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
 }
 
 .rep-btn-excel {

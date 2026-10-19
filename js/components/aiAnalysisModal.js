@@ -100,12 +100,19 @@ const AIAnalysisModal = {
           });
         }
       }
+
+      // Delegate click for #btn-open-ai-chat globally
+      if (e.target.closest('#btn-open-ai-chat')) {
+        e.preventDefault();
+        this.open();
+      }
     });
   },
 
   open() {
     const modalEl = document.getElementById('ai-analysis-modal');
     if (modalEl) {
+      modalEl.classList.add('open');
       modalEl.classList.add('active');
       modalEl.style.display = 'flex';
       
@@ -122,6 +129,7 @@ const AIAnalysisModal = {
   close() {
     const modalEl = document.getElementById('ai-analysis-modal');
     if (modalEl) {
+      modalEl.classList.remove('open');
       modalEl.classList.remove('active');
       modalEl.style.display = 'none';
     }
@@ -129,9 +137,10 @@ const AIAnalysisModal = {
 
   updateContextBanner() {
     const bannerEl = document.getElementById('ai-context-banner');
-    if (!bannerEl || !window.AIAnalysisService) return;
+    const service = (typeof window !== 'undefined' && window.AIAnalysisService) ? window.AIAnalysisService : (typeof AIAnalysisService !== 'undefined' ? AIAnalysisService : null);
+    if (!bannerEl || !service) return;
 
-    const ctx = window.AIAnalysisService.getCurrentReportContext();
+    const ctx = service.getCurrentReportContext();
     bannerEl.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 6px;">
