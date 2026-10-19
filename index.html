@@ -1563,18 +1563,18 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
                 <button class="rep-btn-secondary" id="btn-report-purge-all-files" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; font-weight: 700; padding: 7px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="Xóa toàn bộ các file đã nạp để làm mới hoàn toàn hệ thống">
                   <i class="fa-solid fa-trash-can"></i> Xóa Tất Cả File
                 </button>
-                <span class="badge-tag" style="background: #e0f2fe; color: #0369a1; font-weight: 700; padding: 6px 12px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                <span class="badge-tag" style="background: #e0f2fe; color: #0369a1; font-weight: 700; padding: 6px 12px; border-radius: 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
                   <i class="fa-solid fa-layer-group"></i> Báo Cáo Tích Hợp (Xen Kẽ Bảng &amp; Biểu Đồ)
                 </span>
               </div>
 
-              <!-- Xuất báo cáo & Trợ lý Phân tích AI -->
+              <!-- Xuất báo cáo & Trợ lý Phân tích AI (Sắp xếp gọn gàng sang bên phải: nút trên nút dưới) -->
               <div class="rep-export-buttons">
                 <button class="rep-btn-ai" id="btn-open-ai-chat" title="Hỏi đáp & Phân tích AI thông minh dựa trên 42 tài liệu CLSI & Kháng thuốc">
                   <i class="fa-solid fa-wand-magic-sparkles"></i> Phân Tích AI
                 </button>
                 <button class="rep-btn-print" id="btn-print-full-report" title="Xuất báo cáo định dạng PDF chuẩn y khoa">
-                  <i class="fa-solid fa-file-pdf"></i> Xuất Báo Cáo PDF
+                  <i class="fa-solid fa-file-pdf" style="color: #f87171;"></i> Xuất Báo Cáo PDF
                 </button>
                 <div style="display: none;">
                   <button class="rep-btn-excel" id="btn-export-full-excel" title="Tải xuống trọn gói 13 Sheet Excel chuẩn y khoa">
@@ -2999,21 +2999,53 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
         <!-- Render động bởi AIAnalysisModal.updateContextBanner() -->
       </div>
 
-      <!-- Optional API Key Settings Drawer -->
-      <div id="ai-settings-drawer" style="display: none; background: #fffbeb; border-bottom: 1px solid #fef3c7; padding: 12px 20px; font-size: 12.5px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 260px;">
-            <strong style="color: #92400e;"><i class="fa-solid fa-gear"></i> Kết nối Google Gemini API (Tùy chọn):</strong>
-            <div style="color: #b45309; font-size: 11.5px; margin-top: 2px;">
-              Mặc định hệ thống sử dụng <strong>Local Medical Expert RAG Engine</strong> tích hợp sẵn không cần mạng/key. Nếu nhập Key Gemini, AI sẽ mở rộng tra cứu online không giới hạn.
+      <!-- Settings Drawer: Kết nối Google Gemini API (Tài khoản bsdaoquangtrungducgiang@gmail.com) -->
+      <div id="ai-settings-drawer" style="display: none; background: #f8fafc; border-bottom: 2px solid #e2e8f0; padding: 16px 20px; font-size: 13px;">
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-weight: 800; color: #1e293b; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-brands fa-google" style="color: #4285f4;"></i> Kết Nối Google Gemini AI
+                </span>
+                <span class="badge" style="background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px solid #bbf7d0;">
+                  <i class="fa-solid fa-user-check"></i> bsdaoquangtrungducgiang@gmail.com
+                </span>
+              </div>
+              <p style="margin: 6px 0 0 0; color: #475569; font-size: 12px; line-height: 1.5;">
+                🔒 <strong>Bảo mật:</strong> Google <strong>không yêu cầu mật khẩu Gmail</strong>. Bạn chỉ cần lấy <strong>Gemini API Key miễn phí</strong> từ Google AI Studio bằng tài khoản <code>bsdaoquangtrungducgiang@gmail.com</code>.
+              </p>
             </div>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="background: #0284c7; color: #fff; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25); white-space: nowrap;">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Lấy API Key Tại Google AI Studio
+            </a>
           </div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <input type="password" id="input-ai-api-key" placeholder="Dán Gemini API Key (AIzaSy...)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #fde68a; width: 240px; font-size: 12px;">
-            <button id="btn-save-ai-key" style="background: #d97706; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px;">
-              Lưu Key
+
+          <!-- Input API Key & Buttons -->
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 280px; position: relative;">
+              <input type="password" id="input-ai-api-key" placeholder="Dán mã Gemini API Key tại đây (dạng AIzaSy...)" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-size: 12.5px; font-family: monospace; outline: none; transition: border-color 0.2s;">
+            </div>
+            <button id="btn-save-ai-key" style="background: #16a34a; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-check"></i> Lưu &amp; Kết Nối
+            </button>
+            <button id="btn-clear-ai-key" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12.5px;" title="Xóa Key và chuyển về dùng chế độ Offline Local Expert">
+              Xóa Key
             </button>
           </div>
+
+          <!-- Status Indicator -->
+          <div id="ai-key-status-text" style="margin-top: 8px; font-size: 11.5px; color: #64748b;">
+            <!-- Render động bởi AIAnalysisModal -->
+          </div>
+        </div>
+
+        <!-- Hướng dẫn 3 bước ngắn gọn -->
+        <div style="background: #f1f5f9; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #334155; line-height: 1.5;">
+          <strong>💡 Hướng dẫn 3 bước lấy Key miễn phí (1 phút):</strong><br>
+          1. Đăng nhập Google bằng tài khoản <code>bsdaoquangtrungducgiang@gmail.com</code>.<br>
+          2. Bấm nút xanh <em>"Lấy API Key Tại Google AI Studio"</em> ở trên -> Chọn <strong>"Create API key"</strong>.<br>
+          3. Sao chép đoạn mã (bắt đầu bằng <code>AIzaSy...</code>) dán vào ô bên trên và bấm <strong>"Lưu &amp; Kết Nối"</strong>.
         </div>
       </div>
 

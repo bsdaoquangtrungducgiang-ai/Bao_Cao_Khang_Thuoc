@@ -282,22 +282,45 @@ const DocumentLibraryView = {
 
     const encodedPath = encodeURI(doc.path);
 
+    // Xử lý riêng cho Bản đầy đủ 221 MB: Giao diện chọn nhanh 5 phần tối ưu cho Web
+    if (doc.id === 'doc_2' || (doc.title && doc.title.includes('Bản đầy đủ'))) {
+      this.renderFullGuideSplitSelector(doc, bodyEl);
+      return;
+    }
+
     if (doc.format === 'PDF') {
       // 1. Xem trực tiếp PDF bằng iframe trình duyệt
       bodyEl.innerHTML = `
         <div style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #525659;">
-          <div style="background: #1e293b; color: #cbd5e1; padding: 6px 16px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <span><i class="fa-solid fa-circle-info" style="color: #38bdf8;"></i> Đang đọc tài liệu PDF qua trình xem tích hợp</span>
-            <span style="font-size: 11.5px; color: #94a3b8;">${doc.size_mb} MB</span>
+          <div style="background: #1e293b; color: #cbd5e1; padding: 7px 18px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #38bdf8; font-weight: 700;"><i class="fa-solid fa-file-pdf"></i> Trình đọc PDF</span>
+              <span style="color: #64748b;">|</span>
+              <span style="color: #f8fafc; font-weight: 600; max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${this.escapeAttribute(doc.title)}</span>
+              <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11px; padding: 2px 7px; border-radius: 4px;">${doc.size_mb} MB</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <a href="${encodedPath}" target="_blank" rel="noopener noreferrer" style="color: #f8fafc; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Cửa Sổ Mới
+              </a>
+              <a href="${encodedPath}" download="${this.escapeAttribute(doc.title)}" style="color: #fff; background: #0284c7; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fa-solid fa-download"></i> Tải Về
+              </a>
+            </div>
           </div>
-          <iframe src="${encodedPath}" style="width: 100%; flex: 1; border: none; background: #fff;" title="${doc.title}"></iframe>
+          <iframe src="${encodedPath}#toolbar=1&navpanes=1" style="width: 100%; flex: 1; border: none; background: #fff;" title="${this.escapeAttribute(doc.title)}">
+            <p style="padding: 20px; color: #fff; text-align: center;">
+              Trình duyệt không hỗ trợ nhúng PDF trực tiếp. 
+              <a href="${encodedPath}" target="_blank" style="color: #38bdf8; text-decoration: underline;">Bấm vào đây để mở tài liệu trong tab mới</a>.
+            </p>
+          </iframe>
         </div>
       `;
     } else if (doc.format === 'PNG') {
       // 2. Xem trực tiếp Ảnh Infographic
       bodyEl.innerHTML = `
         <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px; overflow: auto; background: #0f172a;">
-          <img src="${encodedPath}" alt="${doc.title}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+          <img src="${encodedPath}" alt="${this.escapeAttribute(doc.title)}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
         </div>
       `;
     } else if (doc.format === 'XLSX') {
@@ -307,6 +330,96 @@ const DocumentLibraryView = {
       // 4. Xem tài liệu Word (.docx) & PowerPoint (.pptx)
       this.renderOfficeDocumentPreview(encodedPath, doc, bodyEl);
     }
+  },
+
+  renderFullGuideSplitSelector(doc, container) {
+    const parts = [
+      {
+        part: 1,
+        title: "Phần 1: Nguyên Tắc Sử Dụng Kháng Sinh & Nhiễm Trùng Hô Hấp",
+        desc: "Bảng điểm gãy, lựa chọn kháng sinh ban đầu, viêm phổi cộng đồng (CAP), viêm phổi bệnh viện (HAP/VAP), viêm phế quản.",
+        size_mb: 42.17,
+        id: "doc_3"
+      },
+      {
+        part: 2,
+        title: "Phần 2: Nhiễm Khuẩn Tim Mạch, Tiêu Hóa & Ổ Bụng",
+        desc: "Viêm nội tâm mạc nhiễm khuẩn, nhiễm khuẩn huyết catheter, viêm phúc mạc, viêm đường mật, nhiễm trùng đường ruột.",
+        size_mb: 41.23,
+        id: "doc_4"
+      },
+      {
+        part: 3,
+        title: "Phần 3: Nhiễm Khuẩn Tiết Niệu, Thần Kinh & Nhiễm Khuẩn Máu",
+        desc: "Viêm thận - bể thận cấp, nhiễm trùng tiểu có biến chứng, viêm màng não mủ, áp xe não, sốc nhiễm khuẩn nặng.",
+        size_mb: 41.98,
+        id: "doc_5"
+      },
+      {
+        part: 4,
+        title: "Phần 4: Nhiễm Khuẩn Da Mô Mềm, Xương Khớp & Mắt - Tai Mũi Họng",
+        desc: "Viêm mô tế bào, hoại tử cân cơ, nhiễm trùng bàn chân đái tháo đường, viêm tủy xương, viêm khớp nhiễm khuẩn.",
+        size_mb: 50.98,
+        id: "doc_6"
+      },
+      {
+        part: 5,
+        title: "Phần 5: Phụ Lục Liều Dùng, Hiệu Chỉnh Liều Suy Thận & Dự Phòng",
+        desc: "Bảng tra cứu liều toàn bộ kháng sinh, chỉnh liều theo ClCr/GFR, lọc máu liên tục (CRRT), phác đồ kháng sinh dự phòng phẫu thuật.",
+        size_mb: 45.59,
+        id: "doc_7"
+      }
+    ];
+
+    container.innerHTML = `
+      <div style="width: 100%; height: 100%; overflow-y: auto; padding: 24px 20px; background: #0f172a; display: flex; justify-content: center;">
+        <div style="max-width: 780px; width: 100%;">
+          <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 22px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                <i class="fa-solid fa-book-medical"></i>
+              </div>
+              <div>
+                <h3 style="margin: 0; color: #f8fafc; font-size: 16px; font-weight: 700;">Hướng Dẫn Điều Trị Kháng Sinh Theo Kinh Nghiệm (The Stanford Guide)</h3>
+                <span style="font-size: 12.5px; color: #94a3b8;">Bản dịch Tiếng Việt &bull; Tổng dung lượng nguyên bản: 221.81 MB</span>
+              </div>
+            </div>
+            <p style="margin: 0; color: #cbd5e1; font-size: 13px; line-height: 1.6;">
+              💡 <strong>Tối ưu hóa hiển thị trực tiếp trên Web:</strong> Để đảm bảo tốc độ tải nhanh và mượt mà trên mọi thiết bị máy tính và di động, tài liệu đã được tối ưu hóa chia thành <strong>5 phần chuyên khoa</strong> độc lập dưới 51 MB. Quý bác sĩ có thể bấm chọn ngay phần chuyên khoa cần tra cứu dưới đây:
+            </p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            ${parts.map(p => `
+              <div style="background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px; transition: all 0.2s;" class="split-part-card">
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span style="background: #0284c7; color: #fff; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px;">PHẦN ${p.part}</span>
+                    <span style="color: #94a3b8; font-size: 12px;"><i class="fa-solid fa-hard-drive"></i> ${p.size_mb} MB</span>
+                  </div>
+                  <h4 style="margin: 0 0 4px 0; color: #f8fafc; font-size: 14.5px; font-weight: 700;">${p.title}</h4>
+                  <p style="margin: 0; color: #94a3b8; font-size: 12.5px; line-height: 1.45;">${p.desc}</p>
+                </div>
+                <button class="btn-read-part" data-id="${p.id}" style="padding: 10px 18px; border-radius: 8px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: none; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);">
+                  <i class="fa-solid fa-eye"></i> Xem Phần ${p.part}
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Bind click cho từng phần
+    container.querySelectorAll('.btn-read-part').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-id');
+        const targetDoc = window.DocumentLibraryData?.documents?.find(d => d.id === targetId);
+        if (targetDoc) {
+          this.openPreview(targetDoc);
+        }
+      });
+    });
   },
 
   async renderExcelPreview(encodedPath, doc, container) {

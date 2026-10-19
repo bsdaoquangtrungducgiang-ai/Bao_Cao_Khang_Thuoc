@@ -33,6 +33,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Document binaries & large files
-Tài liệu/
-Tài liệu/
+# Large document binaries > 100MB (GitHub 100MB hard limit)
+# Note: Bản đầy đủ 221MB đã được tối ưu chia thành 5 phần (Phần 1 - 5) dưới 51MB để đọc trực tiếp trên Web/Vercel
+Tài liệu/**/Hướng dẫn điều trị kháng sinh theo kinh nghiệm - Bản đầy đủ.pdf
+Tài liệu/**/Hướng dẫn điều trị kháng sinh theo kinh nghiệm - Bản đầy đủ.pdf
+*Bản đầy đủ.pdf
+*Bản đầy đủ.pdf
+

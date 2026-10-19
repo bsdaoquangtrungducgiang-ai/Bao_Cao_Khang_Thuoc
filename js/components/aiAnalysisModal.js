@@ -57,25 +57,43 @@ const AIAnalysisModal = {
     const settingsBox = document.getElementById('ai-settings-drawer');
     if (btnToggleSettings && settingsBox) {
       btnToggleSettings.addEventListener('click', () => {
-        settingsBox.style.display = settingsBox.style.display === 'none' ? 'block' : 'none';
+        const isHidden = settingsBox.style.display === 'none';
+        settingsBox.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+          this.updateKeyStatusUI();
+        }
       });
     }
 
     const btnSaveKey = document.getElementById('btn-save-ai-key');
+    const btnClearKey = document.getElementById('btn-clear-ai-key');
     const inputKey = document.getElementById('input-ai-api-key');
-    if (btnSaveKey && inputKey) {
+    if (inputKey) {
       if (window.AIAnalysisService?.getApiKey()) {
         inputKey.value = window.AIAnalysisService.getApiKey();
       }
+      this.updateKeyStatusUI();
+    }
+
+    if (btnSaveKey && inputKey) {
       btnSaveKey.addEventListener('click', () => {
         const key = inputKey.value.trim();
         window.AIAnalysisService?.setApiKey(key, 'gemini');
+        this.updateKeyStatusUI();
         if (key) {
-          window.Toast?.success('Đã lưu API Key Gemini thành công!');
+          window.Toast?.success('Đã lưu & kết nối Gemini API (bsdaoquangtrungducgiang@gmail.com) thành công!');
         } else {
-          window.Toast?.info('Đã xóa API Key. Sử dụng chế độ Local Medical Expert.');
+          window.Toast?.info('Đã xóa API Key. Hệ thống sử dụng chế độ Local Medical Expert.');
         }
-        if (settingsBox) settingsBox.style.display = 'none';
+      });
+    }
+
+    if (btnClearKey && inputKey) {
+      btnClearKey.addEventListener('click', () => {
+        inputKey.value = '';
+        window.AIAnalysisService?.setApiKey('', 'gemini');
+        this.updateKeyStatusUI();
+        window.Toast?.info('Đã xóa API Key. Chuyển sang chế độ Local Medical Expert (42 tài liệu nội bộ).');
       });
     }
 
@@ -132,6 +150,25 @@ const AIAnalysisModal = {
       modalEl.classList.remove('open');
       modalEl.classList.remove('active');
       modalEl.style.display = 'none';
+    }
+  },
+
+  updateKeyStatusUI() {
+    const statusEl = document.getElementById('ai-key-status-text');
+    if (!statusEl) return;
+    const hasKey = Boolean(window.AIAnalysisService?.getApiKey());
+    if (hasKey) {
+      statusEl.innerHTML = `
+        <span style="color: #15803d; font-weight: 700;">
+          <i class="fa-solid fa-circle-check"></i> Đã kết nối Gemini API
+        </span> (Tài khoản Google: <strong>bsdaoquangtrungducgiang@gmail.com</strong>). Trợ lý AI sẵn sàng giải đáp mở rộng kết hợp 42 tài liệu CLSI nội bộ.
+      `;
+    } else {
+      statusEl.innerHTML = `
+        <span style="color: #0369a1; font-weight: 700;">
+          <i class="fa-solid fa-shield-halved"></i> Đang hoạt động ở chế độ Local Medical Expert RAG
+        </span> (Đã nạp sẵn 42 tài liệu CLSI nội bộ, sử dụng ngay không cần API key).
+      `;
     }
   },
 
