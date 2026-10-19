@@ -23,6 +23,7 @@ const Navigation = {
     'analytics_carbapenem': 'Giám sát Kháng Carbapenem (CRE/CRAB/CRPA)',
     'analytics_mrsa': 'Giám sát Tụ cầu vàng Kháng Methicillin (MRSA)',
     'reports': 'Báo cáo Dịch tễ & AMR Tự động',
+    'documents': 'Thư viện Tài liệu Chuyên môn & Tiêu chuẩn CLSI',
     'data_files': 'Quản lý File & Hạn mức Bộ nhớ (FIFO)',
     'import_history': 'Lịch sử và Nhật ký Import',
     'catalogs': 'Danh mục Hệ thống (Vi khuẩn, Kháng sinh, Khoa)',

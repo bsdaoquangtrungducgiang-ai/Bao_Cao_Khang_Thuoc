@@ -50,6 +50,7 @@ const App = {
     window.SurveillanceModulesView?.init();
     window.PDFImportView?.init();
     window.ReportView?.init();
+    window.DocumentLibraryView?.init();
     window.SystemCatalogsView?.init();
     window.FileManagerView?.init();
 

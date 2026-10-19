@@ -3799,5 +3799,25 @@ body.is-printing-report .content-body {
   }
 }
 
+/* ================= DOCUMENT LIBRARY (THƯ VIỆN TÀI LIỆU & CLSI) ================= */
+.doc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary) !important;
+}
+
+.doc-cat-pill:hover:not(.active) {
+  background: var(--bg-card) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.doc-cat-pill.active {
+  background: var(--primary) !important;
+  color: #fff !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.35);
+}
+
 
 

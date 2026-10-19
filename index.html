@@ -165,6 +165,12 @@
           <span>Báo cáo AMR Tự động</span>
         </a>
 
+        <div class="menu-label">Tài Liệu & Tiêu Chuẩn</div>
+        <a href="#documents" class="menu-item" data-tab="documents">
+          <i class="fa-solid fa-book-bookmark"></i>
+          <span>Thư viện Tài liệu & CLSI</span>
+        </a>
+
         <a href="#import_history" class="menu-item" data-tab="import_history">
           <i class="fa-solid fa-clock-rotate-left"></i>
           <span>Lịch sử Import</span>
@@ -2343,6 +2349,113 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
         </section>
 
 
+        <!-- ================= VIEW: THƯ VIỆN TÀI LIỆU CHUYÊN MÔN & TIÊU CHUẨN CLSI ================= -->
+        <section class="view-panel" id="view-documents">
+          <!-- Top Info Banner & KPIs -->
+          <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; padding: 24px; color: #fff; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid rgba(56, 189, 248, 0.3);">
+                    <i class="fa-solid fa-book-bookmark"></i> KHO CHUYÊN MÔN VI SINH
+                  </span>
+                  <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid rgba(34, 197, 94, 0.3);">
+                    <i class="fa-solid fa-circle-check"></i> 6 Chuyên Mục Đã Chuẩn Hóa
+                  </span>
+                </div>
+                <h2 style="font-size: 22px; font-weight: 800; margin: 0 0 6px 0; color: #f8fafc;">
+                  Thư Viện Tài Liệu Chuyên Môn & Tiêu Chuẩn CLSI
+                </h2>
+                <p style="margin: 0; color: #94a3b8; font-size: 13.5px; max-width: 780px; line-height: 1.5;">
+                  Kho dữ liệu tra cứu lâm sàng và kỹ thuật vi sinh: Chuẩn CLSI M100 qua các năm (2017 - 2026), CLSI chuyên biệt (M02, M07, M39, M45, M50, M52), Thẻ kháng sinh đồ VITEK 2 (AST-N439/N240), Kháng thuốc đặc biệt (Colistin, ESBL, mCIM) và Phác đồ kháng sinh kinh nghiệm.
+                </p>
+              </div>
+
+              <!-- Quick Stats -->
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 18px; text-align: center; min-width: 120px;">
+                  <div style="font-size: 20px; font-weight: 800; color: #38bdf8;" id="doc-stat-total">42 Tài liệu</div>
+                  <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tổng số tệp</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 18px; text-align: center; min-width: 120px;">
+                  <div style="font-size: 20px; font-weight: 800; color: #4ade80;" id="doc-stat-cats">6 Chuyên mục</div>
+                  <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Nhóm dữ liệu</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 18px; text-align: center; min-width: 120px;">
+                  <div style="font-size: 20px; font-weight: 800; color: #f59e0b;">CLSI 2026</div>
+                  <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Ed36 Mới nhất</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls Bar: Filter Pills, Search & Format -->
+          <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 14px;">
+              <!-- Search box -->
+              <div style="flex: 1; min-width: 280px; position: relative;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px;"></i>
+                <input type="text" id="doc-search-input" placeholder="Tìm tài liệu theo tên, năm (2026, 2025...), từ khóa (Colistin, VITEK, mCIM, M39, Nấm)..." style="width: 100%; padding: 10px 14px 10px 36px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 13px;">
+              </div>
+
+              <!-- Format selector -->
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="doc-format-select" style="font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">
+                  <i class="fa-solid fa-filter"></i> Định dạng:
+                </label>
+                <select id="doc-format-select" style="padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 13px;">
+                  <option value="ALL">Tất cả định dạng</option>
+                  <option value="PDF">PDF (.pdf)</option>
+                  <option value="XLSX">Excel (.xlsx)</option>
+                  <option value="PPTX">PowerPoint (.pptx)</option>
+                  <option value="DOCX">Word (.docx)</option>
+                  <option value="PNG">Ảnh Infographic (.png)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Category Pills -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 4px;">
+                Chuyên mục:
+              </span>
+              <button class="doc-cat-pill active" data-cat="ALL" style="padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--primary); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                Tất cả (42)
+              </button>
+              <button class="doc-cat-pill" data-cat="clsi_m100" style="padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                📘 CLSI M100 (13)
+              </button>
+              <button class="doc-cat-pill" data-cat="clsi_specialized" style="padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                🔬 CLSI Chuyên biệt & QC (7)
+              </button>
+              <button class="doc-cat-pill" data-cat="vitek_cards" style="padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                💳 Thẻ VITEK N439/N240 (6)
+              </button>
+              <button class="doc-cat-pill" data-cat="special_resistance" style="padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                ☣️ Colistin & ESBL/mCIM (5)
+              </button>
+              <button class="doc-cat-pill" data-cat="fungal_infections" style="padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                🍄 Vi nấm & CLSI M44 (2)
+              </button>
+              <button class="doc-cat-pill" data-cat="clinical_books" style="padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                📚 Sách & Phác đồ KS (7)
+              </button>
+            </div>
+          </div>
+
+          <!-- Result Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 12.5px; color: var(--text-muted);">
+            <span id="doc-result-count" style="font-weight: 600;">Hiển thị 42 / 42 tài liệu</span>
+            <span><i class="fa-solid fa-circle-info"></i> Bấm biểu tượng <i class="fa-regular fa-copy"></i> để sao chép đường dẫn file trên máy Mac</span>
+          </div>
+
+          <!-- Document Cards Grid -->
+          <div id="doc-library-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 30px;">
+            <!-- Document cards render động tại đây bởi DocumentLibraryView -->
+          </div>
+        </section>
+
+
         <!-- ================= VIEW: QUẢN LÝ FILE & HẠN MỨC BỘ NHỚ (FIFO) ================= -->
         <section class="view-panel" id="view-data_files">
           <!-- Storage Quota & Capacity Summary (Yêu cầu 5: FIFO Purge) -->
@@ -2841,6 +2954,8 @@ BN00202,Trần Thị D,ICU,Máu,2026-09-26,K. pneumoniae,R,R,R,R"></textarea>
   <script src="js/components/reportView.js"></script>
   <script src="js/components/systemCatalogsView.js"></script>
   <script src="js/components/fileManagerView.js"></script>
+  <script src="js/data/documentsData.js"></script>
+  <script src="js/components/documentLibraryView.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
