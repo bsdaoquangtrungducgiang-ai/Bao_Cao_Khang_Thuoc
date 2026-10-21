@@ -129,7 +129,45 @@ const AntibiogramView = {
       btnPrint.addEventListener('click', () => window.print());
     }
 
-    // 7. Chuyển đổi chế độ hiển thị Bảng / Biểu đồ tách biệt
+    // 7. Nút Phân tích AI trên thanh công cụ
+    const btnAiTrigger = document.getElementById('btn-trigger-abg-ai');
+    if (btnAiTrigger) {
+      btnAiTrigger.addEventListener('click', () => {
+        if (this.state.viewMode === 'table' || this.state.viewMode === 'chart') {
+          this.setViewMode('both');
+        }
+        this.renderAIAnalysis(this.state.lastRows);
+        const aiSection = document.getElementById('abg-section-ai');
+        if (aiSection) {
+          aiSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    // 8. Các nút điều khiển trong phân khu Phân tích AI
+    const btnAiRefresh = document.getElementById('btn-abg-ai-refresh');
+    if (btnAiRefresh) {
+      btnAiRefresh.addEventListener('click', () => {
+        this.renderAIAnalysis(this.state.lastRows);
+        window.Toast?.success('Đã cập nhật phân tích AI theo dữ liệu hiện tại');
+      });
+    }
+
+    const btnAiCopy = document.getElementById('btn-abg-ai-copy');
+    if (btnAiCopy) {
+      btnAiCopy.addEventListener('click', () => {
+        this.copyAIAnalysisToClipboard();
+      });
+    }
+
+    const btnAiOpenAssistant = document.getElementById('btn-abg-ai-open-assistant');
+    if (btnAiOpenAssistant) {
+      btnAiOpenAssistant.addEventListener('click', () => {
+        this.openFullAIAssistantForAntibiogram();
+      });
+    }
+
+    // 9. Chuyển đổi chế độ hiển thị Bảng / Biểu đồ / AI
     document.querySelectorAll('.btn-abg-mode').forEach(btn => {
       btn.addEventListener('click', () => {
         const mode = btn.getAttribute('data-mode') || 'both';
@@ -716,8 +754,11 @@ const AntibiogramView = {
         bannerEl.style.display = 'none';
         bannerEl.innerHTML = '';
       }
+      this.state.lastRows = rows;
+      this.updateSummaryKPIs(rows);
       this.renderTable(rows);
       this.renderChart(rows);
+      this.renderAIAnalysis(rows);
       return;
     }
 
@@ -838,6 +879,7 @@ const AntibiogramView = {
     this.updateSummaryKPIs(rows);
     this.renderTable(rows);
     this.renderChart(rows);
+    this.renderAIAnalysis(rows);
   },
 
   setViewMode(mode) {
@@ -856,16 +898,24 @@ const AntibiogramView = {
 
     const secTable = document.getElementById('abg-section-table');
     const secChart = document.getElementById('abg-section-chart');
+    const secAi = document.getElementById('abg-section-ai');
     if (secTable && secChart) {
       if (mode === 'both') {
         secTable.style.display = 'block';
         secChart.style.display = 'block';
+        if (secAi) secAi.style.display = 'block';
       } else if (mode === 'table') {
         secTable.style.display = 'block';
         secChart.style.display = 'none';
+        if (secAi) secAi.style.display = 'none';
       } else if (mode === 'chart') {
         secTable.style.display = 'none';
         secChart.style.display = 'block';
+        if (secAi) secAi.style.display = 'none';
+      } else if (mode === 'ai') {
+        secTable.style.display = 'none';
+        secChart.style.display = 'none';
+        if (secAi) secAi.style.display = 'block';
       }
     }
   },
@@ -1071,6 +1121,364 @@ const AntibiogramView = {
 
     XLSX.writeFile(wb, fileName);
     window.Toast?.success('Đã xuất file Antibiogram Excel thành công!');
+  },
+
+  /**
+   * Phân tích và render khuyến nghị lâm sàng chuyên sâu bằng AI
+   */
+  renderAIAnalysis(rows = []) {
+    const container = document.getElementById('abg-ai-content-body');
+    if (!container) return;
+
+    if (!rows || rows.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 32px 20px; background: #faf5ff; border: 1.5px dashed #c4b5fd; border-radius: 10px;">
+          <i class="fa-solid fa-brain" style="font-size: 32px; color: #a78bfa; margin-bottom: 10px; display: inline-block;"></i>
+          <h4 style="margin: 0 0 6px 0; color: #4c1d95; font-size: 14.5px; font-weight: 700;">Chưa Có Dữ Liệu Kháng Sinh Để Suy Luận AI</h4>
+          <p style="margin: 0; color: #6d28d9; font-size: 12.5px;">Hãy chọn các tiêu chí vi khuẩn, bệnh phẩm hoặc khoa phòng có mẫu nuôi cấy dương tính để kích hoạt phân tích chuyên sâu.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Lấy thông tin ngữ cảnh
+    const orgs = (this.state.selectedOrganisms.has('ALL') || this.state.selectedOrganisms.size === 0)
+      ? 'Tất cả vi khuẩn' 
+      : Array.from(this.state.selectedOrganisms).join(', ');
+    const specs = (this.state.selectedSpecimens.has('ALL') || this.state.selectedSpecimens.size === 0)
+      ? 'Tất cả bệnh phẩm' 
+      : Array.from(this.state.selectedSpecimens).join(', ');
+    const depts = (this.state.selectedDepartments.has('ALL') || this.state.selectedDepartments.size === 0)
+      ? 'Toàn viện' 
+      : Array.from(this.state.selectedDepartments).join(', ');
+
+    // Thống kê nhạy cảm và đề kháng
+    const testedRows = rows.filter(r => (r.total || 0) > 0);
+    const topSensitive = [...testedRows].filter(r => r.sRate >= 70).sort((a, b) => b.sRate - a.sRate);
+    const highResistant = [...testedRows].filter(r => r.rRate >= 50).sort((a, b) => b.rRate - a.rRate);
+    const maxR = [...testedRows].sort((a, b) => b.rRate - a.rRate)[0];
+    const maxS = [...testedRows].sort((a, b) => b.sRate - a.sRate)[0];
+
+    // Phát hiện kháng Carbapenem
+    const carbapenemCodes = ['MEM', 'IPM', 'ETP', 'DOR'];
+    const carbapenems = testedRows.filter(r => carbapenemCodes.includes((r.code || '').toUpperCase()));
+    const hasCarbapenemResistance = carbapenems.some(c => c.rRate >= 35);
+    const carbapenemMaxR = carbapenems.length > 0 ? Math.max(...carbapenems.map(c => c.rRate)) : 0;
+
+    // Phát hiện kháng Colistin
+    const colistin = testedRows.find(r => ['CST', 'COL'].includes((r.code || '').toUpperCase()));
+    const colistinResistant = colistin && colistin.rRate > 10;
+
+    // Phát hiện MRSA
+    const mrsaMarker = testedRows.find(r => ['OX', 'FOX'].includes((r.code || '').toUpperCase()));
+    const isMrsa = mrsaMarker && mrsaMarker.rRate >= 50;
+
+    // Phát hiện Vancomycin resistant
+    const vancomycin = testedRows.find(r => ['VA', 'VAN'].includes((r.code || '').toUpperCase()));
+    const isVre = vancomycin && vancomycin.rRate > 10;
+
+    // Phân loại mức độ nguy cơ lâm sàng
+    let triageLevel = 'SAFE';
+    let triageClass = 'alert-safe';
+    let triageIcon = '<i class="fa-solid fa-circle-check" style="color: #059669;"></i>';
+    let triageTitle = 'Mức Độ Nguy Cơ: Kiểm Soát Tốt';
+    let triageDesc = 'Vi khuẩn còn nhạy cảm rộng với nhiều nhóm kháng sinh điều trị bậc 1 & bậc 2.';
+
+    const isCritical = hasCarbapenemResistance || colistinResistant || isMrsa || isVre || (highResistant.length >= Math.max(3, testedRows.length * 0.5));
+    const isWarning = !isCritical && (highResistant.length >= 2 || carbapenemMaxR > 15);
+
+    if (isCritical) {
+      triageLevel = 'CRITICAL';
+      triageClass = 'alert-critical';
+      triageIcon = '<i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>';
+      triageTitle = 'BÁO ĐỘNG ĐỎ: Đa Kháng Nguy Cơ Cao (MDR / XDR)';
+      triageDesc = 'Phát hiện tỷ lệ đề kháng đáng báo động đối với các kháng sinh dự trữ chủ lực. Cần hội chẩn Dược lâm sàng và Kiểm soát nhiễm khuẩn ngay.';
+    } else if (isWarning) {
+      triageLevel = 'WARNING';
+      triageClass = 'alert-warning';
+      triageIcon = '<i class="fa-solid fa-shield-halved" style="color: #d97706;"></i>';
+      triageTitle = 'CẢNH BÁO: Tăng Cường Giám Sát Đề Kháng';
+      triageDesc = 'Đã ghi nhận kháng đáng kể với một số nhóm kháng sinh kinh nghiệm thông thường.';
+    }
+
+    // Danh sách gợi ý kháng sinh nhạy
+    let sensitiveListHtml = '';
+    if (topSensitive.length > 0) {
+      sensitiveListHtml = topSensitive.slice(0, 5).map(r => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; margin-bottom: 6px; font-size: 12.5px;">
+          <div>
+            <strong style="color: #166534;">${r.code}</strong> — <span style="color: #1e293b;">${r.name}</span>
+          </div>
+          <span style="font-weight: 700; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px;">%S: ${r.sRate}% (n=${r.total})</span>
+        </div>
+      `).join('');
+    } else {
+      sensitiveListHtml = `<div style="font-size: 12.5px; color: #b91c1c; background: #fef2f2; padding: 8px 12px; border-radius: 6px; border: 1px solid #fecaca;"><i class="fa-solid fa-triangle-exclamation"></i> Không có kháng sinh nào đạt độ nhạy &ge; 70%. Bắt buộc phối hợp đa kháng!</div>`;
+    }
+
+    // Danh sách kháng sinh kháng cao
+    let resistantListHtml = '';
+    if (highResistant.length > 0) {
+      resistantListHtml = highResistant.slice(0, 5).map(r => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; margin-bottom: 6px; font-size: 12.5px;">
+          <div>
+            <strong style="color: #991b1b;">${r.code}</strong> — <span style="color: #1e293b;">${r.name}</span>
+          </div>
+          <span style="font-weight: 700; color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 4px;">%R: ${r.rRate}%</span>
+        </div>
+      `).join('');
+    } else {
+      resistantListHtml = `<div style="font-size: 12.5px; color: #15803d; background: #f0fdf4; padding: 8px 12px; border-radius: 6px; border: 1px solid #bbf7d0;"><i class="fa-solid fa-check"></i> Không có kháng sinh nào có tỷ lệ kháng &ge; 50%.</div>`;
+    }
+
+    // Trụ cột lâm sàng chi tiết
+    let clinicalAdvice = '';
+    const orgLower = orgs.toLowerCase();
+    if (orgLower.includes('acinetobacter')) {
+      clinicalAdvice = `
+        <div style="font-size: 12.5px; color: #334155; line-height: 1.6;">
+          <strong>Nhận định chuyên môn:</strong> <em>Acinetobacter baumannii</em> là căn nguyên đa kháng (MDR/XDR) phổ biến gây viêm phổi thở máy (VAP) và nhiễm trùng huyết tại ICU.<br>
+          👉 <strong>Chiến lược điều trị:</strong> Khi kháng Carbapenem (${carbapenemMaxR > 0 ? carbapenemMaxR + '%' : 'cao'}), khuyến nghị phác đồ nền tảng <strong>Colistin/Polymyxin B</strong> kết hợp <strong>Ampicillin/Sulbactam liều cao</strong> (6-9g Sulbactam/ngày) và/hoặc <strong>Tigecycline / Minocycline</strong>.<br>
+          ⚠️ <em>Lưu ý CLSI:</em> Cần xác định MIC Colistin bằng phương pháp vi pha loãng (BMD), tránh đơn trị liệu.
+        </div>
+      `;
+    } else if (orgLower.includes('klebsiella') || orgLower.includes('escherichia') || orgLower.includes('coli')) {
+      clinicalAdvice = `
+        <div style="font-size: 12.5px; color: #334155; line-height: 1.6;">
+          <strong>Nhận định chuyên môn:</strong> Nhóm <em>Enterobacterales</em> có nguy cơ cao sinh men ESBL và Carbapenemase (KPC, NDM, OXA-48).<br>
+          👉 <strong>Chiến lược điều trị:</strong> ${hasCarbapenemResistance ? 'Đã kháng Carbapenem (CRE). Cần làm test mCIM/eCIM định danh loại men. Xem xét <strong>Ceftazidime-avibactam</strong> (cho Serine carbapenemase) hoặc phối hợp <strong>Aztreonam + Ceftazidime-avibactam</strong> nếu tiết Metallo-beta-lactamase (NDM).' : 'Nếu chưa kháng Carbapenem, có thể cân nhắc <strong>Meropenem</strong> liều cao truyền kéo dài 3-4h hoặc <strong>Ertapenem</strong> cho nhiễm khuẩn ngoài hồi sức.'}<br>
+          💧 <em>Nhiễm trùng tiểu:</em> Xem xét Fosfomycin hoặc Nitrofurantoin nếu còn nhạy cảm.
+        </div>
+      `;
+    } else if (orgLower.includes('pseudomonas')) {
+      clinicalAdvice = `
+        <div style="font-size: 12.5px; color: #334155; line-height: 1.6;">
+          <strong>Nhận định chuyên môn:</strong> <em>Pseudomonas aeruginosa</em> đề kháng qua nhiều cơ chế phối hợp (bơm tống xuất, mất kênh porin OprD, men AmpC).<br>
+          👉 <strong>Chiến lược điều trị:</strong> Tối ưu liều PK/PD đối với <strong>Piperacillin/Tazobactam</strong> hoặc <strong>Cefepime / Meropenem</strong> truyền kéo dài. Xem xét phối hợp Aminoglycoside (Amikacin) trong 3-5 ngày đầu cho nhiễm trùng huyết nặng.
+        </div>
+      `;
+    } else if (orgLower.includes('aureus') || orgLower.includes('staphylococcus')) {
+      clinicalAdvice = `
+        <div style="font-size: 12.5px; color: #334155; line-height: 1.6;">
+          <strong>Nhận định chuyên môn:</strong> <em>Staphylococcus aureus</em> ${isMrsa ? '<strong>kháng Methicillin (MRSA)</strong>' : 'nhạy Methicillin (MSSA)'}.<br>
+          👉 <strong>Chiến lược điều trị:</strong> ${isMrsa ? 'Tuyệt đối không dùng các kháng sinh Beta-lactam thông thường. Kháng sinh lựa chọn hàng đầu: <strong>Vancomycin</strong> (theo dõi nồng độ đáy Cmin 15-20 mcg/mL hoặc AUC/MIC &ge; 400), <strong>Linezolid</strong> (ưu tiên cho viêm phổi) hoặc <strong>Teicoplanin</strong>.' : 'MSSA ưu tiên dùng Oxacillin / Cefazolin / Cefuroxime (hiệu quả diệt khuẩn cao hơn Vancomycin).'}<br>
+          🚫 <em>Cấm kỵ:</em> Không dùng Daptomycin trong điều trị viêm phổi vì bị surfactant bất hoạt.
+        </div>
+      `;
+    } else {
+      clinicalAdvice = `
+        <div style="font-size: 12.5px; color: #334155; line-height: 1.6;">
+          <strong>Nhận định chuyên môn:</strong> Đánh giá mức độ nhạy cảm tổng thể trên ${testedRows.length} kháng sinh thử nghiệm tại <strong>${depts}</strong>.<br>
+          👉 <strong>Chiến lược điều trị:</strong> Căn cứ vào kháng sinh nhạy cảm cao nhất (${maxS ? maxS.code + ' ' + maxS.sRate + '%' : 'chưa xác định'}) và nồng độ thuốc ngấm tại ổ nhiễm trùng (<strong>${specs}</strong>) để lựa chọn phác đồ đích.<br>
+          📉 <strong>Xuống thang (De-escalation):</strong> Khi có đáp ứng lâm sàng sau 48-72h và kết quả kháng sinh đồ chính thức, hãy chuyển đổi sang kháng sinh phổ hẹp hơn để hạn chế chọn lọc chủng đa kháng.
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <!-- 1. Thanh phân tầng nguy cơ Triage Bar -->
+      <div class="abg-ai-triage-bar">
+        <div class="abg-ai-triage-card ${triageClass}">
+          <div class="abg-ai-triage-icon" style="background: rgba(255,255,255,0.8);">
+            ${triageIcon}
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Phân Tầng Nguy Cơ AMR</div>
+            <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-top: 2px;">${triageTitle}</div>
+          </div>
+        </div>
+
+        <div class="abg-ai-triage-card">
+          <div class="abg-ai-triage-icon" style="background: #e0f2fe; color: #0284c7;">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Kháng Sinh Nhạy Nhất (%S)</div>
+            <div style="font-size: 13.5px; font-weight: 800; color: #0369a1; margin-top: 2px;">
+              ${maxS ? `${maxS.code} (${maxS.sRate}%)` : '--'}
+            </div>
+          </div>
+        </div>
+
+        <div class="abg-ai-triage-card">
+          <div class="abg-ai-triage-icon" style="background: #fee2e2; color: #dc2626;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Kháng Cao Nhất (%R)</div>
+            <div style="font-size: 13.5px; font-weight: 800; color: #b91c1c; margin-top: 2px;">
+              ${maxR ? `${maxR.code} (${maxR.rRate}%)` : '--'}
+            </div>
+          </div>
+        </div>
+
+        <div class="abg-ai-triage-card">
+          <div class="abg-ai-triage-icon" style="background: #f1f5f9; color: #475569;">
+            <i class="fa-solid fa-vial-virus"></i>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Phạm Vi Phân Tích</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: #334155; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;" title="${orgs} | ${specs}">
+              ${orgs}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Lưới 4 Trụ Cột Chuyên Môn AI -->
+      <div class="abg-ai-grid-pillars">
+        <!-- Khối A: Kháng sinh nhạy cao -->
+        <div class="abg-ai-pillar-card" style="border-top: 3px solid #10b981;">
+          <div class="abg-ai-pillar-header">
+            <i class="fa-solid fa-thumbs-up" style="color: #10b981; font-size: 16px;"></i>
+            <h5 class="abg-ai-pillar-title" style="color: #065f46;">Kháng Sinh Nhạy Cảm Ưu Tiên (%S &ge; 70%)</h5>
+          </div>
+          <div style="flex: 1;">
+            ${sensitiveListHtml}
+          </div>
+          <div style="font-size: 11.5px; color: #64748b; margin-top: 8px;">
+            💡 Ưu tiên lựa chọn kháng sinh có khả năng thâm nhập tốt vào mô ổ nhiễm (${specs}).
+          </div>
+        </div>
+
+        <!-- Khối B: Kháng sinh cảnh báo kháng cao -->
+        <div class="abg-ai-pillar-card" style="border-top: 3px solid #ef4444;">
+          <div class="abg-ai-pillar-header">
+            <i class="fa-solid fa-ban" style="color: #ef4444; font-size: 16px;"></i>
+            <h5 class="abg-ai-pillar-title" style="color: #991b1b;">Cảnh Báo Nguy Cơ Thất Bại (%R &ge; 50%)</h5>
+          </div>
+          <div style="flex: 1;">
+            ${resistantListHtml}
+          </div>
+          <div style="font-size: 11.5px; color: #b91c1c; margin-top: 8px;">
+            ⚠️ Không khuyến cáo sử dụng đơn độc theo kinh nghiệm khi tỷ lệ đề kháng vượt 30-50%.
+          </div>
+        </div>
+
+        <!-- Khối C: Hướng dẫn phác đồ & Phối hợp -->
+        <div class="abg-ai-pillar-card" style="border-top: 3px solid #8b5cf6;">
+          <div class="abg-ai-pillar-header">
+            <i class="fa-solid fa-notes-medical" style="color: #8b5cf6; font-size: 16px;"></i>
+            <h5 class="abg-ai-pillar-title" style="color: #5b21b6;">Khuyến Nghị Phác Đồ &amp; Dược Lâm Sàng</h5>
+          </div>
+          <div style="flex: 1;">
+            ${clinicalAdvice}
+          </div>
+        </div>
+
+        <!-- Khối D: Kiểm soát nhiễm khuẩn & Quản lý kháng sinh -->
+        <div class="abg-ai-pillar-card" style="border-top: 3px solid #0284c7;">
+          <div class="abg-ai-pillar-header">
+            <i class="fa-solid fa-shield-virus" style="color: #0284c7; font-size: 16px;"></i>
+            <h5 class="abg-ai-pillar-title" style="color: #0369a1;">Kiểm Soát Nhiễm Khuẩn (IPC) &amp; Xuống Thang</h5>
+          </div>
+          <div style="font-size: 12.5px; color: #334155; line-height: 1.6; flex: 1;">
+            🔒 <strong>Cách ly tiếp xúc:</strong> Khi phân lập được vi khuẩn đa kháng (CRAB, CRE, MRSA, VRE), khoa <strong>${depts}</strong> cần thực hiện quy trình cách ly, mang găng/áo choàng và bố trí dụng cụ chăm sóc riêng biệt.<br>
+            🧼 <strong>Vệ sinh môi trường:</strong> Khử trùng bề mặt quanh giường bệnh và máy thở hàng ngày bằng dung dịch sát khuẩn đạt chuẩn.<br>
+            ⏱️ <strong>Quản lý kháng sinh (AMS):</strong> Đánh giá lại chỉ định kháng sinh sau 48-72h. Xem xét ngừng thuốc hoặc xuống thang theo kinh nghiệm vi sinh chuẩn.
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Gợi ý câu hỏi tương tác nhanh với AI -->
+      <div class="abg-ai-prompt-chips">
+        <span style="font-size: 12px; font-weight: 700; color: #64748b;">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color: #8b5cf6;"></i> Hỏi nhanh Trợ lý AI:
+        </span>
+        <button type="button" class="abg-ai-chip" data-prompt="Gợi ý phác đồ kháng sinh phối hợp cụ thể cho vi khuẩn ${orgs} tại khoa ${depts}">
+          💊 Phác đồ phối hợp cho ${orgs.slice(0, 20)}
+        </button>
+        <button type="button" class="abg-ai-chip" data-prompt="Cách chỉnh liều và theo dõi độc tính khi dùng Colistin và Aminoglycoside">
+          💉 Chỉnh liều Colistin &amp; Thận
+        </button>
+        <button type="button" class="abg-ai-chip" data-prompt="Tiêu chuẩn CLSI 2026 mới nhất về vi khuẩn ${orgs} và các kháng sinh mới">
+          🔬 Điểm mới CLSI 2026 về ${orgs.slice(0, 18)}
+        </button>
+        <button type="button" class="abg-ai-chip" data-prompt="Quy trình kiểm soát nhiễm khuẩn và cách ly bệnh nhân khi nhiễm ${orgs}">
+          🛡️ Biện pháp cách ly IPC
+        </button>
+      </div>
+    `;
+
+    // Gắn sự kiện click cho các thẻ gợi ý câu hỏi nhanh
+    container.querySelectorAll('.abg-ai-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const prompt = chip.getAttribute('data-prompt');
+        this.openFullAIAssistantForAntibiogram(prompt);
+      });
+    });
+  },
+
+  /**
+   * Mở modal Trợ lý AI đầy đủ và tự động gửi hoặc điền câu hỏi
+   */
+  openFullAIAssistantForAntibiogram(promptText = null) {
+    if (window.AIAnalysisModal && typeof window.AIAnalysisModal.open === 'function') {
+      window.AIAnalysisModal.open();
+      if (promptText) {
+        const inputEl = document.getElementById('ai-chat-input');
+        if (inputEl) {
+          inputEl.value = promptText;
+          const sendBtn = document.getElementById('btn-ai-send');
+          if (sendBtn) {
+            setTimeout(() => sendBtn.click(), 200);
+          }
+        }
+      }
+    } else {
+      window.Toast?.info('Hệ thống đang nạp Trợ lý AI...');
+    }
+  },
+
+  /**
+   * Sao chép toàn bộ nhận xét phân tích AI vào Clipboard
+   */
+  copyAIAnalysisToClipboard() {
+    const container = document.getElementById('abg-ai-content-body');
+    if (!container) return;
+
+    const text = container.innerText || container.textContent || '';
+    if (!text.trim()) {
+      window.Toast?.info('Chưa có nội dung phân tích AI để sao chép!');
+      return;
+    }
+
+    const orgs = (this.state.selectedOrganisms.has('ALL') || this.state.selectedOrganisms.size === 0)
+      ? 'Tất cả vi khuẩn' : Array.from(this.state.selectedOrganisms).join(', ');
+    const depts = (this.state.selectedDepartments.has('ALL') || this.state.selectedDepartments.size === 0)
+      ? 'Toàn viện' : Array.from(this.state.selectedDepartments).join(', ');
+
+    const formattedReport = `[BÁO CÁO PHÂN TÍCH LÂM SÀNG & KHUYẾN NGHỊ KHÁNG SINH BẰNG AI - BVĐK ĐỨC GIANG]\n` +
+      `Tác nhân: ${orgs} | Đơn vị: ${depts} | Thời gian: ${new Date().toLocaleString('vi-VN')}\n` +
+      `--------------------------------------------------------------------------------\n` +
+      text.trim();
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(formattedReport).then(() => {
+        window.Toast?.success('Đã sao chép nhận xét phân tích AI vào bộ nhớ tạm!');
+      }).catch(() => {
+        this.fallbackCopyText(formattedReport);
+      });
+    } else {
+      this.fallbackCopyText(formattedReport);
+    }
+  },
+
+  fallbackCopyText(text) {
+    if (typeof document === 'undefined' || !document.createElement) return;
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      window.Toast?.success('Đã sao chép nhận xét phân tích AI!');
+    } catch (e) {
+      window.Toast?.error('Không thể tự động sao chép, vui lòng bôi đen nhận xét!');
+    }
+    document.body.removeChild(ta);
   }
 };
 
