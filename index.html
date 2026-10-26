@@ -193,64 +193,43 @@
         </a>
       </nav>
 
-      <div class="sidebar-footer">
-        <div><strong>Hệ thống Giám sát Vi sinh</strong></div>
-        <div>Phiên bản v1.0.0 (Phase 1)</div>
+      <!-- User Account & Quick Logout (Góc dưới bên trái sidebar) -->
+      <div class="sidebar-footer" id="sidebar-user-footer">
+        <div class="sidebar-user-box" id="btn-user-profile" title="Xem thông tin tài khoản và đổi vai trò">
+          <div class="user-avatar" id="user-display-avatar">
+            <i class="fa-solid fa-user-doctor"></i>
+          </div>
+          <div class="user-meta" style="flex: 1; min-width: 0;">
+            <div class="user-name" id="user-display-name" title="Tài khoản đăng nhập">Chưa đăng nhập</div>
+            <span class="role-badge" id="user-display-role">LOGIN</span>
+          </div>
+          <i class="fa-solid fa-gear sidebar-user-gear" title="Quản lý tài khoản"></i>
+        </div>
+        <button class="btn-quick-logout" id="btn-quick-logout" title="Đăng xuất khỏi hệ thống" style="display: none;">
+          <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+        </button>
       </div>
     </aside>
 
     <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
     <div class="main-wrapper">
-      <!-- Top Header -->
-      <header class="top-header">
-        <div class="header-left">
-          <button class="sidebar-toggle-btn" id="sidebar-toggle">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <div class="page-title-box">
-            <h2 id="header-page-title">Dashboard Tổng quan Kháng sinh đồ</h2>
-            <span>Giám sát tình hình kháng kháng sinh (AMR) bệnh viện</span>
-          </div>
-        </div>
+      <!-- Nút mở menu thu phóng trên thiết bị di động / màn hình nhỏ -->
+      <button class="mobile-sidebar-toggle-btn" id="sidebar-toggle" title="Mở danh mục menu" aria-label="Toggle navigation">
+        <i class="fa-solid fa-bars"></i>
+      </button>
 
-        <div class="header-right">
-          <!-- Guideline Selector -->
-          <div class="guideline-badge">
-            <i class="fa-solid fa-book-medical"></i>
-            <select class="guideline-select" id="select-guideline">
-              <option value="CLSI M100 2025" selected>CLSI M100 2025</option>
-              <option value="CLSI M100 2026">CLSI M100 2026</option>
-              <option value="EUCAST 2026">EUCAST 2026</option>
-            </select>
-          </div>
-
-          <!-- Live Clock -->
-          <div class="clock-display" id="live-clock">
-            <i class="fa-regular fa-clock"></i>
-            <span>--:--:--</span>
-          </div>
-
-          <!-- Connection Pill -->
-          <div class="connection-pill" id="btn-show-sql">
-            <span class="status-indicator status-online" id="conn-status-badge"></span>
-            <span id="conn-status-text">Đang kết nối Supabase...</span>
-          </div>
-
-          <!-- User Profile Chip -->
-          <div class="user-chip" id="btn-user-profile" title="Xem thông tin và đăng xuất / đổi tài khoản">
-            <div class="user-avatar" id="user-display-avatar">
-              <i class="fa-solid fa-user-doctor"></i>
-            </div>
-            <div class="user-meta">
-              <span class="user-name" id="user-display-name">Chưa đăng nhập</span>
-              <span class="role-badge" id="user-display-role">LOGIN</span>
-            </div>
-          </div>
-
-          <!-- Quick Logout Button -->
-          <button class="btn-quick-logout" id="btn-quick-logout" title="Đăng xuất khỏi hệ thống" style="display: none;">
-            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-          </button>
+      <!-- Top Header (Đã ẩn hoàn toàn để tối đa hóa không gian màn hình chính) -->
+      <header class="top-header" style="display: none !important;" aria-hidden="true">
+        <h2 id="header-page-title" style="display: none;">Dashboard Tổng quan Kháng sinh đồ</h2>
+        <select class="guideline-select" id="select-guideline" style="display: none;">
+          <option value="CLSI M100 2025" selected>CLSI M100 2025</option>
+          <option value="CLSI M100 2026">CLSI M100 2026</option>
+          <option value="EUCAST 2026">EUCAST 2026</option>
+        </select>
+        <span id="live-clock" style="display: none;"></span>
+        <div id="btn-show-sql" style="display: none;">
+          <span id="conn-status-badge"></span>
+          <span id="conn-status-text"></span>
         </div>
       </header>
 
